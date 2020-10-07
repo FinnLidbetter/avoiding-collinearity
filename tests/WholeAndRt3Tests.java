@@ -240,6 +240,7 @@ public class WholeAndRt3Tests {
 
     @Test
     public void testPrecisionComparison() {
+        // 2672280.000000374...
         WholeAndRt3 almost2672280 = new WholeAndRt3(1, 1542841);
         WholeAndRt3 exactly2672280 = new WholeAndRt3(2672280, 0);
         Assert.assertThrows(ArithmeticException.class,
