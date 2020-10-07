@@ -1,3 +1,8 @@
+/**
+ * Class for precisely handling arithmetic on numbers of the form
+ *      a + b * sqrt(3)
+ * where a and b are integers.
+ */
 public class WholeAndRt3 extends AbstractNumber<WholeAndRt3> {
     private static final String PRECISION_ERROR =
             "The rational over and under approximations of sqrt(3) are not " +
@@ -75,16 +80,24 @@ public class WholeAndRt3 extends AbstractNumber<WholeAndRt3> {
      */
     @Override
     public WholeAndRt3 divide(WholeAndRt3 divisor) {
-        checkRationalizedDenominator(divisor);
-        checkResultOnes(divisor);
-        checkResultRt3(divisor);
-        long rationalizedDenominator =
-                divisor.ones * divisor.ones - RT * divisor.rt3 * divisor.rt3;
-        long resultOnes = (ones * divisor.ones - RT * rt3 * divisor.rt3)
-                / rationalizedDenominator;
-        long resultRt3 = (rt3 * divisor.ones - ones * divisor.rt3)
-                / rationalizedDenominator;
-        WholeAndRt3 result = new WholeAndRt3(resultOnes, resultRt3);
+        WholeAndRt3 result;
+        if (divisor.rt3 == 0) {
+            result = new WholeAndRt3(
+                    ones / divisor.ones, rt3 / divisor.ones);
+        } else if (this.equals(ZERO)) {
+            result = ZERO;
+        } else {
+            checkRationalizedDenominator(divisor);
+            checkResultOnes(divisor);
+            checkResultRt3(divisor);
+            long rationalizedDenominator =
+                    divisor.ones * divisor.ones - RT * divisor.rt3 * divisor.rt3;
+            long resultOnes = (ones * divisor.ones - RT * rt3 * divisor.rt3)
+                    / rationalizedDenominator;
+            long resultRt3 = (rt3 * divisor.ones - ones * divisor.rt3)
+                    / rationalizedDenominator;
+            result = new WholeAndRt3(resultOnes, resultRt3);
+        }
         if (this.compareTo(result.multiply(divisor)) != 0)
             throw new ArithmeticException(
                     String.format(DIVISION_ERROR, this, divisor));
@@ -152,11 +165,14 @@ public class WholeAndRt3 extends AbstractNumber<WholeAndRt3> {
      * The returned WholeAndRt3 has no irrational part and the value is the
      * largest integer that divides the integer parts of both WholeAndRt3s
      * and the irrational parts of both WholeAndRt3s.
+     * If both terms are "zero", then return "one".
      * @param m2: the second WholeAndRt3.
      * @return a "common divisor" of this WholeAndRt3 and another.
      */
     @Override
     public WholeAndRt3 commonDivisor(WholeAndRt3 m2) {
+        if (this.equals(ZERO) && m2.equals(ZERO))
+            return ONE;
        return new WholeAndRt3(CommonMath.gcd(
                CommonMath.gcd(ones, rt3),
                CommonMath.gcd(m2.ones, m2.rt3)), 0);

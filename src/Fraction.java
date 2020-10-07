@@ -1,3 +1,7 @@
+/**
+ * Class for precisely handling Fractions of AbstractNumbers.
+ * @param <T> a subclass of AbstractNumber.
+ */
 public class Fraction<T extends AbstractNumber<T>> extends AbstractNumber<Fraction<T>> {
 
     T num, denom;
@@ -23,7 +27,7 @@ public class Fraction<T extends AbstractNumber<T>> extends AbstractNumber<Fracti
 
     public Fraction<T> subtract(Fraction<T> f2) {
         Fraction<T> result = new Fraction<T>(
-                num.multiply(f2.denom).add(f2.num.multiply(denom)),
+                num.multiply(f2.denom).subtract(f2.num.multiply(denom)),
                 denom.multiply(f2.denom));
         result.normalize();
         return result;

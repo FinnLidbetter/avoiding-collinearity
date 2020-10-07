@@ -2,6 +2,9 @@ import org.junit.Assert;
 import org.junit.Test;
 import java.util.Arrays;
 
+/**
+ * Tests for the WholeAndRt3 abstract number class operations.
+ */
 public class WholeAndRt3Tests {
     private static final WholeAndRt3 zero = new WholeAndRt3(0, 0);
     private static final WholeAndRt3 one = new WholeAndRt3(1, 0);
@@ -221,7 +224,7 @@ public class WholeAndRt3Tests {
                 new WholeAndRt3(94, -41),   // 22.98591689...
                 new WholeAndRt3(-3, 15),    // 22.98076211...
                 new WholeAndRt3(535, 214),  // 905.6588728...
-                new WholeAndRt3(5, -4)     // -1.92820323...
+                new WholeAndRt3(5, -4)      // -1.92820323...
         };
         WholeAndRt3[] expectedOrder = {
                 new WholeAndRt3(-1, -1),    // -2.7320508...
@@ -232,7 +235,7 @@ public class WholeAndRt3Tests {
                 new WholeAndRt3(-3, 15),    // 22.98076211...
                 new WholeAndRt3(94, -41),   // 22.98591689...
                 new WholeAndRt3(23, 0),     // 23
-                new WholeAndRt3(535, 214)  // 905.6588728...
+                new WholeAndRt3(535, 214)   // 905.6588728...
         };
         Arrays.sort(arr);
         Assert.assertArrayEquals(expectedOrder, arr);
@@ -247,5 +250,91 @@ public class WholeAndRt3Tests {
                 () -> { almost2672280.compareTo(exactly2672280); });
         Assert.assertThrows(ArithmeticException.class,
                 () -> { exactly2672280.compareTo(almost2672280); });
+    }
+
+    @Test
+    public void testCommonDivisor() {
+        WholeAndRt3[][] cases = {
+                {new WholeAndRt3(12, 8), new WholeAndRt3(40, 44),
+                        new WholeAndRt3(4, 0)},
+                {new WholeAndRt3(15, 7), new WholeAndRt3(105, 105),
+                        new WholeAndRt3(1, 0)},
+                {new WholeAndRt3(35, -35), new WholeAndRt3(-35, 35),
+                        new WholeAndRt3(35, 0)},
+                {new WholeAndRt3(0, 40), new WholeAndRt3(80, 120),
+                        new WholeAndRt3(40, 0)},
+                {new WholeAndRt3(40, 0), new WholeAndRt3(80, 120),
+                        new WholeAndRt3(40, 0)},
+                {new WholeAndRt3(80, 120), new WholeAndRt3(40, 0),
+                        new WholeAndRt3(40, 0)},
+                {new WholeAndRt3(80, 120), new WholeAndRt3(0, 40),
+                        new WholeAndRt3(40, 0)},
+                {new WholeAndRt3(-12, -60), new WholeAndRt3(-120, -72),
+                        new WholeAndRt3(12, 0)},
+                {new WholeAndRt3(5, 0), new WholeAndRt3(0, 0),
+                        new WholeAndRt3(5, 0)},
+                {new WholeAndRt3(0, 5), new WholeAndRt3(0, 0),
+                        new WholeAndRt3(5, 0)},
+                {new WholeAndRt3(0, 0), new WholeAndRt3(5, 0),
+                        new WholeAndRt3(5, 0)},
+                {new WholeAndRt3(0, 0), new WholeAndRt3(0, 5),
+                        new WholeAndRt3(5, 0)},
+                {new WholeAndRt3(0, 0), new WholeAndRt3(0, 0),
+                        new WholeAndRt3(1, 0)}
+        };
+        for (WholeAndRt3[] commonDivisorCase: cases) {
+            System.out.println(Arrays.toString(commonDivisorCase));
+            WholeAndRt3 leftTerm = commonDivisorCase[0];
+            WholeAndRt3 rightTerm = commonDivisorCase[1];
+            WholeAndRt3 expectedResult = commonDivisorCase[2];
+            Assert.assertEquals(leftTerm.commonDivisor(rightTerm),
+                    expectedResult);
+        }
+    }
+
+    @Test
+    public void testDivide() {
+        WholeAndRt3[][] cases = {
+                {zero, one, zero},
+                {zero, minusOne, zero},
+                {zero, onePlusRt3, zero},
+                {zero, minValue, zero},
+                {zero, maxValue, zero},
+                {maxValue, new WholeAndRt3(Long.MAX_VALUE, 0), onePlusRt3},
+                {maxValue, one, maxValue},
+                {minValue, one, minValue},
+                {minValue, new WholeAndRt3(Long.MIN_VALUE, 0), onePlusRt3},
+                {new WholeAndRt3(42, 35), new WholeAndRt3(7, 0),
+                        new WholeAndRt3(6, 5)},
+                {new WholeAndRt3(-2, 0), onePlusRt3, oneMinusRt3},
+                {new WholeAndRt3(126, -9), new WholeAndRt3(3, 0), new WholeAndRt3(42, -3)},
+                {new WholeAndRt3(49, 9), new WholeAndRt3(5, 6), new WholeAndRt3(-1, 3)},
+                {new WholeAndRt3(Long.MAX_VALUE - 1, Long.MAX_VALUE - 1), two,
+                        new WholeAndRt3(Long.MAX_VALUE / 2, Long.MAX_VALUE / 2)},
+                {new WholeAndRt3(0, 3), new WholeAndRt3(0, 1),
+                        new WholeAndRt3(3, 0)}
+        };
+        for (WholeAndRt3[] divisionCase: cases) {
+            System.out.println(Arrays.toString(divisionCase));
+            WholeAndRt3 dividend = divisionCase[0];
+            WholeAndRt3 divisor = divisionCase[1];
+            WholeAndRt3 expectedResult = divisionCase[2];
+            Assert.assertEquals(dividend.divide(divisor), expectedResult);
+        }
+    }
+
+    @Test
+    public void testUnevenDivide() {
+        WholeAndRt3[][] cases = {
+                {new WholeAndRt3(34, 35), zero},
+                {new WholeAndRt3(34, 35), new WholeAndRt3(3, 2)},
+                {new WholeAndRt3(0, 3), new WholeAndRt3(1, 3)}
+        };
+        for (WholeAndRt3[] divisionCase: cases) {
+            WholeAndRt3 dividend = divisionCase[0];
+            WholeAndRt3 divisor = divisionCase[1];
+            Assert.assertThrows(ArithmeticException.class,
+                    () -> { dividend.divide(divisor);});
+        }
     }
 }

@@ -1,3 +1,8 @@
+/**
+ * Class used as a wrapper around long. This is defined to be compatible
+ * with the Fraction class by extending AbstractNumber. This makes
+ * testing the Fraction, Vector, and Trapezoid classes easier.
+ */
 public class WholeNumber extends AbstractNumber<WholeNumber> {
     public static final WholeNumber MINUS_ONE = new WholeNumber(-1);
     public static final WholeNumber ZERO = new WholeNumber(0);
@@ -44,6 +49,8 @@ public class WholeNumber extends AbstractNumber<WholeNumber> {
 
     @Override
     public WholeNumber commonDivisor(WholeNumber n2) {
+        if (value == 0 && n2.value == 0)
+            return new WholeNumber(1);
         return new WholeNumber(CommonMath.gcd(value, n2.value));
     }
 
