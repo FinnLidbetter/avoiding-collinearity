@@ -51,9 +51,9 @@ public class Fraction<T extends AbstractNumber<T>> extends AbstractNumber<Fracti
             num = num.additiveInverse();
             denom = denom.additiveInverse();
         }
-        T gcf = num.gcd(denom);
-        num = num.divide(gcf);
-        denom = denom.divide(gcf);
+        T commonDivisor = num.commonDivisor(denom);
+        num = num.divide(commonDivisor);
+        denom = denom.divide(commonDivisor);
     }
 
     @Override
@@ -66,8 +66,15 @@ public class Fraction<T extends AbstractNumber<T>> extends AbstractNumber<Fracti
         return num.compareToZero();
     }
 
+    /**
+     * Get a common divisor of this Fraction and another.
+     *
+     * This just returns the unit Fraction.
+     * @param f2: the other Fraction to get the common divisor of.
+     * @return the unit Fraction.
+     */
     @Override
-    public Fraction<T> gcd(Fraction<T> f2) {
+    public Fraction<T> commonDivisor(Fraction<T> f2) {
         return f2.multiply(f2.reciprocal());
     }
 }
