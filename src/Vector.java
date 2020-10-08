@@ -1,7 +1,7 @@
 public class Vector<T extends AbstractNumber<T>> {
-    Fraction<T> x;
-    Fraction<T> y;
-    public Vector(Fraction<T> x, Fraction<T> y) {
+    T x;
+    T y;
+    public Vector(T x, T y) {
         this.x = x;
         this.y = y;
     }
@@ -14,10 +14,10 @@ public class Vector<T extends AbstractNumber<T>> {
     public Vector<T> additiveInverse() {
         return new Vector<T>(x.additiveInverse(), y.additiveInverse());
     }
-    public Vector<T> scale(Fraction<T> m) {
+    public Vector<T> scale(T m) {
         return new Vector<T>(x.multiply(m), y.multiply(m));
     }
-    public Fraction<T> cross(Vector<T> v2) {
+    public T cross(Vector<T> v2) {
         return x.multiply(v2.y).subtract(y.multiply(v2.x));
     }
     public Vector<T> perpendicular() {

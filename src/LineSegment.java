@@ -16,20 +16,20 @@ public class LineSegment<T extends AbstractNumber<T>> {
      * @param p: the point to get the distance to.
      * @return the squared distance from this line segment to the point.
      */
-    public Fraction<T> distanceSq(Point<T> p) {
+    public T distanceSq(Point<T> p) {
         if (hasBetween(p)) {
-            Fraction<T> dx = p2.x.subtract(p1.x);
-            Fraction<T> dy = p2.y.subtract(p1.y);
-            Fraction<T> term1 = dy.multiply(p.x);
-            Fraction<T> term2 = dx.multiply(p.y).additiveInverse();
-            Fraction<T> term3 = (p2.x.multiply(p1.y)).subtract(p1.x.multiply(p2.y));
-            Fraction<T> sum = term1.add(term2).add(term3);
-            Fraction<T> numerator = sum.multiply(sum);
-            Fraction<T> denominator = (dx.multiply(dx)).add(dy.multiply(dy));
+            T dx = p2.x.subtract(p1.x);
+            T dy = p2.y.subtract(p1.y);
+            T term1 = dy.multiply(p.x);
+            T term2 = dx.multiply(p.y).additiveInverse();
+            T term3 = (p2.x.multiply(p1.y)).subtract(p1.x.multiply(p2.y));
+            T sum = term1.add(term2).add(term3);
+            T numerator = sum.multiply(sum);
+            T denominator = (dx.multiply(dx)).add(dy.multiply(dy));
             return numerator.divide(denominator);
         }
-        Fraction<T> distSq1 = p.distanceSq(p1);
-        Fraction<T> distSq2 = p.distanceSq(p2);
+        T distSq1 = p.distanceSq(p1);
+        T distSq2 = p.distanceSq(p2);
         if (distSq1.compareTo(distSq2) < 0) {
             return distSq1;
         }
@@ -44,19 +44,19 @@ public class LineSegment<T extends AbstractNumber<T>> {
      *  line segment.
      */
     public boolean hasBetween(Point<T> p) {
-        Vector<T> p1ToP2 = new Vector<T>(p2.x.subtract(p1.x), p2.y.subtract(p1.y));
-        Vector<T> p1PerpVector = p1ToP2.perpendicular();
-        Fraction<T> p2SideOfP1 = p1PerpVector.cross(p1ToP2);
-        Vector<T> p1ToP = new Vector<T>(p.x.subtract(p1.x), p.y.subtract(p1.y));
-        Fraction<T> pSideOfP1 = p1PerpVector.cross(p1ToP);
+        Vector<T> p1ToP2 = new Vector<>(p2.x.subtract(p1.x), p2.y.subtract(p1.y));
+        Vector<T> p1PerpendicularVector = p1ToP2.perpendicular();
+        T p2SideOfP1 = p1PerpendicularVector.cross(p1ToP2);
+        Vector<T> p1ToP = new Vector<>(p.x.subtract(p1.x), p.y.subtract(p1.y));
+        T pSideOfP1 = p1PerpendicularVector.cross(p1ToP);
         if (p2SideOfP1.compareToZero()
                 != pSideOfP1.compareToZero())
             return false;
         Vector<T> p2ToP1 = p1ToP2.additiveInverse();
-        Vector<T> p2PerpVector = p2ToP1.perpendicular();
-        Fraction<T> p1SideOfP2 = p2PerpVector.cross(p2ToP1);
-        Vector<T> p2ToP = new Vector<T>(p.x.subtract(p2.x), p.y.subtract(p2.y));
-        Fraction<T> pSideOfP2 = p2PerpVector.cross(p2ToP);
+        Vector<T> p2PerpendicularVector = p2ToP1.perpendicular();
+        T p1SideOfP2 = p2PerpendicularVector.cross(p2ToP1);
+        Vector<T> p2ToP = new Vector<>(p.x.subtract(p2.x), p.y.subtract(p2.y));
+        T pSideOfP2 = p2PerpendicularVector.cross(p2ToP);
         return p1SideOfP2.compareToZero()
                 == pSideOfP2.compareToZero();
     }

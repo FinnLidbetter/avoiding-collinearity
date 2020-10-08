@@ -23,10 +23,10 @@ public class Trapezoid<T extends AbstractNumber<T>> {
      * @param p: the point to get the squared distance to.
      * @return the squared distance from point p to the trapezoid.
      */
-   public Fraction<T> distanceSq(Point<T> p) {
-       Fraction<T> minDistSq = null;
+   public T distanceSq(Point<T> p) {
+       T minDistSq = null;
        for (LineSegment<T> side: sides) {
-           Fraction<T> currDistSq = side.distanceSq(p);
+           T currDistSq = side.distanceSq(p);
            if (minDistSq == null || currDistSq.compareTo(minDistSq) < 0) {
                minDistSq = currDistSq;
            }
@@ -34,11 +34,18 @@ public class Trapezoid<T extends AbstractNumber<T>> {
        return minDistSq;
    }
 
-   public Fraction<T> maxDistanceSq(Trapezoid<T> t2) {
-       Fraction<T> maxDistSq = null;
+    /**
+     * Get the largest distance between this trapezoid and another trapezoid.
+     *
+     * @param t2: another trapezoid.
+     * @return The largest distance between all pairs of points inside the
+     *  regions defined by the two trapezoids.
+     */
+   public T maxDistanceSq(Trapezoid<T> t2) {
+       T maxDistSq = null;
        for (Point<T> p: vertices) {
            for (LineSegment<T> l: t2.sides) {
-               Fraction<T> currDistSq = l.distanceSq(p);
+               T currDistSq = l.distanceSq(p);
                if (maxDistSq == null || currDistSq.compareTo(maxDistSq) > 0) {
                    maxDistSq = currDistSq;
                }
@@ -46,12 +53,18 @@ public class Trapezoid<T extends AbstractNumber<T>> {
        }
        return maxDistSq;
    }
-
-   public Fraction<T> minDistanceSq(Trapezoid<T> t2) {
-       Fraction<T> minDistSq = null;
+   /**
+    * Get the smallest distance between this trapezoid and another trapezoid.
+    *
+    * @param t2: another trapezoid.
+    * @return The smallest distance between all pairs of points inside the
+    *  regions defined by the two trapezoids.
+    */
+   public T minDistanceSq(Trapezoid<T> t2) {
+       T minDistSq = null;
        for (Point<T> p: vertices) {
            for (LineSegment<T> l: t2.sides) {
-               Fraction<T> currDistSq = l.distanceSq(p);
+               T currDistSq = l.distanceSq(p);
                if (minDistSq == null || currDistSq.compareTo(minDistSq) < 0) {
                    minDistSq = currDistSq;
                }
