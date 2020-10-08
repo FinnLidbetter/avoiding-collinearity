@@ -37,7 +37,7 @@ public class LineSegment<T extends AbstractNumber<T>> {
     }
 
     /**
-     * Return True iff p lies strictly between the infinite lines perpendicular
+     * Return True iff p lies on or between the infinite lines perpendicular
      * to this line segment through p1 and p2.
      * @param p: the point to evaluate.
      * @return boolean indicating if p lies between the endpoints of this
@@ -51,13 +51,14 @@ public class LineSegment<T extends AbstractNumber<T>> {
         T pSideOfP1 = p1PerpendicularVector.cross(p1ToP);
         if (p2SideOfP1.compareToZero()
                 != pSideOfP1.compareToZero())
-            return false;
+            return pSideOfP1.compareToZero() == 0;
         Vector<T> p2ToP1 = p1ToP2.additiveInverse();
         Vector<T> p2PerpendicularVector = p2ToP1.perpendicular();
         T p1SideOfP2 = p2PerpendicularVector.cross(p2ToP1);
         Vector<T> p2ToP = new Vector<>(p.x.subtract(p2.x), p.y.subtract(p2.y));
         T pSideOfP2 = p2PerpendicularVector.cross(p2ToP);
-        return p1SideOfP2.compareToZero()
-                == pSideOfP2.compareToZero();
+        if (p1SideOfP2.compareToZero() != pSideOfP2.compareToZero())
+            return pSideOfP2.compareToZero() == 0;
+        return true;
     }
 }

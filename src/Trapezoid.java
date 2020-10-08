@@ -18,8 +18,9 @@ public class Trapezoid<T extends AbstractNumber<T>> {
    }
 
     /**
-     * Return the shortest distance squared from the Trapezoid to
-     * the provided point p.
+     * Return the shortest distance squared from the boundary of the Trapezoid
+     * to the provided point.
+     *
      * @param p: the point to get the squared distance to.
      * @return the squared distance from point p to the trapezoid.
      */
@@ -38,8 +39,8 @@ public class Trapezoid<T extends AbstractNumber<T>> {
      * Get the largest distance between this trapezoid and another trapezoid.
      *
      * @param t2: another trapezoid.
-     * @return The largest distance between all pairs of points inside the
-     *  regions defined by the two trapezoids.
+     * @return The largest straight line distance squared between all pairs
+     *  of points inside the regions defined by the two trapezoids.
      */
    public T maxDistanceSq(Trapezoid<T> t2) {
        T maxDistSq = null;
@@ -56,6 +57,7 @@ public class Trapezoid<T extends AbstractNumber<T>> {
    /**
     * Get the smallest distance between this trapezoid and another trapezoid.
     *
+    * This assumes that the area of the intersection of the trapezoids is 0.
     * @param t2: another trapezoid.
     * @return The smallest distance between all pairs of points inside the
     *  regions defined by the two trapezoids.
