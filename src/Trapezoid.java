@@ -1,6 +1,11 @@
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * The methods in this class assume that the points form a Trapezoid.
+ *
+ * @param <T>: Some AbstractNumber.
+ */
 public class Trapezoid<T extends AbstractNumber<T>> {
    List<Point<T>> vertices;
    List<LineSegment<T>> sides;
@@ -36,17 +41,19 @@ public class Trapezoid<T extends AbstractNumber<T>> {
    }
 
     /**
-     * Get the largest distance between this trapezoid and another trapezoid.
+     * Get the largest distance squared between this trapezoid and another.
      *
+     * The largest distance is always between two vertices.
      * @param t2: another trapezoid.
      * @return The largest straight line distance squared between all pairs
      *  of points inside the regions defined by the two trapezoids.
      */
    public T maxDistanceSq(Trapezoid<T> t2) {
        T maxDistSq = null;
-       for (Point<T> p: vertices) {
-           for (LineSegment<T> l: t2.sides) {
-               T currDistSq = l.distanceSq(p);
+       for (Point<T> p1: vertices) {
+           for (Point<T> p2: t2.vertices) {
+               T currDistSq = p1.distanceSq(p2);
+               System.out.printf("Distance between %s and %s is: %s\n", p1.toString(), p2.toString(), currDistSq.toString());
                if (maxDistSq == null || currDistSq.compareTo(maxDistSq) > 0) {
                    maxDistSq = currDistSq;
                }
@@ -66,6 +73,14 @@ public class Trapezoid<T extends AbstractNumber<T>> {
        T minDistSq = null;
        for (Point<T> p: vertices) {
            for (LineSegment<T> l: t2.sides) {
+               T currDistSq = l.distanceSq(p);
+               if (minDistSq == null || currDistSq.compareTo(minDistSq) < 0) {
+                   minDistSq = currDistSq;
+               }
+           }
+       }
+       for (Point<T> p: t2.vertices) {
+           for (LineSegment<T> l: sides) {
                T currDistSq = l.distanceSq(p);
                if (minDistSq == null || currDistSq.compareTo(minDistSq) < 0) {
                    minDistSq = currDistSq;

@@ -12,4 +12,8 @@ public class Point<T extends AbstractNumber<T>> {
         T dySq = dy.multiply(dy);
         return dxSq.add(dySq);
     }
+
+    public String toString() {
+        return String.format("(%s, %s)", x.toString(), y.toString());
+    }
 }
