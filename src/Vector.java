@@ -23,4 +23,16 @@ public class Vector<T extends AbstractNumber<T>> {
     public Vector<T> perpendicular() {
         return new Vector<T>(y, x.additiveInverse());
     }
+    public boolean equals(Object other) {
+        if (other instanceof Vector<?>) {
+            Vector<?> v2 = (Vector<?>) other;
+            return x.equals(v2.x) && y.equals(v2.y);
+        }
+        return false;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("(%s, %s)", x.toString(), y.toString());
+    }
 }
