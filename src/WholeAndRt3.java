@@ -44,6 +44,8 @@ public class WholeAndRt3 extends AbstractNumber<WholeAndRt3> {
 
     @Override
     public WholeAndRt3 additiveInverse() {
+        if (ones == Long.MIN_VALUE || rt3 == Long.MIN_VALUE)
+            throw new RuntimeException("Additive inverse will overflow.");
         return new WholeAndRt3(-ones, -rt3);
     }
 

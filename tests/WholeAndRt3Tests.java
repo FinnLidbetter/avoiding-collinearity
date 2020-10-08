@@ -334,7 +334,29 @@ public class WholeAndRt3Tests {
             WholeAndRt3 dividend = divisionCase[0];
             WholeAndRt3 divisor = divisionCase[1];
             Assert.assertThrows(ArithmeticException.class,
-                    () -> { dividend.divide(divisor);});
+                    () -> { dividend.divide(divisor); });
         }
+    }
+
+    @Test
+    public void testAdditiveInverse() {
+        WholeAndRt3[][] cases = {
+                {one, minusOne},
+                {minusOne, one},
+                {zero, zero},
+                {onePlusRt3, new WholeAndRt3(-1, -1)},
+                {maxValue, largeNegative},
+                {largeNegative, maxValue},
+                {new WholeAndRt3(23, -4), new WholeAndRt3(-23, 4)}
+        };
+        for (WholeAndRt3[] additiveInverseCase: cases) {
+            WholeAndRt3 value = additiveInverseCase[0];
+            WholeAndRt3 expectedResult = additiveInverseCase[1];
+            Assert.assertEquals(value.additiveInverse(), expectedResult);
+        }
+        // We cannot get the additive inverse if Long.MIN_VALUE is used since
+        // this will cause overflow.
+        Assert.assertThrows(RuntimeException.class,
+                () -> {  minValue.additiveInverse(); });
     }
 }
