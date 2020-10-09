@@ -101,6 +101,11 @@ public class Fraction<T extends AbstractNumber<T>> extends AbstractNumber<Fracti
     }
 
     @Override
+    public double toDouble() {
+        return num.toDouble() / denom.toDouble();
+    }
+
+    @Override
     public String toString() {
         return String.format("%s / %s", num.toString(), denom.toString());
     }

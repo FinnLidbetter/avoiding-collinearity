@@ -9,17 +9,17 @@ import java.util.List;
 public class Trapezoid<T extends AbstractNumber<T>> {
    List<Point<T>> vertices;
    List<LineSegment<T>> sides;
-   public Trapezoid(Point<T> p1, Point<T> p2, Point<T> p3, Point<T> p4) {
+   public Trapezoid(Point<T> p0, Point<T> p1, Point<T> p2, Point<T> p3) {
        vertices = new ArrayList<Point<T>>(4);
+       vertices.add(p0);
        vertices.add(p1);
        vertices.add(p2);
        vertices.add(p3);
-       vertices.add(p4);
        sides = new ArrayList<LineSegment<T>>(4);
+       sides.add(new LineSegment<T>(p0, p1));
        sides.add(new LineSegment<T>(p1, p2));
        sides.add(new LineSegment<T>(p2, p3));
-       sides.add(new LineSegment<T>(p3, p4));
-       sides.add(new LineSegment<T>(p4, p1));
+       sides.add(new LineSegment<T>(p3, p0));
    }
 
     /**
@@ -53,7 +53,6 @@ public class Trapezoid<T extends AbstractNumber<T>> {
        for (Point<T> p1: vertices) {
            for (Point<T> p2: t2.vertices) {
                T currDistSq = p1.distanceSq(p2);
-               System.out.printf("Distance between %s and %s is: %s\n", p1.toString(), p2.toString(), currDistSq.toString());
                if (maxDistSq == null || currDistSq.compareTo(maxDistSq) > 0) {
                    maxDistSq = currDistSq;
                }

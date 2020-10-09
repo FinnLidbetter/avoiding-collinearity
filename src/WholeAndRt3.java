@@ -274,4 +274,9 @@ public class WholeAndRt3 extends AbstractNumber<WholeAndRt3> {
     public int compareToZero() {
         return this.compareTo(ZERO);
     }
+
+    @Override
+    public double toDouble() {
+        return ones + Math.sqrt(3) * rt3;
+    }
 }

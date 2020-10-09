@@ -81,6 +81,11 @@ public class WholeNumber extends AbstractNumber<WholeNumber> {
     }
 
     @Override
+    public double toDouble() {
+        return (double) value;
+    }
+
+    @Override
     public String toString() {
         return ""+value;
     }
