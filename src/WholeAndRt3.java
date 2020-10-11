@@ -14,8 +14,6 @@ public class WholeAndRt3 extends AbstractNumber<WholeAndRt3> {
     private static final long RT3_UNDER_APPROX_NUMERATOR = 265;
     private static final long RT3_UNDER_APPROX_DENOMINATOR = 153;
     private static final long RT = 3;
-    public static final WholeAndRt3 ONE = new WholeAndRt3(1, 0);
-    public static final WholeAndRt3 MINUS_ONE = new WholeAndRt3(-1, 0);
     public static final WholeAndRt3 ZERO = new WholeAndRt3(0, 0);
 
     long ones;
@@ -174,7 +172,7 @@ public class WholeAndRt3 extends AbstractNumber<WholeAndRt3> {
     @Override
     public WholeAndRt3 commonDivisor(WholeAndRt3 m2) {
         if (this.equals(ZERO) && m2.equals(ZERO))
-            return ONE;
+            return one();
        return new WholeAndRt3(CommonMath.gcd(
                CommonMath.gcd(ones, rt3),
                CommonMath.gcd(m2.ones, m2.rt3)), 0);
@@ -278,5 +276,34 @@ public class WholeAndRt3 extends AbstractNumber<WholeAndRt3> {
     @Override
     public double toDouble() {
         return ones + Math.sqrt(3) * rt3;
+    }
+
+
+    public WholeAndRt3 one() {
+        return new WholeAndRt3(1, 0);
+    }
+    public WholeAndRt3 two() {
+        return new WholeAndRt3(2, 0);
+    }
+    public WholeAndRt3 three() {
+        return new WholeAndRt3(3, 0);
+    }
+    public WholeAndRt3 four() {
+        return new WholeAndRt3(4, 0);
+    }
+    public WholeAndRt3 five() {
+        return new WholeAndRt3(5, 0);
+    }
+    public WholeAndRt3 six() {
+        return new WholeAndRt3(6, 0);
+    }
+    public WholeAndRt3 rt3() {
+        return new WholeAndRt3(0, 1);
+    }
+    public WholeAndRt3 twoRt3() {
+        return new WholeAndRt3(0, 2);
+    }
+    public WholeAndRt3 threeRt3() {
+        return new WholeAndRt3(0, 3);
     }
 }

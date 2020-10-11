@@ -109,4 +109,32 @@ public class Fraction<T extends AbstractNumber<T>> extends AbstractNumber<Fracti
     public String toString() {
         return String.format("%s / %s", num.toString(), denom.toString());
     }
+
+    public Fraction<T> one() {
+        return new Fraction<>(num.one(), num.one());
+    }
+    public Fraction<T> two() {
+        return new Fraction<>(num.two(), num.one());
+    }
+    public Fraction<T> three() {
+        return new Fraction<>(num.three(), num.one());
+    }
+    public Fraction<T> four() {
+        return new Fraction<>(num.four(), num.one());
+    }
+    public Fraction<T> five() {
+        return new Fraction<>(num.five(), num.one());
+    }
+    public Fraction<T> six() {
+        return new Fraction<>(num.six(), num.one());
+    }
+    public Fraction<T> rt3() {
+        return new Fraction<>(num.rt3(), num.one());
+    }
+    public Fraction<T> twoRt3() {
+        return new Fraction<>(num.twoRt3(), num.one());
+    }
+    public Fraction<T> threeRt3() {
+        return new Fraction<>(num.threeRt3(), num.one());
+    }
 }

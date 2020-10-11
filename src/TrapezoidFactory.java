@@ -1,23 +1,5 @@
-public class TrapezoidFactory {
+public class TrapezoidFactory<T extends AbstractNumber<T>> {
     private static final PointFactory pf = new PointFactory();
-    private static final WholeAndRt3 rt3 = new WholeAndRt3(0, 1);
-    private static final WholeAndRt3 twoRt3 = new WholeAndRt3(0, 2);
-    private static final WholeAndRt3 threeRt3 = new WholeAndRt3(0, 3);
-    private static final WholeAndRt3 one = new WholeAndRt3(1, 0);
-    private static final WholeAndRt3 two = new WholeAndRt3(2, 0);
-    private static final WholeAndRt3 three = new WholeAndRt3(3, 0);
-    private static final WholeAndRt3 four = new WholeAndRt3(4, 0);
-    private static final WholeAndRt3 five = new WholeAndRt3(5, 0);
-    private static final WholeAndRt3 six = new WholeAndRt3(6, 0);
-    private static final Fraction<WholeAndRt3> fracRt3 = new Fraction<>(rt3, one);
-    private static final Fraction<WholeAndRt3> fracTwoRt3 = new Fraction<>(twoRt3, one);
-    private static final Fraction<WholeAndRt3> fracThreeRt3 = new Fraction<>(threeRt3, one);
-    private static final Fraction<WholeAndRt3> fracOne = new Fraction<>(one, one);
-    private static final Fraction<WholeAndRt3> fracTwo = new Fraction<>(two, one);
-    private static final Fraction<WholeAndRt3> fracThree = new Fraction<>(three, one);
-    private static final Fraction<WholeAndRt3> fracFour = new Fraction<>(four, one);
-    private static final Fraction<WholeAndRt3> fracFive = new Fraction<>(five, one);
-    private static final Fraction<WholeAndRt3> fracSix = new Fraction<>(six, one);
 
     public Trapezoid<Fraction<WholeNumber>> makeFractionTrapezoid(
             long x1, long y1, long x2, long y2,
@@ -45,8 +27,8 @@ public class TrapezoidFactory {
      *                         \/      \_\    \/      /_/
      *                          .         .   ,      ,
      */
-    public Trapezoid<Fraction<WholeAndRt3>> makeSequenceTrapezoid(
-            int type, Point<Fraction<WholeAndRt3>> startPoint) {
+    public Trapezoid<T> makeSequenceTrapezoid(
+            int type, Point<T> startPoint) {
         switch (type) {
             case 0:
                 return makeTrapezoidType0(startPoint);
@@ -64,74 +46,74 @@ public class TrapezoidFactory {
                 throw new IllegalArgumentException("Unknown trapezoid type.");
         }
     }
-    private Trapezoid<Fraction<WholeAndRt3>> makeTrapezoidType0(
-            Point<Fraction<WholeAndRt3>> startPoint) {
-        Point<Fraction<WholeAndRt3>> pt0 = startPoint;
-        Point<Fraction<WholeAndRt3>> pt1 = new Point<>(
-            startPoint.x.add(fracOne), startPoint.y.add(fracRt3));
-        Point<Fraction<WholeAndRt3>> pt2 = new Point<>(
-            startPoint.x.add(fracFive), startPoint.y.add(fracRt3));
-        Point<Fraction<WholeAndRt3>> pt3 = new Point<>(
-            startPoint.y.add(fracSix), startPoint.y);
+    private Trapezoid<T> makeTrapezoidType0(Point<T> startPoint) {
+        T tVal = startPoint.x;
+        Point<T> pt0 = startPoint;
+        Point<T> pt1 = new Point<>(
+            startPoint.x.add(tVal.one()), startPoint.y.add(tVal.rt3()));
+        Point<T> pt2 = new Point<>(
+            startPoint.x.add(tVal.five()), startPoint.y.add(tVal.rt3()));
+        Point<T> pt3 = new Point<>(
+            startPoint.y.add(tVal.six()), startPoint.y);
         return new Trapezoid<>(pt0, pt1, pt2, pt3);
     }
-    private Trapezoid<Fraction<WholeAndRt3>> makeTrapezoidType1(
-            Point<Fraction<WholeAndRt3>> startPoint) {
-        Point<Fraction<WholeAndRt3>> pt0 = startPoint;
-        Point<Fraction<WholeAndRt3>> pt1 = new Point<>(
-            startPoint.x.add(fracOne), startPoint.y.subtract(fracRt3));
-        Point<Fraction<WholeAndRt3>> pt2 = new Point<>(
-            startPoint.x.add(fracFive), startPoint.y.subtract(fracRt3));
-        Point<Fraction<WholeAndRt3>> pt3 = new Point<>(
-            startPoint.x.add(fracSix), startPoint.y);
-        return new Trapezoid<>(pt0, pt1, pt2, pt3);
-    }
-
-    private Trapezoid<Fraction<WholeAndRt3>> makeTrapezoidType2(
-            Point<Fraction<WholeAndRt3>> startPoint) {
-        Point<Fraction<WholeAndRt3>> pt0 = startPoint;
-        Point<Fraction<WholeAndRt3>> pt1 = new Point<>(
-            startPoint.x.add(fracOne), startPoint.y.add(fracRt3));
-        Point<Fraction<WholeAndRt3>> pt2 = new Point<>(
-            startPoint.x.subtract(fracTwo), startPoint.y.add(fracThreeRt3));
-        Point<Fraction<WholeAndRt3>> pt3 = new Point<>(
-            startPoint.x.subtract(fracThree), startPoint.y.add(fracThreeRt3));
+    private Trapezoid<T> makeTrapezoidType1(Point<T> startPoint) {
+        T tVal = startPoint.x;
+        Point<T> pt0 = startPoint;
+        Point<T> pt1 = new Point<>(
+            startPoint.x.add(tVal.one()), startPoint.y.subtract(tVal.rt3()));
+        Point<T> pt2 = new Point<>(
+            startPoint.x.add(tVal.five()), startPoint.y.subtract(tVal.rt3()));
+        Point<T> pt3 = new Point<>(
+            startPoint.x.add(tVal.six()), startPoint.y);
         return new Trapezoid<>(pt0, pt1, pt2, pt3);
     }
 
-    private Trapezoid<Fraction<WholeAndRt3>> makeTrapezoidType3(
-            Point<Fraction<WholeAndRt3>> startPoint) {
-        Point<Fraction<WholeAndRt3>> pt0 = startPoint;
-        Point<Fraction<WholeAndRt3>> pt1 = new Point<>(
-            startPoint.x.subtract(fracTwo), startPoint.y);
-        Point<Fraction<WholeAndRt3>> pt2 = new Point<>(
-            startPoint.x.subtract(fracFour), startPoint.y.add(fracTwoRt3));
-        Point<Fraction<WholeAndRt3>> pt3 = new Point<>(
-            startPoint.x.subtract(fracThree), startPoint.y.add(fracThreeRt3));
+    private Trapezoid<T> makeTrapezoidType2(Point<T> startPoint) {
+        T tVal = startPoint.x;
+        Point<T> pt0 = startPoint;
+        Point<T> pt1 = new Point<>(
+            startPoint.x.add(tVal.one()), startPoint.y.add(tVal.rt3()));
+        Point<T> pt2 = new Point<>(
+            startPoint.x.subtract(tVal.two()), startPoint.y.add(tVal.threeRt3()));
+        Point<T> pt3 = new Point<>(
+            startPoint.x.subtract(tVal.three()), startPoint.y.add(tVal.threeRt3()));
         return new Trapezoid<>(pt0, pt1, pt2, pt3);
     }
 
-    private Trapezoid<Fraction<WholeAndRt3>> makeTrapezoidType4(
-            Point<Fraction<WholeAndRt3>> startPoint) {
-        Point<Fraction<WholeAndRt3>> pt0 = startPoint;
-        Point<Fraction<WholeAndRt3>> pt1 = new Point<>(
-            startPoint.x.subtract(fracTwo), startPoint.y);
-        Point<Fraction<WholeAndRt3>> pt2 = new Point<>(
-            startPoint.x.subtract(fracFour), startPoint.y.subtract(fracTwoRt3));
-        Point<Fraction<WholeAndRt3>> pt3 = new Point<>(
-            startPoint.x.subtract(fracThree), startPoint.y.subtract(fracThreeRt3));
+    private Trapezoid<T> makeTrapezoidType3(Point<T> startPoint) {
+        T tVal = startPoint.x;
+        Point<T> pt0 = startPoint;
+        Point<T> pt1 = new Point<>(
+            startPoint.x.subtract(tVal.two()), startPoint.y);
+        Point<T> pt2 = new Point<>(
+            startPoint.x.subtract(tVal.four()), startPoint.y.add(tVal.twoRt3()));
+        Point<T> pt3 = new Point<>(
+            startPoint.x.subtract(tVal.three()), startPoint.y.add(tVal.threeRt3()));
         return new Trapezoid<>(pt0, pt1, pt2, pt3);
     }
 
-    private Trapezoid<Fraction<WholeAndRt3>> makeTrapezoidType5(
-            Point<Fraction<WholeAndRt3>> startPoint) {
-        Point<Fraction<WholeAndRt3>> pt0 = startPoint;
-        Point<Fraction<WholeAndRt3>> pt1 = new Point<>(
-            startPoint.x.add(fracOne), startPoint.y.subtract(fracRt3));
-        Point<Fraction<WholeAndRt3>> pt2 = new Point<>(
-            startPoint.x.subtract(fracOne), startPoint.y.subtract(fracThreeRt3));
-        Point<Fraction<WholeAndRt3>> pt3 = new Point<>(
-            startPoint.x.subtract(fracThree), startPoint.y.subtract(fracThreeRt3));
+    private Trapezoid<T> makeTrapezoidType4(Point<T> startPoint) {
+        T tVal = startPoint.x;
+        Point<T> pt0 = startPoint;
+        Point<T> pt1 = new Point<>(
+            startPoint.x.subtract(tVal.two()), startPoint.y);
+        Point<T> pt2 = new Point<>(
+            startPoint.x.subtract(tVal.four()), startPoint.y.subtract(tVal.twoRt3()));
+        Point<T> pt3 = new Point<>(
+            startPoint.x.subtract(tVal.three()), startPoint.y.subtract(tVal.threeRt3()));
+        return new Trapezoid<>(pt0, pt1, pt2, pt3);
+    }
+
+    private Trapezoid<T> makeTrapezoidType5(Point<T> startPoint) {
+        T tVal = startPoint.x;
+        Point<T> pt0 = startPoint;
+        Point<T> pt1 = new Point<>(
+            startPoint.x.add(tVal.one()), startPoint.y.subtract(tVal.rt3()));
+        Point<T> pt2 = new Point<>(
+            startPoint.x.subtract(tVal.one()), startPoint.y.subtract(tVal.threeRt3()));
+        Point<T> pt3 = new Point<>(
+            startPoint.x.subtract(tVal.three()), startPoint.y.subtract(tVal.threeRt3()));
         return new Trapezoid<>(pt0, pt1, pt2, pt3);
     }
 }

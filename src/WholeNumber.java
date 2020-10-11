@@ -89,4 +89,52 @@ public class WholeNumber extends AbstractNumber<WholeNumber> {
     public String toString() {
         return ""+value;
     }
+
+    public WholeNumber one() {
+        return new WholeNumber(1);
+    }
+    public WholeNumber two() {
+        return one().add(one());
+    }
+    public WholeNumber three() {
+        return two().add(one());
+    }
+    public WholeNumber four() {
+        return two().add(two());
+    }
+    public WholeNumber five() {
+        return three().add(two());
+    }
+    public WholeNumber six() {
+        return three().add(three());
+    }
+
+    /**
+     * Return a value representing sqrt(3).
+     *
+     * For the WholeNumber class this is undefined, but for the purpose of
+     * the trapezoid sequences the y coordinate is always a multiple of sqrt(3)
+     * and the x coordinate has no sqrt(3) terms. So for these purposes we
+     * just represent multiples of sqrt(3) the same way as whole numbers.
+     * @return a representation of sqrt(3).
+     */
+    public WholeNumber rt3() {
+        return new WholeNumber(1);
+    }
+
+    /**
+     * Return a value representing 2 * sqrt(3).
+     * @return a representation of 2 * sqrt(3).
+     */
+    public WholeNumber twoRt3() {
+        return rt3().add(rt3());
+    }
+
+    /**
+     * Return a value representing 3 * sqrt(3).
+     * @return a representation of 3 * sqrt(3).
+     */
+    public WholeNumber threeRt3() {
+        return twoRt3().add(rt3());
+    }
 }
