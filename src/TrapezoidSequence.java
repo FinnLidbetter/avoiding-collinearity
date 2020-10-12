@@ -32,14 +32,16 @@ public class TrapezoidSequence<T extends AbstractNumber<T>> {
 
     private void buildSequence(int nTrapezoids) {
         ArrayList<Integer> symbolSequence = new ArrayList<>(nTrapezoids);
-        symbolSequence.add(0);
         int index = 0;
         while (symbolSequence.size() < nTrapezoids) {
-            int currMorphismRule = symbolSequence.get(index);
+            int currMorphismRule = 0;
+            if (index != 0)
+                currMorphismRule = symbolSequence.get(index);
             int ruleIndex = 0;
             while (symbolSequence.size() < nTrapezoids
                     && ruleIndex < morphism[currMorphismRule].length) {
                 symbolSequence.add(morphism[currMorphismRule][ruleIndex]);
+                ruleIndex++;
             }
             index++;
         }

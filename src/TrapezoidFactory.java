@@ -54,7 +54,7 @@ public class TrapezoidFactory<T extends AbstractNumber<T>> {
         Point<T> pt2 = new Point<>(
             startPoint.x.add(tVal.five()), startPoint.y.add(tVal.rt3()));
         Point<T> pt3 = new Point<>(
-            startPoint.y.add(tVal.six()), startPoint.y);
+            startPoint.x.add(tVal.six()), startPoint.y);
         return new Trapezoid<>(pt0, pt1, pt2, pt3);
     }
     private Trapezoid<T> makeTrapezoidType1(Point<T> startPoint) {
@@ -75,7 +75,7 @@ public class TrapezoidFactory<T extends AbstractNumber<T>> {
         Point<T> pt1 = new Point<>(
             startPoint.x.add(tVal.one()), startPoint.y.add(tVal.rt3()));
         Point<T> pt2 = new Point<>(
-            startPoint.x.subtract(tVal.two()), startPoint.y.add(tVal.threeRt3()));
+            startPoint.x.subtract(tVal.one()), startPoint.y.add(tVal.threeRt3()));
         Point<T> pt3 = new Point<>(
             startPoint.x.subtract(tVal.three()), startPoint.y.add(tVal.threeRt3()));
         return new Trapezoid<>(pt0, pt1, pt2, pt3);
