@@ -16,4 +16,12 @@ public class Point<T extends AbstractNumber<T>> {
     public String toString() {
         return String.format("(%s, %s)", x.toString(), y.toString());
     }
+
+    public boolean equals(Object o) {
+        if (o instanceof Point) {
+            Point<?> p2 = (Point<?>) o;
+            return x.equals(p2.x) && y.equals(p2.y);
+        }
+        return false;
+    }
 }
