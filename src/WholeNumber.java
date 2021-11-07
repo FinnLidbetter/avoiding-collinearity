@@ -61,6 +61,10 @@ public class WholeNumber extends AbstractNumber<WholeNumber> {
         return new WholeNumber(-value);
     }
 
+    public WholeNumber whole(long wholeValue) {
+        return new WholeNumber(wholeValue);
+    }
+
     @Override
     public int compareTo(WholeNumber n2) {
         return Long.compare(value, n2.value);

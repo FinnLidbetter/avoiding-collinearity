@@ -8,7 +8,7 @@
  * threeRt3(), using the implementations of one() and rt3().
  * @param <T>
  */
-public abstract class AbstractNumber<T> implements Comparable<T>, Arithmetic<T>, TrapezoidDimensions<T> {
+public abstract class AbstractNumber<T> implements Comparable<T>, Arithmetic<T>, TrapezoidDimensions<T>, Wholes<T> {
     public abstract int compareToZero();
     public abstract double toDouble();
     public abstract String toString();

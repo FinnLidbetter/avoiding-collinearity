@@ -22,6 +22,7 @@ public class Main {
             String[] commandArgs = line.split(" ");
             if (commandArgs.length < 2) {
                 System.out.println("Not enough arguments");
+                line = br.readLine();
                 continue;
             }
             String command = commandArgs[0];
@@ -32,21 +33,21 @@ public class Main {
                         System.out.println("At least three arguments are needed for draw.");
                         break;
                     }
-                    String path = commandArgs[2];
+                    String outputPath = commandArgs[2];
                     switch (numberSystemStr) {
                         case "double":
                             if (doubleRepTrapezoidSequence == null) {
                                 System.out.println("The sequence must be built before it can be drawn.");
                                 break;
                             }
-                            drawDoubleRepSequence(path);
+                            drawDoubleRepSequence(outputPath);
                             break;
                         case "wholeAndRt3":
                             if (wholeAndRt3TrapezoidSequence == null) {
                                 System.out.println("The sequence must be built before it can be drawn.");
                                 break;
                             }
-                            drawWholeAndRt3Sequence(path);
+                            drawWholeAndRt3Sequence(outputPath);
                             break;
                         default:
                             System.out.println("Unknown number system.");
@@ -54,7 +55,7 @@ public class Main {
                     break;
                 case "build":
                     if (commandArgs.length < 3) {
-                        System.out.println("At least three arguments are needed for build.");
+                        System.out.println("At least two arguments are needed for build.");
                         break;
                     }
                     int nTrapezoids = 0;
@@ -79,6 +80,49 @@ public class Main {
                             break;
                         default:
                             System.out.println("Unknown number system.");
+                    }
+                    break;
+                case "assertBoundedDistanceRatio":
+                    if (commandArgs.length != 7 && commandArgs.length != 8) {
+                        System.out.println("The assertBoundedDistanceRatio command takes only 6 or 7 arguments.");
+                        break;
+                    }
+                    int gapMin;
+                    int gapMax;
+                    int startIndex;
+                    int endIndex;
+                    try {
+                        gapMin = Integer.parseInt(commandArgs[2]);
+                        gapMax = Integer.parseInt(commandArgs[3]);
+                        startIndex = Integer.parseInt(commandArgs[4]);
+                        endIndex = Integer.parseInt(commandArgs[5]);
+                    } catch(NumberFormatException e) {
+                        System.out.println("The first and second arguments to 'assertBoundedDistanceRatio' must be integers.");
+                        break;
+                    }
+                    numberSystemStr = commandArgs[1];
+                    switch (numberSystemStr) {
+                        case "double":
+                            DoubleRep doubleUpperBound = new DoubleRep(Double.parseDouble(commandArgs[6]));
+                            boolean result = doubleRepTrapezoidSequence.assertBoundedRatio(gapMin, gapMax, startIndex, endIndex, doubleUpperBound);
+                            if (result) {
+                                System.out.println("SUCCESS! All distance ratios are within the bound!");
+                            } else {
+                                System.out.println("FAILURE! Some distance ratio exceeds the bound!");
+                            }
+                            break;
+                        case "wholeAndRt3":
+                            WholeAndRt3 wrt3UpperBound = new WholeAndRt3(Integer.parseInt(commandArgs[6]), Integer.parseInt(commandArgs[7]));
+                            Fraction<WholeAndRt3> fracUpperBound = new Fraction<>(wrt3UpperBound, wrt3UpperBound.one());
+                            boolean wrt3Result = wholeAndRt3TrapezoidSequence.assertBoundedRatio(gapMin, gapMax, startIndex, endIndex, fracUpperBound);
+                            if (wrt3Result) {
+                                System.out.println("SUCCESS! All distance ratios are within the bound!");
+                            } else {
+                                System.out.println("FAILURE! Some distance ratio exceeds the bound!");
+                            }
+                            break;
+                        default:
+                            System.out.println("Unknown number system");
                     }
                     break;
                 case "quit":

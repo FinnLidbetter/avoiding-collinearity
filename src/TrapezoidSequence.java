@@ -167,18 +167,51 @@ public class TrapezoidSequence<T extends AbstractNumber<T>> {
         return wordSet.size();
     }
 
-    public T maximumDistanceRatio(int minIndex, int maxIndex, int minGap, int maxGap) {
-        T maxRatio = maximumDistanceRatio(minIndex, maxIndex, minGap);
-        for (int gap=minGap + 1; gap <= maxGap; gap++) {
-            T distanceRatio = maximumDistanceRatio(minIndex, maxIndex, gap);
-            if (maxRatio.compareTo(distanceRatio) < 0) {
-                maxRatio = distanceRatio;
+    public T loDistanceSq(int minIndex, int maxIndex, int gap) {
+        T minMinDistanceSq = null;
+        for (int index=minIndex; index<=maxIndex; index++) {
+            T minDistanceSq1 = getMinDistanceSq(index, index + gap);
+            T minDistanceSq2 = getMinDistanceSq(index, index + gap + 1);
+            if (minMinDistanceSq == null || minDistanceSq1.compareTo(minMinDistanceSq) < 0) {
+                minMinDistanceSq = minDistanceSq1;
+            }
+            if (minDistanceSq2.compareTo(minMinDistanceSq) < 0){
+                minMinDistanceSq = minDistanceSq2;
             }
         }
-        return maxRatio;
+        return minMinDistanceSq;
+    }
+    public T hiDistanceSq(int minIndex, int maxIndex, int gap) {
+        T maxMaxDistanceSq = null;
+        for (int index=minIndex; index<=maxIndex; index++) {
+            T maxDistanceSq1 = getMaxDistanceSq(index, index + gap);
+            T maxDistanceSq2 = getMaxDistanceSq(index, index + gap + 1);
+            if (maxMaxDistanceSq == null || maxDistanceSq1.compareTo(maxMaxDistanceSq) > 0) {
+                maxMaxDistanceSq = maxDistanceSq1;
+            }
+            if (maxDistanceSq2.compareTo(maxMaxDistanceSq) > 0) {
+                maxMaxDistanceSq = maxDistanceSq2;
+            }
+        }
+        return maxMaxDistanceSq;
     }
 
-    public T maximumDistanceRatio(int minIndex, int maxIndex, int gap) {
-        T maxDistanceSq =
+    public boolean assertBoundedRatio(int gapMin, int gapMax, int startIndex, int endIndex, T baseUpperBound) {
+        for (int cGap=gapMin; cGap<=gapMax; cGap++) {
+            T loDistanceSq = loDistanceSq(startIndex, endIndex, cGap);
+            for (int dGap=gapMin; dGap<=gapMax; dGap++) {
+                T hiDistanceSq = hiDistanceSq(startIndex, endIndex, dGap);
+                // Want to assert ((c+1)*sqrt(hiDistanceSq(d))) / (d*sqrt(loDistanceSq(c))) < baseUpperBound
+                // All quantities are greater than 0, so evaluate:
+                //    hiDistanceSq(d) / loDistanceSq(c) < ((d * baseUpperBound) / (c+1))^2
+                T lhs = hiDistanceSq.divide(loDistanceSq);
+                T rhsSqrt = baseUpperBound.multiply(baseUpperBound.whole(dGap)).divide(baseUpperBound.whole(cGap + 1));
+                T rhs = rhsSqrt.multiply(rhsSqrt);
+                if (lhs.compareTo(rhs) >= 0) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 }

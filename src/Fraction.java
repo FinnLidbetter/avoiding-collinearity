@@ -52,6 +52,10 @@ public class Fraction<T extends AbstractNumber<T>> extends AbstractNumber<Fracti
         return result;
     }
 
+    public Fraction<T> whole(long value) {
+        return new Fraction<T>(num.whole(value), num.one());
+    }
+
     public void normalize() {
         if (denom.compareToZero() < 0) {
             num = num.additiveInverse();

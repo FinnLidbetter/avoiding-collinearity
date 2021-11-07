@@ -9,11 +9,12 @@ public class WholeAndRt3 extends AbstractNumber<WholeAndRt3> {
                     "sufficiently precise to compare %s and %s.";
     private static final String DIVISION_ERROR =
             "Non-integer division of %s by %s";
-    private static final long RT3_OVER_APPROX_NUMERATOR = 1351;
-    private static final long RT3_OVER_APPROX_DENOMINATOR = 780;
-    private static final long RT3_UNDER_APPROX_NUMERATOR = 265;
-    private static final long RT3_UNDER_APPROX_DENOMINATOR = 153;
+    private static final long RT3_OVER_APPROX_NUMERATOR = 262087;
+    private static final long RT3_OVER_APPROX_DENOMINATOR = 151316;
+    private static final long RT3_UNDER_APPROX_NUMERATOR = 716035;
+    private static final long RT3_UNDER_APPROX_DENOMINATOR = 413403;
     private static final long RT = 3;
+    private static final int SQRT_APPROXIMATION_ITERATIONS = 10;
     public static final WholeAndRt3 ZERO = new WholeAndRt3(0, 0);
 
     long ones;
@@ -21,6 +22,10 @@ public class WholeAndRt3 extends AbstractNumber<WholeAndRt3> {
     public WholeAndRt3(long ones, long rt3) {
         this.ones = ones;
         this.rt3 = rt3;
+    }
+
+    public WholeAndRt3 whole(long wholeValue) {
+        return new WholeAndRt3(wholeValue, 0);
     }
 
     @Override
@@ -124,7 +129,7 @@ public class WholeAndRt3 extends AbstractNumber<WholeAndRt3> {
     }
 
     /**
-     * Throw an exception if the computation with overflow or underflow.
+     * Throw an exception if the computation will overflow or underflow.
      *
      * The computation being checked is:
      *  ones * divisor.ones - RT * rt3 * divisor.rt3
@@ -142,7 +147,7 @@ public class WholeAndRt3 extends AbstractNumber<WholeAndRt3> {
             throw new RuntimeException("Subtraction overflow or underflow");
     }
     /**
-     * Throw an exception if the computation with overflow or underflow.
+     * Throw an exception if the computation will overflow or underflow.
      *
      * The computation being checked is:
      *  rt3 * divisor.ones - ones * divisor.rt3
@@ -278,6 +283,20 @@ public class WholeAndRt3 extends AbstractNumber<WholeAndRt3> {
         return ones + Math.sqrt(3) * rt3;
     }
 
+    public Fraction<WholeNumber> lower() {
+        Fraction<WholeNumber> rt3Part = new Fraction<WholeNumber>(
+                new WholeNumber(rt3 * RT3_UNDER_APPROX_NUMERATOR),
+                new WholeNumber(RT3_UNDER_APPROX_DENOMINATOR)
+        );
+        return rt3Part.add(new Fraction<WholeNumber>(new WholeNumber(ones), WholeNumber.ONE));
+    }
+    public Fraction<WholeNumber> upper() {
+        Fraction<WholeNumber> rt3Part = new Fraction<WholeNumber>(
+                new WholeNumber(rt3 * RT3_OVER_APPROX_NUMERATOR),
+                new WholeNumber(RT3_OVER_APPROX_DENOMINATOR)
+        );
+        return rt3Part.add(new Fraction<WholeNumber>(new WholeNumber(ones), WholeNumber.ONE));
+    }
 
     public WholeAndRt3 one() {
         return new WholeAndRt3(1, 0);

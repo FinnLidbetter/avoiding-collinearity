@@ -27,6 +27,10 @@ public class DoubleRep extends AbstractNumber<DoubleRep> {
         return new DoubleRep(value / n2.value);
     }
 
+    public DoubleRep whole(long wholeValue) {
+        return new DoubleRep(wholeValue);
+    }
+
     @Override
     public DoubleRep commonDivisor(DoubleRep n2) {
         if (value == (long) value && n2.value == (long) n2.value) {

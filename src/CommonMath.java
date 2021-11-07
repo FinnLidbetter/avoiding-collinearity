@@ -49,4 +49,16 @@ public class CommonMath {
             return Long.MIN_VALUE / b > a;
         return Long.MIN_VALUE / a > b;
     }
+
+    public static Fraction<WholeNumber> approximateRt3(int iterations) {
+        Fraction<WholeNumber> approximation = new Fraction<>(new WholeNumber(2), new WholeNumber(1));
+        for (int i=0; i<iterations; i++) {
+            approximation = nextRt3Approximation(approximation);
+        }
+        return approximation;
+    }
+
+    public static Fraction<WholeNumber> nextRt3Approximation(Fraction<WholeNumber> frac) {
+        return frac.add(frac.one()).reciprocal().multiply(frac.two()).add(frac.one());
+    }
 }

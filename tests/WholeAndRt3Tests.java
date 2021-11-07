@@ -359,4 +359,10 @@ public class WholeAndRt3Tests {
         Assert.assertThrows(RuntimeException.class,
                 () -> {  minValue.additiveInverse(); });
     }
+
+    @Test
+    public void testWholeInstantiation() {
+        WholeAndRt3 base = new WholeAndRt3(1,2);
+        Assert.assertEquals(base.whole(7), new WholeAndRt3(7,0));
+    }
 }
