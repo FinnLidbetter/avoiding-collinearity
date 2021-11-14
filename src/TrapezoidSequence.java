@@ -146,6 +146,23 @@ public class TrapezoidSequence<T extends AbstractNumber<T>> {
         return maxCollinear;
     }
 
+    public int fastCountCollinear(int minIndex, int maxIndex, int maxIndexDiff) {
+        // Iterate over all pivot vertices in trapezoids between minIndex and maxIndex,
+        for (int pivotTrapezoidIndex=minIndex; pivotTrapezoidIndex<=maxIndex; pivotTrapezoidIndex++) {
+            for (Point<T> pivotVertex: trapezoids.get(pivotTrapezoidIndex).vertices) {
+                // For each other trapezoid sort the 4 vertices relative to the pivot and identify enter and exit vertices
+
+
+                // Sort all enter and exit vertices relative to the pivot
+                // Initialize Fenwick tree with trapezoids that straddle the 0 line relative to the pivot
+                // Iterate over enter and exit vertices and insert trapezoid index into a fenwick tree
+                // Check the count of inserted vertices `maxIndexDiff` either side of the inserted index
+                // Record a new maximum if either of those counts is greater than the previous maximum
+            }
+        }
+        return 0;
+    }
+
     public int countSubwords(int length) {
         if (length >= symbolSequence.size())
             return 0;
@@ -167,7 +184,7 @@ public class TrapezoidSequence<T extends AbstractNumber<T>> {
         return wordSet.size();
     }
 
-    public T loDistanceSq(int minIndex, int maxIndex, int gap) {
+    private T loDistanceSq(int minIndex, int maxIndex, int gap) {
         T minMinDistanceSq = null;
         for (int index=minIndex; index<=maxIndex; index++) {
             T minDistanceSq1 = getMinDistanceSq(index, index + gap);
@@ -181,7 +198,7 @@ public class TrapezoidSequence<T extends AbstractNumber<T>> {
         }
         return minMinDistanceSq;
     }
-    public T hiDistanceSq(int minIndex, int maxIndex, int gap) {
+    private T hiDistanceSq(int minIndex, int maxIndex, int gap) {
         T maxMaxDistanceSq = null;
         for (int index=minIndex; index<=maxIndex; index++) {
             T maxDistanceSq1 = getMaxDistanceSq(index, index + gap);

@@ -125,6 +125,32 @@ public class Main {
                             System.out.println("Unknown number system");
                     }
                     break;
+                case "countCollinear":
+                    numberSystemStr = commandArgs[1];
+                    if (commandArgs.length != 5) {
+                        System.out.println("Exactly 4 arguments are needed for countCollinear.");
+                        break;
+                    }
+                    int collinearIndexMin = 0;
+                    int collinearIndexMax = 0;
+                    int collinearGapMax = 1;
+                    try {
+                        collinearIndexMin = Integer.parseInt(commandArgs[2]);
+                        collinearIndexMax = Integer.parseInt(commandArgs[3]);
+                        collinearGapMax = Integer.parseInt(commandArgs[4]);
+                    } catch (NumberFormatException e) {
+                        System.out.println("The second, third, and fourth arguments must be integers.");
+                        break;
+                    }
+                    switch (numberSystemStr) {
+                        case "wholeAndRt3":
+                            int collinearMax = wholeAndRt3TrapezoidSequence.countCollinear(collinearIndexMin, collinearIndexMax, collinearGapMax);
+                            System.out.println(String.format("There are %d collinear trapezoids.", collinearMax));
+                            break;
+                        default:
+                            System.out.println("Unknown number system for countCollinear command");
+                    }
+                    break;
                 case "quit":
                 case "exit":
                     done = true;
