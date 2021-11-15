@@ -22,7 +22,7 @@ public class TrapezoidFactory<T extends AbstractNumber<T>> {
      * The types are given below. The startPoints are marked by '.' these
      * will always be vertex 0 in the trapezoid and vertex 3 will always be
      * the vertex marked by ','
-     * The trapezoids have a base length (longest side) of 6.
+     * The trapezoids have a base length (the longest side) of 6.
      * The top edge has length 4, the two sides have length 2.
      *     Type 0   Type 1   Type 2  Type 3   Type 4  Type 5
      *      ___    .____,   ,__       ,         __.      .
@@ -33,91 +33,78 @@ public class TrapezoidFactory<T extends AbstractNumber<T>> {
      */
     public Trapezoid<T> makeSequenceTrapezoid(
             int type, Point<T> startPoint) {
-        switch (type) {
-            case 0:
-                return makeTrapezoidType0(startPoint);
-            case 1:
-                return makeTrapezoidType1(startPoint);
-            case 2:
-                return makeTrapezoidType2(startPoint);
-            case 3:
-                return makeTrapezoidType3(startPoint);
-            case 4:
-                return makeTrapezoidType4(startPoint);
-            case 5:
-                return makeTrapezoidType5(startPoint);
-            default:
-                throw new IllegalArgumentException("Unknown trapezoid type.");
-        }
+        return switch (type) {
+            case 0 -> makeTrapezoidType0(startPoint);
+            case 1 -> makeTrapezoidType1(startPoint);
+            case 2 -> makeTrapezoidType2(startPoint);
+            case 3 -> makeTrapezoidType3(startPoint);
+            case 4 -> makeTrapezoidType4(startPoint);
+            case 5 -> makeTrapezoidType5(startPoint);
+            default -> throw new IllegalArgumentException("Unknown trapezoid type.");
+        };
     }
     private Trapezoid<T> makeTrapezoidType0(Point<T> startPoint) {
         T tVal = startPoint.x;
-        Point<T> pt0 = startPoint;
         Point<T> pt1 = new Point<>(
             startPoint.x.add(tVal.one()), startPoint.y.add(tVal.rt3()));
         Point<T> pt2 = new Point<>(
             startPoint.x.add(tVal.five()), startPoint.y.add(tVal.rt3()));
         Point<T> pt3 = new Point<>(
             startPoint.x.add(tVal.six()), startPoint.y);
-        return new Trapezoid<>(pt0, pt1, pt2, pt3);
+        return new Trapezoid<>(startPoint, pt1, pt2, pt3);
     }
     private Trapezoid<T> makeTrapezoidType1(Point<T> startPoint) {
         T tVal = startPoint.x;
-        Point<T> pt0 = startPoint;
         Point<T> pt1 = new Point<>(
             startPoint.x.add(tVal.one()), startPoint.y.subtract(tVal.rt3()));
         Point<T> pt2 = new Point<>(
             startPoint.x.add(tVal.five()), startPoint.y.subtract(tVal.rt3()));
         Point<T> pt3 = new Point<>(
             startPoint.x.add(tVal.six()), startPoint.y);
-        return new Trapezoid<>(pt0, pt1, pt2, pt3);
+        return new Trapezoid<>(startPoint, pt1, pt2, pt3);
     }
 
     private Trapezoid<T> makeTrapezoidType2(Point<T> startPoint) {
         T tVal = startPoint.x;
-        Point<T> pt0 = startPoint;
         Point<T> pt1 = new Point<>(
             startPoint.x.add(tVal.one()), startPoint.y.add(tVal.rt3()));
         Point<T> pt2 = new Point<>(
             startPoint.x.subtract(tVal.one()), startPoint.y.add(tVal.threeRt3()));
         Point<T> pt3 = new Point<>(
             startPoint.x.subtract(tVal.three()), startPoint.y.add(tVal.threeRt3()));
-        return new Trapezoid<>(pt0, pt1, pt2, pt3);
+        return new Trapezoid<>(startPoint, pt1, pt2, pt3);
     }
 
     private Trapezoid<T> makeTrapezoidType3(Point<T> startPoint) {
         T tVal = startPoint.x;
-        Point<T> pt0 = startPoint;
         Point<T> pt1 = new Point<>(
             startPoint.x.subtract(tVal.two()), startPoint.y);
         Point<T> pt2 = new Point<>(
             startPoint.x.subtract(tVal.four()), startPoint.y.add(tVal.twoRt3()));
         Point<T> pt3 = new Point<>(
             startPoint.x.subtract(tVal.three()), startPoint.y.add(tVal.threeRt3()));
-        return new Trapezoid<>(pt0, pt1, pt2, pt3);
+        return new Trapezoid<>(startPoint, pt1, pt2, pt3);
     }
 
     private Trapezoid<T> makeTrapezoidType4(Point<T> startPoint) {
         T tVal = startPoint.x;
-        Point<T> pt0 = startPoint;
         Point<T> pt1 = new Point<>(
             startPoint.x.subtract(tVal.two()), startPoint.y);
         Point<T> pt2 = new Point<>(
             startPoint.x.subtract(tVal.four()), startPoint.y.subtract(tVal.twoRt3()));
         Point<T> pt3 = new Point<>(
             startPoint.x.subtract(tVal.three()), startPoint.y.subtract(tVal.threeRt3()));
-        return new Trapezoid<>(pt0, pt1, pt2, pt3);
+        return new Trapezoid<>(startPoint, pt1, pt2, pt3);
     }
 
     private Trapezoid<T> makeTrapezoidType5(Point<T> startPoint) {
         T tVal = startPoint.x;
-        Point<T> pt0 = startPoint;
         Point<T> pt1 = new Point<>(
             startPoint.x.add(tVal.one()), startPoint.y.subtract(tVal.rt3()));
         Point<T> pt2 = new Point<>(
             startPoint.x.subtract(tVal.one()), startPoint.y.subtract(tVal.threeRt3()));
         Point<T> pt3 = new Point<>(
             startPoint.x.subtract(tVal.three()), startPoint.y.subtract(tVal.threeRt3()));
-        return new Trapezoid<>(pt0, pt1, pt2, pt3);
+        return new Trapezoid<>(startPoint, pt1, pt2, pt3);
     }
 }

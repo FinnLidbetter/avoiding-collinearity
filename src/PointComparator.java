@@ -31,8 +31,8 @@ public class PointComparator<T extends AbstractNumber<T>> implements Comparator<
             // The point closest to the pivot is "less".
             return pivot.distanceSq(p1).compareTo(pivot.distanceSq(p2));
         }
-        Vector<T> v1 = new Vector<T>(pivot, p1);
-        Vector<T> v2 = new Vector<T>(pivot, p2);
+        Vector<T> v1 = new Vector<>(pivot, p1);
+        Vector<T> v2 = new Vector<>(pivot, p2);
         int side = v1.cross(v2).compareToZero();
         if (side == 0) {
             return pivot.distanceSq(p1).compareTo(pivot.distanceSq(p2));

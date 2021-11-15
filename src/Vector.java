@@ -35,8 +35,7 @@ public class Vector<T extends AbstractNumber<T>> {
         return new Vector<>(y, x.additiveInverse());
     }
     public boolean equals(Object other) {
-        if (other instanceof Vector<?>) {
-            Vector<?> v2 = (Vector<?>) other;
+        if (other instanceof Vector<?> v2) {
             return x.equals(v2.x) && y.equals(v2.y);
         }
         return false;

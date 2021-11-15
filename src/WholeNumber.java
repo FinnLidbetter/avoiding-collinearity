@@ -77,8 +77,7 @@ public class WholeNumber extends AbstractNumber<WholeNumber> {
 
     @Override
     public boolean equals(Object o) {
-        if (o instanceof WholeNumber) {
-            WholeNumber n2 = (WholeNumber) o;
+        if (o instanceof WholeNumber n2) {
             return value == n2.value;
         }
         return false;

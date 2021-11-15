@@ -44,13 +44,13 @@ public class DrawTrapezoids<T extends AbstractNumber<T>> extends JFrame {
         double yMin = bounds.get(1).toDouble();
         double xMax = bounds.get(2).toDouble();
         double yMax = bounds.get(3).toDouble();
-        double xOffset = border, yOffset = border;
+        double xOffset = border;
+        double yOffset = imageHeight - border;
         double xScalar = (imageWidth - 2 * border) / (xMax - xMin);
         double yScalar = (imageHeight - 2 * border) / (yMax - yMin);
         xScalar = Math.min(xScalar, yScalar);
         yScalar = Math.min(xScalar, yScalar);
         yScalar *= -1;
-        yOffset = imageHeight - border;
         for (Trapezoid<T> trap: trapezoidSequence.trapezoids) {
             for (LineSegment<T> line: trap.sides) {
                 int x1 = (int)(line.p1.x.toDouble() * xScalar + xOffset);

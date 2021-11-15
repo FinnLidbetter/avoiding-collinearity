@@ -18,8 +18,7 @@ public class Point<T extends AbstractNumber<T>> {
     }
 
     public boolean equals(Object o) {
-        if (o instanceof Point) {
-            Point<?> p2 = (Point<?>) o;
+        if (o instanceof Point<?> p2) {
             return x.equals(p2.x) && y.equals(p2.y);
         }
         return false;

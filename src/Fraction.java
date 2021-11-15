@@ -12,7 +12,7 @@ public class Fraction<T extends AbstractNumber<T>> extends AbstractNumber<Fracti
     }
 
     public Fraction<T> add(Fraction<T> f2) {
-        Fraction<T> result = new Fraction<T>(
+        Fraction<T> result = new Fraction<>(
                 num.multiply(f2.denom).add(f2.num.multiply(denom)),
                 denom.multiply(f2.denom));
         result.normalize();
@@ -20,13 +20,13 @@ public class Fraction<T extends AbstractNumber<T>> extends AbstractNumber<Fracti
     }
 
     public Fraction<T> additiveInverse() {
-        Fraction<T> result = new Fraction<T>(num.additiveInverse(), denom);
+        Fraction<T> result = new Fraction<>(num.additiveInverse(), denom);
         result.normalize();
         return result;
     }
 
     public Fraction<T> subtract(Fraction<T> f2) {
-        Fraction<T> result = new Fraction<T>(
+        Fraction<T> result = new Fraction<>(
                 num.multiply(f2.denom).subtract(f2.num.multiply(denom)),
                 denom.multiply(f2.denom));
         result.normalize();
@@ -34,7 +34,7 @@ public class Fraction<T extends AbstractNumber<T>> extends AbstractNumber<Fracti
     }
 
     public Fraction<T> multiply(Fraction<T> f2) {
-        Fraction<T> result = new Fraction<T>(
+        Fraction<T> result = new Fraction<>(
                 num.multiply(f2.num), denom.multiply(f2.denom));
         result.normalize();
         return result;
@@ -47,13 +47,13 @@ public class Fraction<T extends AbstractNumber<T>> extends AbstractNumber<Fracti
     }
 
     public Fraction<T> reciprocal() {
-        Fraction<T> result = new Fraction<T>(denom, num);
+        Fraction<T> result = new Fraction<>(denom, num);
         result.normalize();
         return result;
     }
 
     public Fraction<T> whole(long value) {
-        return new Fraction<T>(num.whole(value), num.one());
+        return new Fraction<>(num.whole(value), num.one());
     }
 
     public void normalize() {
@@ -95,8 +95,7 @@ public class Fraction<T extends AbstractNumber<T>> extends AbstractNumber<Fracti
 
     @Override
     public boolean equals(Object o) {
-        if (o instanceof Fraction<?>) {
-            Fraction<?> f2 = (Fraction<?>) o;
+        if (o instanceof Fraction<?> f2) {
             this.normalize();
             f2.normalize();
             return num.equals(f2.num) && denom.equals(f2.denom);

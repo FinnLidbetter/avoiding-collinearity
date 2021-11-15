@@ -211,7 +211,7 @@ public class WholeAndRt3 extends AbstractNumber<WholeAndRt3> {
                 < summedUnderApproxNumerator * RT3_OVER_APPROX_DENOMINATOR)
             return 1;
         throw new ArithmeticException(
-                String.format(PRECISION_ERROR, this.toString(), m2.toString()));
+                String.format(PRECISION_ERROR, this, m2));
     }
     private void checkLessThanOverflow(WholeAndRt3 m2) {
         if (CommonMath.multiplicationWillOverflow(ones, RT3_OVER_APPROX_DENOMINATOR)
@@ -267,9 +267,8 @@ public class WholeAndRt3 extends AbstractNumber<WholeAndRt3> {
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof WholeAndRt3))
+        if (!(o instanceof WholeAndRt3 value2))
             return false;
-        WholeAndRt3 value2 = (WholeAndRt3) o;
         return compareTo(value2) == 0;
     }
 
@@ -284,18 +283,18 @@ public class WholeAndRt3 extends AbstractNumber<WholeAndRt3> {
     }
 
     public Fraction<WholeNumber> lower() {
-        Fraction<WholeNumber> rt3Part = new Fraction<WholeNumber>(
+        Fraction<WholeNumber> rt3Part = new Fraction<>(
                 new WholeNumber(rt3 * RT3_UNDER_APPROX_NUMERATOR),
                 new WholeNumber(RT3_UNDER_APPROX_DENOMINATOR)
         );
         return rt3Part.add(new Fraction<WholeNumber>(new WholeNumber(ones), WholeNumber.ONE));
     }
     public Fraction<WholeNumber> upper() {
-        Fraction<WholeNumber> rt3Part = new Fraction<WholeNumber>(
+        Fraction<WholeNumber> rt3Part = new Fraction<>(
                 new WholeNumber(rt3 * RT3_OVER_APPROX_NUMERATOR),
                 new WholeNumber(RT3_OVER_APPROX_DENOMINATOR)
         );
-        return rt3Part.add(new Fraction<WholeNumber>(new WholeNumber(ones), WholeNumber.ONE));
+        return rt3Part.add(new Fraction<>(new WholeNumber(ones), WholeNumber.ONE));
     }
 
     public WholeAndRt3 one() {

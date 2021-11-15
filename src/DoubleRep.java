@@ -57,8 +57,7 @@ public class DoubleRep extends AbstractNumber<DoubleRep> {
 
     @Override
     public boolean equals(Object o) {
-        if (o instanceof DoubleRep) {
-            DoubleRep d2 = (DoubleRep) o;
+        if (o instanceof DoubleRep d2) {
             return Math.abs(value - d2.value) < EPS;
         }
         return false;
