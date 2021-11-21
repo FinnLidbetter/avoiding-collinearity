@@ -61,4 +61,32 @@ public class LineSegment<T extends AbstractNumber<T>> {
             return pSideOfP2.compareToZero() == 0;
         return true;
     }
+
+    public boolean intersectsInfiniteLine(Point<T> linePoint1, Point<T> linePoint2) {
+        Vector<T> lineVector = new Vector<>(linePoint1, linePoint2);
+        Vector<T> v1 = new Vector<>(linePoint1, p1);
+        Vector<T> v2 = new Vector<>(linePoint1, p2);
+        int v1Side = lineVector.cross(v1).compareToZero();
+        int v2Side = lineVector.cross(v2).compareToZero();
+        if (v1Side == 0 || v2Side == 0 || v1Side != v2Side)
+            return true;
+        return false;
+    }
+
+    public boolean intersectsSemiInfiniteLine(Point<T> linePoint1, Point<T> linePoint2) {
+        if (!intersectsInfiniteLine(linePoint1, linePoint2)) {
+            return false;
+        }
+        Vector<T> lineVector = new Vector<>(linePoint1, linePoint2);
+        Vector<T> v1 = new Vector<>(linePoint1, p1);
+        Vector<T> v2 = new Vector<>(linePoint1, p2);
+        T crossV12 = v1.cross(v2);
+        if (crossV12.compareToZero() == 0) {
+            return true;
+        } else if (crossV12.compareToZero() < 0) {
+            v1 = v2;
+        }
+        return v1.cross(lineVector).compareToZero() >= 0;
+    }
+
 }

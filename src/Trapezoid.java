@@ -102,15 +102,46 @@ public class Trapezoid<T extends AbstractNumber<T>> {
            throw new IllegalArgumentException(
                    "Equal points do not define a unique line.");
        }
-       Vector<T> lineVector = new Vector<>(linePoint1, linePoint2);
        for (LineSegment<T> side: sides) {
-           Vector<T> v1 = new Vector<>(linePoint1, side.p1);
-           Vector<T> v2 = new Vector<>(linePoint1, side.p2);
-           int v1Side = lineVector.cross(v1).compareToZero();
-           int v2Side = lineVector.cross(v2).compareToZero();
-           if (v1Side == 0 || v2Side == 0 || v1Side != v2Side)
+           if (side.intersectsInfiniteLine(linePoint1, linePoint2))
                return true;
        }
        return false;
+   }
+
+    /**
+     * Determine if a semi-infinite line starting at linePoint1 intersects this trapezoid.
+     * @param linePoint1
+     * @param linePoint2
+     * @return true iff the semi-infinite line starting at linePoint1, going through
+     * linePoint2 intersects this trapezoid.
+     */
+   public boolean intersectsSemiInfiniteLine(Point<T> linePoint1, Point<T> linePoint2) {
+       if (linePoint1.equals(linePoint2)) {
+           throw new IllegalArgumentException(
+                   "Equal points do not define a unique line.");
+       }
+       for (LineSegment<T> side: sides) {
+           if (side.intersectsSemiInfiniteLine(linePoint1, linePoint2))
+               return true;
+       }
+       return false;
+   }
+
+   public boolean contains(Point<T> p) {
+       int sign = 0;
+       for (LineSegment<T> side: sides) {
+           Vector<T> sideVector = new Vector<>(side.p1, side.p2);
+           Vector<T> pVector = new Vector<>(side.p1, p);
+           if (sign == 0) {
+               sign = sideVector.cross(pVector).compareToZero();
+           } else {
+               int currSign = sideVector.cross(pVector).compareToZero();
+               if (currSign != 0 && currSign != sign) {
+                   return false;
+               }
+           }
+       }
+       return true;
    }
 }

@@ -49,6 +49,6 @@ public class EventPointComparator<T extends AbstractNumber<T>> implements Compar
             }
             return pivot.distanceSq(ep1.point).compareTo(pivot.distanceSq(ep2.point));
         }
-        return side;
+        return -side;
     }
 }

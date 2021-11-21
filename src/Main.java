@@ -20,19 +20,20 @@ public class Main {
         boolean done = false;
         while (line != null && !done) {
             String[] commandArgs = line.split(" ");
-            if (commandArgs.length < 2) {
+            if (commandArgs.length < 1) {
                 System.out.println("Not enough arguments");
                 line = br.readLine();
                 continue;
             }
             String command = commandArgs[0];
-            String numberSystemStr = commandArgs[1];
+            String numberSystemStr;
             switch (command) {
                 case "draw":
                     if (commandArgs.length < 3) {
                         System.out.println("At least three arguments are needed for draw.");
                         break;
                     }
+                    numberSystemStr = commandArgs[1];
                     String outputPath = commandArgs[2];
                     switch (numberSystemStr) {
                         case "double":
@@ -58,6 +59,7 @@ public class Main {
                         System.out.println("At least two arguments are needed for build.");
                         break;
                     }
+                    numberSystemStr = commandArgs[1];
                     int nTrapezoids = 0;
                     try {
                         nTrapezoids = Integer.parseInt(commandArgs[2]);
@@ -144,7 +146,7 @@ public class Main {
                     }
                     switch (numberSystemStr) {
                         case "wholeAndRt3":
-                            int collinearMax = wholeAndRt3TrapezoidSequence.countCollinear(collinearIndexMin, collinearIndexMax, collinearGapMax);
+                            int collinearMax = wholeAndRt3TrapezoidSequence.fastCountCollinear(collinearIndexMin, collinearIndexMax, collinearGapMax);
                             System.out.println(String.format("There are %d collinear trapezoids.", collinearMax));
                             break;
                         default:
@@ -158,7 +160,8 @@ public class Main {
                 default:
                     System.out.println("Unknown command.");
             }
-
+            if (done)
+                break;
             line = br.readLine();
         }
     }
