@@ -182,4 +182,29 @@ public class TrapezoidTests {
         Assert.assertFalse(trap1.intersectsInfiniteLine(p25, p26));
         Assert.assertFalse(trap1.intersectsInfiniteLine(p26, p25));
     }
+
+    @Test
+    public void testContains() {
+        Trapezoid<Fraction<WholeNumber>> trap = tf.makeFractionTrapezoid(
+                1, 1, 9, 1, 7, 4, 3, 4);
+
+        Point<Fraction<WholeNumber>> p23 = pf.makeFractionPoint(2, 3);
+        Point<Fraction<WholeNumber>> p33 = pf.makeFractionPoint(3, 3);
+        Point<Fraction<WholeNumber>> p51 = pf.makeFractionPoint(5, 1);
+        Point<Fraction<WholeNumber>> p11 = pf.makeFractionPoint(1, 1);
+        Point<Fraction<WholeNumber>> p91 = pf.makeFractionPoint(9, 1);
+        Point<Fraction<WholeNumber>> p74 = pf.makeFractionPoint(7, 4);
+        Point<Fraction<WholeNumber>> p34 = pf.makeFractionPoint(3, 4);
+        Point<Fraction<WholeNumber>> p05 = pf.makeFractionPoint(0, 5);
+        Point<Fraction<WholeNumber>> p83 = pf.makeFractionPoint(8, 3);
+        Assert.assertFalse(trap.contains(p23));
+        Assert.assertFalse(trap.contains(p05));
+        Assert.assertFalse(trap.contains(p83));
+        Assert.assertTrue(trap.contains(p33));
+        Assert.assertTrue(trap.contains(p51));
+        Assert.assertTrue(trap.contains(p11));
+        Assert.assertTrue(trap.contains(p91));
+        Assert.assertTrue(trap.contains(p74));
+        Assert.assertTrue(trap.contains(p34));
+    }
 }
