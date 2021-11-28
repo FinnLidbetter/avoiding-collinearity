@@ -266,4 +266,97 @@ public class LineTests {
         Assert.assertEquals(new WholeNumber(30 * 30 + 100 * 100),
                 line.distanceSq(notOnNorBetween));
     }
+
+    @Test
+    public void testIntersectsInfiniteLine() {
+        Point<WholeNumber> p00 = pf.makePoint(0, 0);
+        Point<WholeNumber> p10 = pf.makePoint(1, 0);
+        Point<WholeNumber> p11 = pf.makePoint(1, 1);
+        Point<WholeNumber> p23 = pf.makePoint(2, 3);
+
+        // Line segment has exactly one endpoint on the infinite line.
+        LineSegment<WholeNumber> s1 = lf.makeLine(5, 0, 9, 9);
+        Assert.assertTrue(s1.intersectsInfiniteLine(p00, p10));
+
+        // Line segment has exactly one endpoint on the infinite line (the other endpoint).
+        LineSegment<WholeNumber> s2 = lf.makeLine(9, 9, 5, 0);
+        Assert.assertTrue(s2.intersectsInfiniteLine(p00, p10));
+
+        // Both endpoints lie on the infinite line.
+        LineSegment<WholeNumber> s3 = lf.makeLine(-100, 0, 10000, 0);
+        Assert.assertTrue(s3.intersectsInfiniteLine(p00, p10));
+
+        // Line segment intersects infinite line at a non-endpoint
+        LineSegment<WholeNumber> s4 = lf.makeLine(-100, 2, 5, 0);
+        Assert.assertTrue(s4.intersectsInfiniteLine(p00, p23));
+
+        // Line segment does not intersect the infinite line---segment below horizontal.
+        LineSegment<WholeNumber> s5 = lf.makeLine(3, -1, 200, -2);
+        Assert.assertFalse(s5.intersectsInfiniteLine(p00, p10));
+
+        // Line segment does not intersect the infinite line---segment above horizontal.
+        LineSegment<WholeNumber> s6 = lf.makeLine(3, 1, 200, 2);
+        Assert.assertFalse(s6.intersectsInfiniteLine(p00, p10));
+
+        // Line segment does not intersect the infinite line---segment left of vertical.
+        LineSegment<WholeNumber> s7 = lf.makeLine(-1, 100, 0, 200);
+        Assert.assertFalse(s7.intersectsInfiniteLine(p10, p11));
+
+        // Line segment does not intersect the infinite line---segment right of vertical.
+        LineSegment<WholeNumber> s8 = lf.makeLine(3, 1, 200, 2);
+        Assert.assertFalse(s8.intersectsInfiniteLine(p11, p10));
+    }
+
+    @Test
+    public void testIntersectsSemiInfiniteLine() {
+        Point<WholeNumber> p00 = pf.makePoint(0, 0);
+        Point<WholeNumber> p50 = pf.makePoint(5, 0);
+        // Intersection is between the semi-infinite line points.
+        LineSegment<WholeNumber> s1 = lf.makeLine(2, 1, 3, -2);
+        Assert.assertTrue(s1.intersectsSemiInfiniteLine(p00, p50));
+
+        // Intersection is on the good side of the semi-infinite line points.
+        LineSegment<WholeNumber> s2 = lf.makeLine(7, 1, 8, -2);
+        Assert.assertTrue(s2.intersectsSemiInfiniteLine(p00, p50));
+
+        // No intersection---line segment is on the wrong side of the semi-infinite line points.
+        LineSegment<WholeNumber> s3 = lf.makeLine(-3, 1, 1, -2);
+        Assert.assertFalse(s3.intersectsSemiInfiniteLine(p00, p50));
+
+        // Same cases but semi-infinite line is in the other direction.
+        Assert.assertTrue(s1.intersectsSemiInfiniteLine(p50, p00));
+        Assert.assertFalse(s2.intersectsSemiInfiniteLine(p50, p00));
+        Assert.assertTrue(s3.intersectsSemiInfiniteLine(p50, p00));
+
+        Point<WholeNumber> p53 = pf.makePoint(5, 3);
+        Point<WholeNumber> p59 = pf.makePoint(5, 9);
+        // Coincident cases:
+        //  Line segment does not intersect semi-infinite line.
+        LineSegment<WholeNumber> s4 = lf.makeLine(5, 0, 5, 2);
+        Assert.assertFalse(s4.intersectsSemiInfiniteLine(p53, p59));
+
+        //  Line segment intersects at exactly one point.
+        LineSegment<WholeNumber> s5 = lf.makeLine(5, 0, 5, 3);
+        Assert.assertTrue(s5.intersectsSemiInfiniteLine(p53, p59));
+
+        //  Line segment has one endpoint off, one endpoint between semi-infinite line points.
+        LineSegment<WholeNumber> s6 = lf.makeLine(5, 1, 5, 5);
+        Assert.assertTrue(s6.intersectsSemiInfiniteLine(p53, p59));
+
+        //  Line segment has one endpoint off, one endpoint on the correct side of both semi-infinite line points.
+        LineSegment<WholeNumber> s7 = lf.makeLine(5, -1, 5, 20);
+        Assert.assertTrue(s7.intersectsSemiInfiniteLine(p53, p59));
+
+        //  Line segment has both endpoints between semi-infinite line points.
+        LineSegment<WholeNumber> s8 = lf.makeLine(5, 4, 5, 5);
+        Assert.assertTrue(s8.intersectsSemiInfiniteLine(p53, p59));
+
+        //  Line segment has one endpoint between semi-infinite line points, other on correct side of both.
+        LineSegment<WholeNumber> s9 = lf.makeLine(5, 4, 5, 21);
+        Assert.assertTrue(s9.intersectsSemiInfiniteLine(p53, p59));
+
+        //  Line segment has both endpoints on the correct side of both semi-infinite line points.
+        LineSegment<WholeNumber> s10 = lf.makeLine(5, 20, 5, 21);
+        Assert.assertTrue(s10.intersectsSemiInfiniteLine(p53, p59));
+    }
 }

@@ -72,7 +72,7 @@ public class Main {
                             doubleRepTrapezoidSequence = new TrapezoidSequence<>(
                                     nTrapezoids, doubleRepStartPoint);
                             System.out.println("Built a trapezoid sequence of length "
-                                    + wholeAndRt3TrapezoidSequence.trapezoids.size());
+                                    + doubleRepTrapezoidSequence.trapezoids.size());
                             break;
                         case "wholeAndRt3":
                             wholeAndRt3TrapezoidSequence = new TrapezoidSequence<>(
@@ -144,9 +144,14 @@ public class Main {
                         System.out.println("The second, third, and fourth arguments must be integers.");
                         break;
                     }
+                    int collinearMax = 0;
                     switch (numberSystemStr) {
                         case "wholeAndRt3":
-                            int collinearMax = wholeAndRt3TrapezoidSequence.fastCountCollinear(collinearIndexMin, collinearIndexMax, collinearGapMax);
+                            collinearMax = wholeAndRt3TrapezoidSequence.fastCountCollinear(collinearIndexMin, collinearIndexMax, collinearGapMax);
+                            System.out.println(String.format("There are %d collinear trapezoids.", collinearMax));
+                            break;
+                        case "double":
+                            collinearMax = doubleRepTrapezoidSequence.fastCountCollinear(collinearIndexMin, collinearIndexMax, collinearGapMax);
                             System.out.println(String.format("There are %d collinear trapezoids.", collinearMax));
                             break;
                         default:

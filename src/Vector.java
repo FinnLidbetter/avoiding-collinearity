@@ -31,6 +31,9 @@ public class Vector<T extends AbstractNumber<T>> {
     public T cross(Vector<T> v2) {
         return x.multiply(v2.y).subtract(y.multiply(v2.x));
     }
+    public T dot(Vector<T> v2) {
+        return x.multiply(v2.x).add(y.multiply(v2.y));
+    }
     public Vector<T> perpendicular() {
         return new Vector<>(y, x.additiveInverse());
     }

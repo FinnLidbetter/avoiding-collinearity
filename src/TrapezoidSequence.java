@@ -99,9 +99,7 @@ public class TrapezoidSequence<T extends AbstractNumber<T>> {
      * Get the largest number of trapezoids intersected by a single line
      * where no two trapezoids are more than maxIndexDiff indices apart.
      *
-     * Where n=maxIndex-minIndex and k=maxIndexDiff, this algorithm is
-     * O(nk^2). It could be improved to O(kn log n) by
-     * using a radial line sweep approach.
+     * Where n=maxIndex-minIndex and k=maxIndexDiff, this algorithm is O(nk^2)
      *
      * @param minIndex: the smallest index to consider.
      * @param maxIndex: the largest index to consider.
@@ -146,6 +144,20 @@ public class TrapezoidSequence<T extends AbstractNumber<T>> {
         return maxCollinear;
     }
 
+    /**
+     * Get the largest number of trapezoids intersected by a single line
+     * where no two trapezoids are more than maxIndexDiff indices apart.
+     *
+     * This algorithm uses a radial line sweep approach.
+     * Where n=maxIndex-minIndex this algorithm is O(n^2 log^2 n).
+     *
+     * @param minIndex: the smallest index to consider.
+     * @param maxIndex: the largest index to consider.
+     * @param maxIndexDiff: the largest difference in indices for a set of
+     *      collinear trapezoids.
+     * @return The maximum number of trapezoids intersected by an infinite line
+     *      subject to the bounds on the indices.
+     */
     public int fastCountCollinear(int minIndex, int maxIndex, int maxIndexDiff) {
         // Iterate over all pivot vertices in trapezoids between minIndex and maxIndex.
         int maxCollinear = 0;

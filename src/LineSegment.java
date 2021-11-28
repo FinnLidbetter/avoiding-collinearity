@@ -82,7 +82,13 @@ public class LineSegment<T extends AbstractNumber<T>> {
         Vector<T> v2 = new Vector<>(linePoint1, p2);
         T crossV12 = v1.cross(v2);
         if (crossV12.compareToZero() == 0) {
-            return true;
+            // p1, p2, and linePoint1 are on the same line.
+            if (hasBetween(linePoint1)) {
+                // Handle the non-coincident case and the case where the line
+                // segment contains linePoint1.
+                return true;
+            }
+            return lineVector.dot(v1).compareToZero() >= 0;
         } else if (crossV12.compareToZero() < 0) {
             v1 = v2;
         }

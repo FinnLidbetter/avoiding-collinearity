@@ -52,6 +52,8 @@ public class DoubleRep extends AbstractNumber<DoubleRep> {
 
     @Override
     public int compareTo(DoubleRep o) {
+        if (Math.abs(value - o.value) < EPS)
+            return 0;
         return Double.compare(value, o.value);
     }
 
