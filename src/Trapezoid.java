@@ -122,8 +122,10 @@ public class Trapezoid<T extends AbstractNumber<T>> {
                    "Equal points do not define a unique line.");
        }
        for (LineSegment<T> side: sides) {
-           if (side.intersectsSemiInfiniteLine(linePoint1, linePoint2))
+           if (side.intersectsSemiInfiniteLine(linePoint1, linePoint2)) {
+               //System.out.printf("%s intersects %s, %s\n", side, linePoint1, linePoint2);
                return true;
+           }
        }
        return false;
    }
@@ -143,5 +145,8 @@ public class Trapezoid<T extends AbstractNumber<T>> {
            }
        }
        return true;
+   }
+   public String toString() {
+       return String.format("[%s, %s, %s, %s]", vertices.get(0), vertices.get(1), vertices.get(2), vertices.get(3));
    }
 }

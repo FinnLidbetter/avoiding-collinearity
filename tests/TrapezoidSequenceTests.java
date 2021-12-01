@@ -19,6 +19,23 @@ public class TrapezoidSequenceTests {
     }
 
     @Test
+    public void testFastCollinearity() {
+        //TrapezoidSequence<Fraction<WholeAndRt3>> trapSeq343 = new TrapezoidSequence<>(343, zeroPt);
+        TrapezoidSequence<WholeNumber> trapSeq343 = new TrapezoidSequence<>(343, new Point<WholeNumber>(new WholeNumber(0), new WholeNumber(0)));
+        for (int minIndex=0; minIndex<100; minIndex++) {
+            for (int maxIndex=minIndex+1; maxIndex<200; maxIndex++) {
+                for (int maxIndexDiff=1; maxIndexDiff<=Math.min(20, maxIndex - minIndex); maxIndexDiff++) {
+                    System.out.printf("Testing (%d, %d, %d)\n", minIndex, maxIndex, maxIndexDiff);
+                    Assert.assertEquals(
+                            trapSeq343.countCollinear(minIndex, maxIndex, maxIndexDiff),
+                            trapSeq343.fastCountCollinear(minIndex, maxIndex, maxIndexDiff)
+                    );
+                }
+            }
+        }
+    }
+
+    @Test
     public void testCountSubwords(){
         TrapezoidSequence<Fraction<WholeAndRt3>> trapSeq49 =
                 new TrapezoidSequence<>(51001, zeroPt);

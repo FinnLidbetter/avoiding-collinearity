@@ -358,5 +358,8 @@ public class LineTests {
         //  Line segment has both endpoints on the correct side of both semi-infinite line points.
         LineSegment<WholeNumber> s10 = lf.makeLine(5, 20, 5, 21);
         Assert.assertTrue(s10.intersectsSemiInfiniteLine(p53, p59));
+
+        LineSegment<WholeNumber> s11 = lf.makeLine(-4, -3, -6, 0);
+        Assert.assertFalse(s11.intersectsSemiInfiniteLine(p00, p50));
     }
 }

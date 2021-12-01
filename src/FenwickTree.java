@@ -1,3 +1,5 @@
+import java.util.Arrays;
+
 public class FenwickTree {
 
     private int[] arr;
@@ -29,5 +31,13 @@ public class FenwickTree {
             arr[i] += delta;
             i += i & -i;
         }
+    }
+
+    public String toString() {
+        long[] vals = new long[arr.length];
+        for (int i=1; i<arr.length; i++) {
+            vals[i] = sum(i, i);
+        }
+        return Arrays.toString(vals);
     }
 }

@@ -115,6 +115,7 @@ public class TrapezoidSequence<T extends AbstractNumber<T>> {
             Trapezoid<T> trap1 = trapezoids.get(loIndex);
             for (int hiIndex=loIndex + 1; hiIndex <= hiUpperBound; hiIndex++) {
                 Trapezoid<T> trap2 = trapezoids.get(hiIndex);
+                //System.out.printf("Traps: %d, %d\n", loIndex, hiIndex);
                 for (Point<T> p1: trap1.vertices) {
                     for (Point<T> p2: trap2.vertices) {
                         if (p1.equals(p2))
@@ -135,6 +136,7 @@ public class TrapezoidSequence<T extends AbstractNumber<T>> {
                             }
                             if (intersectIndices.size() > maxCollinear) {
                                 maxCollinear = intersectIndices.size();
+                                //System.out.printf("New max: %d\n",maxCollinear);
                             }
                         }
                     }
@@ -162,8 +164,11 @@ public class TrapezoidSequence<T extends AbstractNumber<T>> {
         // Iterate over all pivot vertices in trapezoids between minIndex and maxIndex.
         int maxCollinear = 0;
         for (int pivotTrapezoidIndex=minIndex; pivotTrapezoidIndex<=maxIndex; pivotTrapezoidIndex++) {
+            if (pivotTrapezoidIndex % 100 == 0) {
+                System.out.printf("Progress: considering vertices in trapezoid %d as pivots\n", pivotTrapezoidIndex);
+            }
             for (Point<T> pivotVertex: trapezoids.get(pivotTrapezoidIndex).vertices) {
-                FenwickTree activeTrapezoids = new FenwickTree(maxIndex + 1);
+                SegmentTreeNode activeTrapezoidsRoot = new SegmentTreeNode(0, maxIndex + maxIndexDiff);
                 Point<T> pivotPositiveDirectionPoint = new Point<>(pivotVertex.x.add(pivotVertex.x.one()), pivotVertex.y);
                 ArrayList<EventPoint<T>> eventPoints = new ArrayList<>();
                 PointComparator<T> positivePointComparator = new PointComparator<>(pivotVertex, true);
@@ -177,59 +182,48 @@ public class TrapezoidSequence<T extends AbstractNumber<T>> {
                     if (currentTrapezoid.contains(pivotVertex)) {
                         // Every line through the pivot intersects this trapezoid, so
                         // there are no enter and exit vertices.
-                        activeTrapezoids.add(currTrapezoidIndex + 1, 1);
-                        maxCollinear = Math.max(maxCollinear, getActiveTrapezoidsInInterval(
-                                activeTrapezoids, currTrapezoidIndex, maxIndexDiff));
+                        activeTrapezoidsRoot.update(currTrapezoidIndex, currTrapezoidIndex + maxIndexDiff, 1);
+                        maxCollinear = Math.max(maxCollinear, activeTrapezoidsRoot.max(0, maxIndex + maxIndexDiff));
                         continue;
                     }
                     // Initialize a sortable list of the trapezoid vertices.
                     ArrayList<Point<T>> trapPoints = new ArrayList<>(4);
                     trapPoints.addAll(currentTrapezoid.vertices);
-                    if (currentTrapezoid.intersectsSemiInfiniteLine(pivotVertex, pivotPositiveDirectionPoint)) {
-                        // If the trapezoid intersects the initial sweep line, then sort relative to a
-                        // sweep line starting pointing in the opposite direction, but still rotating
+                    trapPoints.sort(positivePointComparator);
+                    if (currentTrapezoid.intersectsSemiInfiniteLine(pivotVertex, pivotPositiveDirectionPoint)
+                            && (trapPoints.get(0).y.compareTo(pivotVertex.y) != 0 || trapPoints.get(3).y.compareTo(pivotVertex.y) <= 0)) {
+
+                        // If the trapezoid intersects the initial sweep line (asterisk), then sort relative
+                        // to a sweep line starting pointing in the opposite direction, but still rotating
                         // in the same (counter-clockwise) direction.
+                        //  Asterisk: the intersection is ignored if the whole trapezoid is at or above the sweep line.
                         trapPoints.sort(negativePointComparator);
                         // The sweep line starts intersecting the trapezoid, so increment the initial counter.
-                        activeTrapezoids.add(currTrapezoidIndex + 1, 1);
-                        maxCollinear = Math.max(maxCollinear, getActiveTrapezoidsInInterval(
-                                activeTrapezoids, currTrapezoidIndex, maxIndexDiff));
-                    } else {
-                        trapPoints.sort(positivePointComparator);
+                        activeTrapezoidsRoot.update(currTrapezoidIndex, currTrapezoidIndex + maxIndexDiff, 1);
+                        maxCollinear = Math.max(maxCollinear, activeTrapezoidsRoot.max(0, maxIndex + maxIndexDiff));
                     }
                     Point<T> startPoint = trapPoints.get(0);
                     Point<T> endPoint = trapPoints.get(trapPoints.size() - 1);
                     eventPoints.add(new EventPoint<>(startPoint, currTrapezoidIndex, true));
                     eventPoints.add(new EventPoint<>(endPoint, currTrapezoidIndex, false));
                 }
-                // Sort all enter and exit vertices relative to the pivot
+                // Sort all enter and exit vertices relative to the pivot.
                 eventPoints.sort(eventPointComparator);
                 // Iterate over enter and exit vertices and insert trapezoid index into a fenwick tree
                 for (EventPoint<T> eventPoint: eventPoints) {
                     if (eventPoint.isStart) {
-                        // Insert the corresponding trapezoid into the Fenwick tree.
-                        activeTrapezoids.add(eventPoint.trapezoidIndex, 1);
+                        // Insert the corresponding trapezoid into the Segment tree.
+                        activeTrapezoidsRoot.update(eventPoint.trapezoidIndex, eventPoint.trapezoidIndex + maxIndexDiff, 1);
+                        maxCollinear = Math.max(maxCollinear, activeTrapezoidsRoot.max(0, maxIndex + maxIndexDiff));
                         // Check the count of inserted vertices `maxIndexDiff` either side of the inserted index.
-                        maxCollinear = Math.max(
-                                maxCollinear,
-                                getActiveTrapezoidsInInterval(
-                                        activeTrapezoids, eventPoint.trapezoidIndex, maxIndexDiff
-                                )
-                        );
                     } else {
                         // Remove the corresponding trapezoid from the Fenwick tree.
-                        activeTrapezoids.add(eventPoint.trapezoidIndex, -1);
+                        activeTrapezoidsRoot.update(eventPoint.trapezoidIndex, eventPoint.trapezoidIndex + maxIndexDiff, -1);
                     }
                 }
             }
         }
         return maxCollinear;
-    }
-
-    private int getActiveTrapezoidsInInterval(FenwickTree activeTrapezoids, int index, int indexDiff) {
-        int minIndex = Math.max(0, index - indexDiff);
-        int maxIndex = Math.min(index + indexDiff, activeTrapezoids.size() - 1);
-        return Math.max(activeTrapezoids.sum(minIndex + 1, index + 1), activeTrapezoids.sum(index + 1, maxIndex + 1));
     }
 
     public int countSubwords(int length) {

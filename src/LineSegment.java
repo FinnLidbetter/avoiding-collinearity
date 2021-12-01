@@ -92,7 +92,16 @@ public class LineSegment<T extends AbstractNumber<T>> {
         } else if (crossV12.compareToZero() < 0) {
             v1 = v2;
         }
-        return v1.cross(lineVector).compareToZero() >= 0;
+        T crossv1lineVector = v1.cross(lineVector);
+        if (crossv1lineVector.compareToZero() > 0) {
+            return true;
+        } else if (crossv1lineVector.compareToZero() == 0) {
+            return lineVector.dot(v1).compareToZero() > 0;
+        }
+        return false;
     }
 
+    public String toString() {
+        return String.format("[%s, %s]", p1, p2);
+    }
 }
