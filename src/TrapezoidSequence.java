@@ -316,27 +316,6 @@ public class TrapezoidSequence<T extends AbstractNumber<T>> {
         return maxCollinear;
     }
 
-    public int countSubwords(int length) {
-        if (length >= symbolSequence.size())
-            return 0;
-        HashSet<BigInteger> wordSet = new HashSet<>();
-        BigInteger base = new BigInteger("" + NUM_SYMBOLS);
-        BigInteger maxPow = base.pow(length-1);
-        BigInteger word = BigInteger.ZERO;
-        for (int i=0; i < length; i++) {
-            word = word.multiply(base);
-            word = word.add(new BigInteger("" + symbolSequence.get(i)));
-        }
-        wordSet.add(word);
-        for (int j=length; j < symbolSequence.size(); j++) {
-            word = word.subtract(maxPow.multiply(new BigInteger("" + symbolSequence.get(j - length))));
-            word = word.multiply(base);
-            word = word.add(new BigInteger("" + symbolSequence.get(j)));
-            wordSet.add(word);
-        }
-        return wordSet.size();
-    }
-
     private T loDistanceSq(int minIndex, int maxIndex, int gap) {
         T minMinDistanceSq = null;
         for (int index=minIndex; index<=maxIndex; index++) {
