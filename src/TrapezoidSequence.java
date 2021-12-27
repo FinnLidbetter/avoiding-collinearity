@@ -250,7 +250,7 @@ public class TrapezoidSequence<T extends AbstractNumber<T>> {
      * @return The maximum number of trapezoids intersected by an infinite line
      *      subject to the bounds on the indices.
      */
-    public int fastCountCollinear(int minIndex, int maxIndex, int maxIndexDiff) {
+    public int radialSweepCountCollinear(int minIndex, int maxIndex, int maxIndexDiff) {
         // Iterate over all pivot vertices in trapezoids between minIndex and maxIndex.
         int maxCollinear = 0;
         for (int pivotTrapezoidIndex=minIndex; pivotTrapezoidIndex<=maxIndex; pivotTrapezoidIndex++) {

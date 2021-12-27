@@ -147,11 +147,11 @@ public class Main {
                     int collinearMax = 0;
                     switch (numberSystemStr) {
                         case "wholeAndRt3":
-                            collinearMax = wholeAndRt3TrapezoidSequence.fastCountCollinear(collinearIndexMin, collinearIndexMax, collinearGapMax);
+                            collinearMax = wholeAndRt3TrapezoidSequence.radialSweepCountCollinear(collinearIndexMin, collinearIndexMax, collinearGapMax);
                             System.out.println(String.format("There are %d collinear trapezoids.", collinearMax));
                             break;
                         case "double":
-                            collinearMax = doubleRepTrapezoidSequence.fastCountCollinear(collinearIndexMin, collinearIndexMax, collinearGapMax);
+                            collinearMax = doubleRepTrapezoidSequence.radialSweepCountCollinear(collinearIndexMin, collinearIndexMax, collinearGapMax);
                             System.out.println(String.format("There are %d collinear trapezoids.", collinearMax));
                             break;
                         default:
