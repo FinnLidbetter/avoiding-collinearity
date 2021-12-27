@@ -32,14 +32,14 @@ public class TrapezoidFactory<T extends AbstractNumber<T>> {
      *                          .         .   ,      ,
      */
     public Trapezoid<T> makeSequenceTrapezoid(
-            int type, Point<T> startPoint) {
+            TrapezoidType type, Point<T> startPoint) {
         return switch (type) {
-            case 0 -> makeTrapezoidType0(startPoint);
-            case 1 -> makeTrapezoidType1(startPoint);
-            case 2 -> makeTrapezoidType2(startPoint);
-            case 3 -> makeTrapezoidType3(startPoint);
-            case 4 -> makeTrapezoidType4(startPoint);
-            case 5 -> makeTrapezoidType5(startPoint);
+            case ZERO -> makeTrapezoidType0(startPoint);
+            case ONE -> makeTrapezoidType1(startPoint);
+            case TWO -> makeTrapezoidType2(startPoint);
+            case THREE -> makeTrapezoidType3(startPoint);
+            case FOUR -> makeTrapezoidType4(startPoint);
+            case FIVE -> makeTrapezoidType5(startPoint);
             default -> throw new IllegalArgumentException("Unknown trapezoid type.");
         };
     }

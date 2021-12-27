@@ -38,7 +38,17 @@ public class TrapezoidSequenceTests {
     @Test
     public void testCountSubwords(){
         TrapezoidSequence<Fraction<WholeAndRt3>> trapSeq49 =
-                new TrapezoidSequence<>(51001, zeroPt);
-        Assert.assertEquals(16, trapSeq49.countSubwords(7));
+                new TrapezoidSequence<>(1000001, zeroPt);
+        Assert.assertEquals(30, trapSeq49.countSubwords(2401));
+    }
+
+    @Test
+    public void testSubwordIndex() {
+        TrapezoidSequence<Fraction<WholeAndRt3>> trapSeq = new TrapezoidSequence<>(600, zeroPt);
+
+        int upperBoundIndex = trapSeq.indexOfLastNewSubword(3401, null);
+        System.out.println(upperBoundIndex);
+        int lastNewPositioningIndex = trapSeq.indexOfLastNewRelativePositioning(3401, upperBoundIndex);
+        System.out.println(lastNewPositioningIndex);
     }
 }

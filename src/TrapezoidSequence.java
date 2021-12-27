@@ -22,40 +22,132 @@ public class TrapezoidSequence<T extends AbstractNumber<T>> {
         {10, 1, 5,10, 1, 6,10},
         {11, 2, 3,11, 2, 7,11},
     };
-    private static final int[] trapezoidTypeMap = new int[]{0,3,5,1,2,4,1,2,4,0,3,5};
+    private static final TrapezoidType[] trapezoidTypeMap = {
+            TrapezoidType.ZERO, TrapezoidType.THREE, TrapezoidType.FIVE, TrapezoidType.ONE, TrapezoidType.TWO, TrapezoidType.FOUR,
+            TrapezoidType.ONE, TrapezoidType.TWO, TrapezoidType.FOUR, TrapezoidType.ZERO, TrapezoidType.THREE, TrapezoidType.FIVE
+    };
     private static final int NUM_SYMBOLS = morphism.length;
 
     ArrayList<Integer> symbolSequence;
+    ArrayList<TrapezoidType> trapezoidTypeSequence;
     ArrayList<Trapezoid<T>> trapezoids;
     Point<T> startPoint;
 
     public TrapezoidSequence(int nTrapezoids, Point<T> startPoint) {
         trapezoids = new ArrayList<>(nTrapezoids);
         this.startPoint = startPoint;
-        buildSequence(nTrapezoids);
+        buildSymbolSequence(nTrapezoids);
+        buildTrapezoidTypeSequenceFromSymbolSequence();
+        buildTrapezoidSequenceFromTrapezoidTypeSequence();
     }
 
-    private void buildSequence(int nTrapezoids) {
-        symbolSequence = new ArrayList<>(nTrapezoids);
+    private void buildSymbolSequence(int sequenceLength) {
+        symbolSequence = new ArrayList<>(sequenceLength);
         int index = 0;
-        while (symbolSequence.size() < nTrapezoids) {
+        while (symbolSequence.size() < sequenceLength) {
             int currMorphismRule = 0;
             if (index != 0)
                 currMorphismRule = symbolSequence.get(index);
             int ruleIndex = 0;
-            while (symbolSequence.size() < nTrapezoids
+            while (symbolSequence.size() < sequenceLength
                     && ruleIndex < morphism[currMorphismRule].length) {
                 symbolSequence.add(morphism[currMorphismRule][ruleIndex]);
                 ruleIndex++;
             }
             index++;
         }
-        Point<T> prevPoint = startPoint;
+    }
+
+    private void buildTrapezoidTypeSequenceFromSymbolSequence() {
+        trapezoidTypeSequence = new ArrayList<>(symbolSequence.size());
         for (int symbol: symbolSequence) {
-            int trapType = trapezoidTypeMap[symbol];
-            trapezoids.add(tf.makeSequenceTrapezoid(trapType, prevPoint));
+            trapezoidTypeSequence.add(trapezoidTypeMap[symbol]);
+        }
+    }
+
+    private void buildTrapezoidSequenceFromTrapezoidTypeSequence() {
+        Point<T> prevPoint = startPoint;
+        for (TrapezoidType trapezoidType: trapezoidTypeSequence) {
+            trapezoids.add(tf.makeSequenceTrapezoid(trapezoidType, prevPoint));
             prevPoint = trapezoids.get(trapezoids.size() - 1).vertices.get(3);
         }
+    }
+
+    public int indexOfLastNewSubword(int wordLength, Integer[] dp) {
+        if (dp==null) {
+            dp = new Integer[wordLength + 1];
+        }
+        if (dp[wordLength] != null) {
+            return dp[wordLength];
+        }
+        if (wordLength == 1) {
+            dp[wordLength] = 212;
+            return 212;
+        } else if (wordLength == 2) {
+            dp[wordLength] = 557;
+            return 557;
+        }
+        int prevSubwordLength = (int)Math.ceil((double) wordLength / 7.0) + 1;
+        int maxCheckIndex = 7 * (indexOfLastNewSubword(prevSubwordLength, dp) + prevSubwordLength);
+        if (maxCheckIndex + wordLength + 1 > symbolSequence.size()) {
+            buildSymbolSequence(maxCheckIndex + wordLength + 2);
+        }
+        HashSet<BigInteger> wordSet = new HashSet<>();
+        BigInteger base = new BigInteger("" + NUM_SYMBOLS);
+        BigInteger maxPow = base.pow(wordLength-1);
+        BigInteger word = BigInteger.ZERO;
+        for (int i=0; i < wordLength; i++) {
+            word = word.multiply(base);
+            BigInteger addend = new BigInteger("" + symbolSequence.get(i));
+            word = word.add(addend);
+        }
+        wordSet.add(word);
+        int lastNewSubwordIndex = 0;
+        for (int j=wordLength; j < maxCheckIndex + wordLength; j++) {
+            BigInteger subtractor = maxPow.multiply(new BigInteger("" + symbolSequence.get(j - wordLength)));
+            word = word.subtract(subtractor);
+            word = word.multiply(base);
+            BigInteger addend = new BigInteger("" + symbolSequence.get(j));
+            word = word.add(addend);
+            int prevSize = wordSet.size();
+            wordSet.add(word);
+            if (wordSet.size() > prevSize) {
+                lastNewSubwordIndex = j - wordLength + 1;
+            }
+        }
+        dp[wordLength] = lastNewSubwordIndex;
+        return lastNewSubwordIndex;
+    }
+
+    private String positioningCanonicalString(int startIndex, int sequenceLength) {
+        StringBuilder sb = new StringBuilder();
+        TrapezoidType normalizer = trapezoidTypeSequence.get(startIndex).inverse();
+        for (int i=0; i<sequenceLength; i++) {
+            sb.append(trapezoidTypeSequence.get(startIndex + i).multiply(normalizer).toString());
+        }
+        return sb.toString();
+    }
+
+    public int indexOfLastNewRelativePositioning(int sequenceLength, int upperBoundIndex) {
+        if (upperBoundIndex + sequenceLength > trapezoidTypeSequence.size()) {
+            buildSymbolSequence(upperBoundIndex + sequenceLength);
+            buildTrapezoidTypeSequenceFromSymbolSequence();
+        }
+        HashSet<String> canonicalPositionings = new HashSet<>();
+        int lastNewIndex = 0;
+        for (int i=0; i<upperBoundIndex; i++) {
+            if (i%10000==0) {
+                System.err.printf("Progress %d\n", i);
+            }
+
+            int prevSize = canonicalPositionings.size();
+            canonicalPositionings.add(positioningCanonicalString(i, sequenceLength));
+            if (canonicalPositionings.size() > prevSize) {
+                System.out.println(canonicalPositionings.size());
+                lastNewIndex = i;
+            }
+        }
+        return lastNewIndex;
     }
 
     public T getMinDistanceSq(int trapIndex1, int trapIndex2) {
@@ -115,7 +207,6 @@ public class TrapezoidSequence<T extends AbstractNumber<T>> {
             Trapezoid<T> trap1 = trapezoids.get(loIndex);
             for (int hiIndex=loIndex + 1; hiIndex <= hiUpperBound; hiIndex++) {
                 Trapezoid<T> trap2 = trapezoids.get(hiIndex);
-                //System.out.printf("Traps: %d, %d\n", loIndex, hiIndex);
                 for (Point<T> p1: trap1.vertices) {
                     for (Point<T> p2: trap2.vertices) {
                         if (p1.equals(p2))
@@ -136,7 +227,6 @@ public class TrapezoidSequence<T extends AbstractNumber<T>> {
                             }
                             if (intersectIndices.size() > maxCollinear) {
                                 maxCollinear = intersectIndices.size();
-                                //System.out.printf("New max: %d\n",maxCollinear);
                             }
                         }
                     }
@@ -209,7 +299,7 @@ public class TrapezoidSequence<T extends AbstractNumber<T>> {
                 }
                 // Sort all enter and exit vertices relative to the pivot.
                 eventPoints.sort(eventPointComparator);
-                // Iterate over enter and exit vertices and insert trapezoid index into a fenwick tree
+                // Iterate over enter and exit vertices and insert trapezoid index into the Segment tree
                 for (EventPoint<T> eventPoint: eventPoints) {
                     if (eventPoint.isStart) {
                         // Insert the corresponding trapezoid into the Segment tree.
@@ -217,7 +307,7 @@ public class TrapezoidSequence<T extends AbstractNumber<T>> {
                         maxCollinear = Math.max(maxCollinear, activeTrapezoidsRoot.max(0, maxIndex + maxIndexDiff));
                         // Check the count of inserted vertices `maxIndexDiff` either side of the inserted index.
                     } else {
-                        // Remove the corresponding trapezoid from the Fenwick tree.
+                        // Remove the corresponding trapezoid from the Segment tree.
                         activeTrapezoidsRoot.update(eventPoint.trapezoidIndex, eventPoint.trapezoidIndex + maxIndexDiff, -1);
                     }
                 }
