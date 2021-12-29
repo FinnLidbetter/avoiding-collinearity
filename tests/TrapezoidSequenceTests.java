@@ -1,6 +1,8 @@
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.Arrays;
+
 public class TrapezoidSequenceTests {
     static PointFactory pf = new PointFactory();
     static Point<Fraction<WholeAndRt3>> zeroPt = pf.makeWholeAndRt3Point(0, 0, 0, 0);
@@ -28,7 +30,7 @@ public class TrapezoidSequenceTests {
                     System.out.printf("Testing (%d, %d, %d)\n", minIndex, maxIndex, maxIndexDiff);
                     Assert.assertEquals(
                             trapSeq343.countCollinear(minIndex, maxIndex, maxIndexDiff),
-                            trapSeq343.fastCountCollinear(minIndex, maxIndex, maxIndexDiff)
+                            trapSeq343.radialSweepCountCollinear(minIndex, maxIndex, maxIndexDiff)
                     );
                 }
             }
@@ -39,9 +41,53 @@ public class TrapezoidSequenceTests {
     public void testSubwordIndex() {
         TrapezoidSequence<Fraction<WholeAndRt3>> trapSeq = new TrapezoidSequence<>(600, zeroPt);
 
-        int upperBoundIndex = trapSeq.indexOfLastNewSubword(3401, null);
+        int upperBoundIndex = trapSeq.indexOfLastNewSubword(2401, null);
         System.out.println(upperBoundIndex);
-        int lastNewPositioningIndex = trapSeq.indexOfLastNewRelativePositioning(3401, upperBoundIndex);
+        int lastNewPositioningIndex = trapSeq.indexOfLastNewRelativePositioning(2401, upperBoundIndex);
         System.out.println(lastNewPositioningIndex);
+    }
+
+    @Test
+    public void testIntervals() {
+        TrapezoidSequence<Fraction<WholeAndRt3>> trapSeq = new TrapezoidSequence<>(2, zeroPt);
+        int upperBoundIndex = trapSeq.indexOfLastNewSubword(2401, null);
+        Interval[] collinearSearchIntervals = trapSeq.getCollinearSearchIntervals(2401, upperBoundIndex);
+        System.out.println(Arrays.toString(collinearSearchIntervals));
+    }
+
+    @Test
+    public void testWindowCollinearity() {
+        TrapezoidSequence<Fraction<WholeAndRt3>> trapSeq = new TrapezoidSequence<>(2, zeroPt);
+        int upperBoundIndex = trapSeq.indexOfLastNewSubword(2401, null);
+        System.out.println(upperBoundIndex);
+        System.out.println(trapSeq.distinctWindowsCountCollinear(2401, upperBoundIndex));
+    }
+
+    @Test
+    public void testRadialSweep() {
+        TrapezoidSequence<Fraction<WholeAndRt3>> trapSeq = new TrapezoidSequence<>(6002, zeroPt);
+        int result = trapSeq.radialSweepCountCollinear(0, 6000, 2401);
+        System.out.println(result);
+    }
+
+    @Test
+    public void testAllIntervalsCollinearity() {
+        TrapezoidSequence<Fraction<WholeAndRt3>> trapSeq = new TrapezoidSequence<>(2, zeroPt);
+        int upperBoundIndex = trapSeq.indexOfLastNewSubword(2401, null);
+        Interval[] collinearSearchIntervals = trapSeq.getCollinearSearchIntervals(2401, upperBoundIndex);
+        int overallMaxCollinear = 0;
+        System.out.println(Arrays.toString(collinearSearchIntervals));
+        long startTime = System.currentTimeMillis();
+        for (Interval interval: collinearSearchIntervals) {
+            System.out.printf("Starting interval %s\n", interval);
+            int maxCollinear =  trapSeq.radialSweepCountCollinear(interval.lo, interval.hi, 2401);
+            if (maxCollinear > overallMaxCollinear) {
+                overallMaxCollinear = maxCollinear;
+            }
+            long checkpoint = System.currentTimeMillis();
+            System.out.printf("Expended %d seconds\n", (checkpoint - startTime) / 1000);
+            System.out.printf("Overall max collinear is currently %d\n", overallMaxCollinear);
+        }
+        System.out.printf("Final max collinear is %d\n", overallMaxCollinear);
     }
 }

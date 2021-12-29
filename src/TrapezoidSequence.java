@@ -136,18 +136,43 @@ public class TrapezoidSequence<T extends AbstractNumber<T>> {
         HashSet<String> canonicalPositionings = new HashSet<>();
         int lastNewIndex = 0;
         for (int i=0; i<upperBoundIndex; i++) {
-            if (i%10000==0) {
-                System.err.printf("Progress %d\n", i);
-            }
-
             int prevSize = canonicalPositionings.size();
             canonicalPositionings.add(positioningCanonicalString(i, sequenceLength));
             if (canonicalPositionings.size() > prevSize) {
-                System.out.println(canonicalPositionings.size());
                 lastNewIndex = i;
             }
         }
         return lastNewIndex;
+    }
+
+    public Interval[] getCollinearSearchIntervals(int sequenceLength, int upperBoundIndex) {
+        if (upperBoundIndex + sequenceLength > trapezoidTypeSequence.size()) {
+            buildSymbolSequence(upperBoundIndex + sequenceLength);
+            buildTrapezoidTypeSequenceFromSymbolSequence();
+        }
+        HashSet<String> canonicalPositionings = new HashSet<>();
+        ArrayList<Interval> collinearSearchIntervals = new ArrayList<>();
+        Interval activeInterval = new Interval(0, sequenceLength);
+        for (int i=0; i<upperBoundIndex; i++) {
+            String positioningString = positioningCanonicalString(i, sequenceLength);
+            int currLo = i;
+            int currHi = i + sequenceLength;
+            if (!canonicalPositionings.contains(positioningString)) {
+                if (activeInterval.hi >= currLo) {
+                    activeInterval = new Interval(activeInterval.lo, currHi);
+                } else {
+                    collinearSearchIntervals.add(activeInterval);
+                    activeInterval = new Interval(currLo, currHi);
+                }
+            }
+            canonicalPositionings.add(positioningString);
+        }
+        collinearSearchIntervals.add(activeInterval);
+        Interval[] result = new Interval[collinearSearchIntervals.size()];
+        for (int i=0; i<collinearSearchIntervals.size(); i++) {
+            result[i] = collinearSearchIntervals.get(i);
+        }
+        return result;
     }
 
     public T getMinDistanceSq(int trapIndex1, int trapIndex2) {
@@ -251,14 +276,30 @@ public class TrapezoidSequence<T extends AbstractNumber<T>> {
      *      subject to the bounds on the indices.
      */
     public int radialSweepCountCollinear(int minIndex, int maxIndex, int maxIndexDiff) {
+        ArrayList<Trapezoid<T>> trapezoidRange = new ArrayList<>(maxIndex - minIndex + 1);
+        if (maxIndex + 1 > trapezoidTypeSequence.size()) {
+            buildSymbolSequence(2 * maxIndex);
+            buildTrapezoidTypeSequenceFromSymbolSequence();
+        }
+        Point<T> prevPoint = startPoint;
+        for (int i=minIndex; i<=maxIndex; i++) {
+            Trapezoid<T> nextTrapezoid = tf.makeSequenceTrapezoid(trapezoidTypeSequence.get(i), prevPoint);
+            trapezoidRange.add(nextTrapezoid);
+            prevPoint = nextTrapezoid.vertices.get(3);
+        }
         // Iterate over all pivot vertices in trapezoids between minIndex and maxIndex.
         int maxCollinear = 0;
         for (int pivotTrapezoidIndex=minIndex; pivotTrapezoidIndex<=maxIndex; pivotTrapezoidIndex++) {
-            if (pivotTrapezoidIndex % 100 == 0) {
+            if (pivotTrapezoidIndex % 200 == 0) {
                 System.out.printf("Progress: considering vertices in trapezoid %d as pivots\n", pivotTrapezoidIndex);
             }
-            for (Point<T> pivotVertex: trapezoids.get(pivotTrapezoidIndex).vertices) {
-                SegmentTreeNode activeTrapezoidsRoot = new SegmentTreeNode(0, maxIndex + maxIndexDiff);
+            boolean firstVertex = true;
+            for (Point<T> pivotVertex: trapezoidRange.get(pivotTrapezoidIndex - minIndex).vertices) {
+                if (firstVertex && pivotTrapezoidIndex != minIndex) {
+                    firstVertex = false;
+                    continue;
+                }
+                SegmentTreeNode activeTrapezoidsRoot = new SegmentTreeNode(minIndex, maxIndex + maxIndexDiff);
                 Point<T> pivotPositiveDirectionPoint = new Point<>(pivotVertex.x.add(pivotVertex.x.one()), pivotVertex.y);
                 ArrayList<EventPoint<T>> eventPoints = new ArrayList<>();
                 PointComparator<T> positivePointComparator = new PointComparator<>(pivotVertex, true);
@@ -268,7 +309,7 @@ public class TrapezoidSequence<T extends AbstractNumber<T>> {
                 int currIndexMin = Math.max(pivotTrapezoidIndex - maxIndexDiff, minIndex);
                 int currIndexMax = Math.min(pivotTrapezoidIndex + maxIndexDiff, maxIndex);
                 for (int currTrapezoidIndex=currIndexMin; currTrapezoidIndex<=currIndexMax; currTrapezoidIndex++) {
-                    Trapezoid<T> currentTrapezoid = trapezoids.get(currTrapezoidIndex);
+                    Trapezoid<T> currentTrapezoid = trapezoidRange.get(currTrapezoidIndex - minIndex);
                     if (currentTrapezoid.contains(pivotVertex)) {
                         // Every line through the pivot intersects this trapezoid, so
                         // there are no enter and exit vertices.
@@ -311,6 +352,133 @@ public class TrapezoidSequence<T extends AbstractNumber<T>> {
                         activeTrapezoidsRoot.update(eventPoint.trapezoidIndex, eventPoint.trapezoidIndex + maxIndexDiff, -1);
                     }
                 }
+            }
+        }
+        return maxCollinear;
+    }
+
+    /**
+     * Get the largest number of trapezoids between two indices intersected by a single line.
+     *
+     * This algorithm uses a radial line sweep approach.
+     * Where n=maxIndex-minIndex this algorithm is O(n^2 log^2 n).
+     *
+     * @param minSequenceIndex: the smallest index to consider.
+     * @param maxSequenceIndex: the largest index to consider.
+     * @return The maximum number of trapezoids intersected by an infinite line
+     *      subject to the bounds on the indices.
+     */
+    public int windowRadialSweepCountCollinear(int minSequenceIndex, int maxSequenceIndex) {
+        if (trapezoidTypeSequence.size() <= maxSequenceIndex) {
+            System.out.println("Building longer trapezoid type sequence");
+            buildSymbolSequence(2 * maxSequenceIndex);
+            buildTrapezoidTypeSequenceFromSymbolSequence();
+        }
+        System.out.println("Building trapezoid sequence");
+        ArrayList<Trapezoid<T>> windowTrapezoids = new ArrayList<>(maxSequenceIndex - minSequenceIndex + 1);
+        Point<T> prevPoint = startPoint;
+        for (int i=minSequenceIndex; i<=maxSequenceIndex; i++) {
+            Trapezoid<T> nextTrapezoid = tf.makeSequenceTrapezoid(trapezoidTypeSequence.get(i), prevPoint);
+            prevPoint = nextTrapezoid.vertices.get(3);
+            windowTrapezoids.add(nextTrapezoid);
+        }
+        System.out.println("Starting radial line sweep");
+        // Iterate over all pivot vertices in the window trapezoids.
+        int maxCollinear = 0;
+        for (int pivotTrapezoidIndex=0; pivotTrapezoidIndex<windowTrapezoids.size(); pivotTrapezoidIndex++) {
+            System.out.printf("pivot index: %d\n",pivotTrapezoidIndex);
+            boolean firstPivotVertex = true;
+            for (Point<T> pivotVertex: windowTrapezoids.get(pivotTrapezoidIndex).vertices) {
+                if (firstPivotVertex && pivotTrapezoidIndex != 0) {
+                    // The first vertex is equal to the last vertex of the previous trapezoid,
+                    // so we have already considered it as a pivot, unless it is the first trapezoid.
+                    firstPivotVertex = false;
+                    continue;
+                }
+                Point<T> pivotPositiveDirectionPoint = new Point<>(pivotVertex.x.add(pivotVertex.x.one()), pivotVertex.y);
+                ArrayList<EventPoint<T>> eventPoints = new ArrayList<>();
+                PointComparator<T> positivePointComparator = new PointComparator<>(pivotVertex, true);
+                PointComparator<T> negativePointComparator = new PointComparator<>(pivotVertex, false);
+                EventPointComparator<T> eventPointComparator = new EventPointComparator<>(pivotVertex);
+                int collinearCount = 0;
+                // For each other trapezoid sort the 4 vertices relative to the pivot and identify enter and exit vertices.
+                for (int currTrapezoidIndex=0; currTrapezoidIndex<windowTrapezoids.size(); currTrapezoidIndex++) {
+                    Trapezoid<T> currentTrapezoid = windowTrapezoids.get(currTrapezoidIndex);
+                    if (currentTrapezoid.contains(pivotVertex)) {
+                        // Every line through the pivot intersects this trapezoid, so
+                        // there are no enter and exit vertices.
+                        collinearCount++;
+                        if (collinearCount > maxCollinear) {
+                            maxCollinear = collinearCount;
+                        }
+                        continue;
+                    }
+                    // Initialize a sortable list of the trapezoid vertices.
+                    ArrayList<Point<T>> trapPoints = new ArrayList<>(4);
+                    trapPoints.addAll(currentTrapezoid.vertices);
+                    trapPoints.sort(positivePointComparator);
+                    if (currentTrapezoid.intersectsSemiInfiniteLine(pivotVertex, pivotPositiveDirectionPoint)
+                            && (trapPoints.get(0).y.compareTo(pivotVertex.y) != 0 || trapPoints.get(3).y.compareTo(pivotVertex.y) <= 0)) {
+
+                        // If the trapezoid intersects the initial sweep line (asterisk), then sort relative
+                        // to a sweep line starting pointing in the opposite direction, but still rotating
+                        // in the same (counter-clockwise) direction.
+                        //  Asterisk: the intersection is ignored if the whole trapezoid is at or above the sweep line.
+                        trapPoints.sort(negativePointComparator);
+                        // The sweep line starts intersecting the trapezoid, so increment the initial counter.
+                        collinearCount++;
+                        if (collinearCount > maxCollinear) {
+                            maxCollinear = collinearCount;
+                        }
+                    }
+                    Point<T> startPoint = trapPoints.get(0);
+                    Point<T> endPoint = trapPoints.get(trapPoints.size() - 1);
+                    eventPoints.add(new EventPoint<>(startPoint, currTrapezoidIndex, true));
+                    eventPoints.add(new EventPoint<>(endPoint, currTrapezoidIndex, false));
+                }
+                // Sort all enter and exit vertices relative to the pivot.
+                eventPoints.sort(eventPointComparator);
+                // Iterate over enter and exit vertices and update the collinear count
+                for (EventPoint<T> eventPoint: eventPoints) {
+                    if (eventPoint.isStart) {
+                        // Add the corresponding trapezoid to the collinear count.
+                        collinearCount++;
+                        if (collinearCount > maxCollinear) {
+                            maxCollinear = collinearCount;
+                        }
+                    } else {
+                        // Remove the corresponding trapezoid from the collinear count.
+                        collinearCount--;
+                    }
+                }
+            }
+        }
+        return maxCollinear;
+    }
+
+    public int distinctWindowsCountCollinear(int windowSize, int indexUpperBound) {
+        if (indexUpperBound + windowSize > trapezoidTypeSequence.size()) {
+            buildSymbolSequence(indexUpperBound + windowSize);
+            buildTrapezoidTypeSequenceFromSymbolSequence();
+        }
+        HashSet<String> processedCanonicalSequences = new HashSet<>();
+        int maxCollinear = 0;
+        int windowsCount = 0;
+        for (int i=0; i<indexUpperBound; i++) {
+            if (i%10000==0) {
+                System.err.printf("Processed %d start indices\n", i);
+            }
+            String canonicalSequence = positioningCanonicalString(i, windowSize);
+            if (!processedCanonicalSequences.contains(canonicalSequence)) {
+                int windowCollinear = windowRadialSweepCountCollinear(i, i + windowSize - 1);
+                if (windowCollinear > maxCollinear) {
+                    maxCollinear = windowCollinear;
+                }
+                processedCanonicalSequences.add(canonicalSequence);
+                windowsCount++;
+                //if (windowsCount%1000 == 0) {
+                    System.err.printf("Processed %d windows\n", windowsCount);
+                //}
             }
         }
         return maxCollinear;
