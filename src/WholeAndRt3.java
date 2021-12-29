@@ -14,8 +14,8 @@ public class WholeAndRt3 extends AbstractNumber<WholeAndRt3> {
     private static final long RT3_UNDER_APPROX_NUMERATOR = 716035;
     private static final long RT3_UNDER_APPROX_DENOMINATOR = 413403;
     private static final long RT = 3;
-    private static final int SQRT_APPROXIMATION_ITERATIONS = 10;
     public static final WholeAndRt3 ZERO = new WholeAndRt3(0, 0);
+    public static final WholeAndRt3 ONE = new WholeAndRt3(1, 0);
 
     long ones;
     long rt3;

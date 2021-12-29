@@ -41,9 +41,9 @@ public class TrapezoidSequenceTests {
     public void testSubwordIndex() {
         TrapezoidSequence<Fraction<WholeAndRt3>> trapSeq = new TrapezoidSequence<>(600, zeroPt);
 
-        int upperBoundIndex = trapSeq.indexOfLastNewSubword(2401, null);
+        int upperBoundIndex = trapSeq.indexOfLastNewSubword(49, null);
         System.out.println(upperBoundIndex);
-        int lastNewPositioningIndex = trapSeq.indexOfLastNewRelativePositioning(2401, upperBoundIndex);
+        int lastNewPositioningIndex = trapSeq.indexOfLastNewRelativePositioning(49, upperBoundIndex);
         System.out.println(lastNewPositioningIndex);
     }
 

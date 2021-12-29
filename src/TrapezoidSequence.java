@@ -67,6 +67,7 @@ public class TrapezoidSequence<T extends AbstractNumber<T>> {
 
     private void buildTrapezoidSequenceFromTrapezoidTypeSequence() {
         Point<T> prevPoint = startPoint;
+        trapezoids = new ArrayList<>();
         for (TrapezoidType trapezoidType: trapezoidTypeSequence) {
             trapezoids.add(tf.makeSequenceTrapezoid(trapezoidType, prevPoint));
             prevPoint = trapezoids.get(trapezoids.size() - 1).vertices.get(3);
@@ -387,6 +388,11 @@ public class TrapezoidSequence<T extends AbstractNumber<T>> {
     }
 
     public boolean assertBoundedRatio(int gapMin, int gapMax, int startIndex, int endIndex, T baseUpperBound) {
+        if (trapezoids.size() <= endIndex + gapMax + 1) {
+            buildSymbolSequence(endIndex + gapMax + 2);
+            buildTrapezoidTypeSequenceFromSymbolSequence();
+            buildTrapezoidSequenceFromTrapezoidTypeSequence();
+        }
         for (int cGap=gapMin; cGap<=gapMax; cGap++) {
             T loDistanceSq = loDistanceSq(startIndex, endIndex, cGap);
             for (int dGap=gapMin; dGap<=gapMax; dGap++) {
