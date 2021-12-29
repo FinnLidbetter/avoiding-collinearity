@@ -56,14 +56,6 @@ public class TrapezoidSequenceTests {
     }
 
     @Test
-    public void testWindowCollinearity() {
-        TrapezoidSequence<Fraction<WholeAndRt3>> trapSeq = new TrapezoidSequence<>(2, zeroPt);
-        int upperBoundIndex = trapSeq.indexOfLastNewSubword(2401, null);
-        System.out.println(upperBoundIndex);
-        System.out.println(trapSeq.distinctWindowsCountCollinear(2401, upperBoundIndex));
-    }
-
-    @Test
     public void testRadialSweep() {
         TrapezoidSequence<Fraction<WholeAndRt3>> trapSeq = new TrapezoidSequence<>(6002, zeroPt);
         int result = trapSeq.radialSweepCountCollinear(0, 6000, 2401);
