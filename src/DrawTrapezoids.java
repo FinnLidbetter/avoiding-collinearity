@@ -1,69 +1,60 @@
-import javax.imageio.ImageIO;
 import javax.swing.*;
-import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
 
-public class DrawTrapezoids<T extends AbstractNumber<T>> extends JFrame {
+public class DrawTrapezoids {
 
-    static final int imageWidth = 1400;
-    static final int imageHeight = 600;
-    static final int border = 50;
-    TrapezoidSequence<T> trapezoidSequence;
+    public static TrapezoidSequence<DoubleRep> doubleRepTrapezoidSequence;
+    public static TrapezoidSequence<WholeAndRt3> wholeAndRt3TrapezoidSequence;
 
-    public DrawTrapezoids(TrapezoidSequence<T> trapezoidSequence, String path) {
-        super("Trapezoid sequence.");
-        this.trapezoidSequence = trapezoidSequence;
-
-        setSize(imageWidth, imageHeight);
-        setVisible(true);
-        setBackground(Color.WHITE);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLocationRelativeTo(null);
-
-        BufferedImage bImg = new BufferedImage(
-                getWidth(), getHeight(), BufferedImage.TYPE_INT_RGB);
-        Graphics2D cg = bImg.createGraphics();
-        paintAll(cg);
+    public static void main(String[] args) {
+        if (isHelpArgument(args[0])) {
+            printHelp();
+            System.exit(0);
+        }
+        if (args.length != 3) {
+            printHelp();
+            System.exit(1);
+        }
+        String numberSystem = args[0];
+        String outputPath = args[2];
         try {
-            if (ImageIO.write(bImg, "png", new File(path))) {
-                System.out.println("-- saved");
+            int sequenceLength = Integer.parseInt(args[1]);
+            if (numberSystem.equals("wholeAndRt3")) {
+                Point<WholeAndRt3> zeroPoint = new Point<>(WholeAndRt3.ZERO, WholeAndRt3.ZERO);
+                wholeAndRt3TrapezoidSequence = new TrapezoidSequence<>(sequenceLength, zeroPoint);
+                drawWholeAndRt3Sequence(outputPath);
+            } else if (numberSystem.equals("double")) {
+                Point<DoubleRep> zeroPoint = new Point<>(new DoubleRep(0), new DoubleRep(0));
+                doubleRepTrapezoidSequence = new TrapezoidSequence<>(sequenceLength, zeroPoint);
+                drawDoubleRepSequence(outputPath);
+            } else {
+                printHelp();
+                System.exit(1);
             }
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (NumberFormatException e) {
+            printHelp();
+            System.exit(1);
         }
     }
 
-    void drawLines(Graphics g) {
-        Graphics2D canvas = (Graphics2D) g;
-
-        List<T> bounds = trapezoidSequence.getBounds();
-        double xMin = bounds.get(0).toDouble();
-        double yMin = bounds.get(1).toDouble();
-        double xMax = bounds.get(2).toDouble();
-        double yMax = bounds.get(3).toDouble();
-        double xOffset = border;
-        double yOffset = imageHeight - border;
-        double xScalar = (imageWidth - 2 * border) / (xMax - xMin);
-        double yScalar = (imageHeight - 2 * border) / (yMax - yMin);
-        xScalar = Math.min(xScalar, yScalar);
-        yScalar = Math.min(xScalar, yScalar);
-        yScalar *= -1;
-        for (Trapezoid<T> trap: trapezoidSequence.trapezoids) {
-            for (LineSegment<T> line: trap.sides) {
-                int x1 = (int)(line.p1.x.toDouble() * xScalar + xOffset);
-                int y1 = (int)(line.p1.y.toDouble() * yScalar + yOffset);
-                int x2 = (int)(line.p2.x.toDouble() * xScalar + xOffset);
-                int y2 = (int)(line.p2.y.toDouble() * yScalar + yOffset);
-                canvas.drawLine(x1, y1, x2, y2);
-            }
-        }
+    public static void drawWholeAndRt3Sequence(String path) {
+        SwingUtilities.invokeLater(
+                () -> new TrapezoidDrawer<>(wholeAndRt3TrapezoidSequence, path));
     }
 
-    public void paint(Graphics g) {
-        super.paint(g);
-        drawLines(g);
+    public static void drawDoubleRepSequence(String path) {
+        SwingUtilities.invokeLater(
+                () -> new TrapezoidDrawer<>(doubleRepTrapezoidSequence, path));
+    }
+
+    private static void printHelp() {
+        System.out.println("Usage:");
+        System.out.println("\tjava DrawTrapezoids \"wholeAndRt3\"|\"double\" num_trapezoids output_path");
+        System.out.println("Examples:");
+        System.out.println("java DrawTrapezoids wholeAndRt3 343 /Users/finn/trapezoids.png");
+        System.out.println("java DrawTrapezoids double 343 /Users/finn/trapezoids.png");
+    }
+
+    private static boolean isHelpArgument(String str) {
+        return str.contains("help") || str.equals("-h");
     }
 }

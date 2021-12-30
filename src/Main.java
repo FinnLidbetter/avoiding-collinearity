@@ -173,10 +173,10 @@ public class Main {
 
     public static void drawWholeAndRt3Sequence(String path) {
         SwingUtilities.invokeLater(
-                () -> new DrawTrapezoids<>(wholeAndRt3TrapezoidSequence, path));
+                () -> new TrapezoidDrawer<>(wholeAndRt3TrapezoidSequence, path));
     }
     public static void drawDoubleRepSequence(String path) {
         SwingUtilities.invokeLater(
-                () -> new DrawTrapezoids<>(doubleRepTrapezoidSequence, path));
+                () -> new TrapezoidDrawer<>(doubleRepTrapezoidSequence, path));
     }
 }
