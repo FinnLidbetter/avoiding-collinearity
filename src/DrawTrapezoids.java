@@ -4,6 +4,7 @@ public class DrawTrapezoids {
 
     public static TrapezoidSequence<DoubleRep> doubleRepTrapezoidSequence;
     public static TrapezoidSequence<WholeAndRt3> wholeAndRt3TrapezoidSequence;
+    public static TrapezoidSequence<WholeNumber> wholeNumberTrapezoidSequence;
 
     public static void main(String[] args) {
         if (isHelpArgument(args[0])) {
@@ -18,17 +19,29 @@ public class DrawTrapezoids {
         String outputPath = args[2];
         try {
             int sequenceLength = Integer.parseInt(args[1]);
-            if (numberSystem.equals("wholeAndRt3")) {
-                Point<WholeAndRt3> zeroPoint = new Point<>(WholeAndRt3.ZERO, WholeAndRt3.ZERO);
-                wholeAndRt3TrapezoidSequence = new TrapezoidSequence<>(sequenceLength, zeroPoint);
-                drawWholeAndRt3Sequence(outputPath);
-            } else if (numberSystem.equals("double")) {
-                Point<DoubleRep> zeroPoint = new Point<>(new DoubleRep(0), new DoubleRep(0));
-                doubleRepTrapezoidSequence = new TrapezoidSequence<>(sequenceLength, zeroPoint);
-                drawDoubleRepSequence(outputPath);
-            } else {
-                printHelp();
-                System.exit(1);
+            switch (numberSystem) {
+                case "wholeAndRt3" -> {
+                    Point<WholeAndRt3> zeroPoint = new Point<>(WholeAndRt3.ZERO, WholeAndRt3.ZERO);
+                    wholeAndRt3TrapezoidSequence = new TrapezoidSequence<>(sequenceLength, zeroPoint);
+                    drawWholeAndRt3Sequence(outputPath);
+                    break;
+                }
+                case "double" -> {
+                    Point<DoubleRep> zeroPoint = new Point<>(new DoubleRep(0), new DoubleRep(0));
+                    doubleRepTrapezoidSequence = new TrapezoidSequence<>(sequenceLength, zeroPoint);
+                    drawDoubleRepSequence(outputPath);
+                    break;
+                }
+                case "wholeNumber" -> {
+                    Point<WholeNumber> zeroPoint = new Point<>(new WholeNumber(0), new WholeNumber(0));
+                    wholeNumberTrapezoidSequence = new TrapezoidSequence<>(sequenceLength, zeroPoint);
+                    drawWholeNumberSequence(outputPath);
+                    break;
+                }
+                default -> {
+                    printHelp();
+                    System.exit(1);
+                }
             }
         } catch (NumberFormatException e) {
             printHelp();
@@ -44,6 +57,11 @@ public class DrawTrapezoids {
     public static void drawDoubleRepSequence(String path) {
         SwingUtilities.invokeLater(
                 () -> new TrapezoidDrawer<>(doubleRepTrapezoidSequence, path));
+    }
+
+    public static void drawWholeNumberSequence(String path) {
+        SwingUtilities.invokeLater(
+                () -> new TrapezoidDrawer<>(wholeNumberTrapezoidSequence, path));
     }
 
     private static void printHelp() {
