@@ -41,17 +41,16 @@ public class TrapezoidSequenceTests {
     public void testSubwordIndex() {
         TrapezoidSequence<Fraction<WholeAndRt3>> trapSeq = new TrapezoidSequence<>(600, zeroPt);
 
-        int upperBoundIndex = trapSeq.indexOfLastNewSubword(49, null);
+        int upperBoundIndex = trapSeq.indexOfLastNewSubword(49);
         System.out.println(upperBoundIndex);
-        int lastNewPositioningIndex = trapSeq.indexOfLastNewRelativePositioning(49, upperBoundIndex);
+        int lastNewPositioningIndex = trapSeq.indexOfLastNewRelativePositioning(49);
         System.out.println(lastNewPositioningIndex);
     }
 
     @Test
     public void testIntervals() {
         TrapezoidSequence<Fraction<WholeAndRt3>> trapSeq = new TrapezoidSequence<>(2, zeroPt);
-        int upperBoundIndex = trapSeq.indexOfLastNewSubword(2401, null);
-        Interval[] collinearSearchIntervals = trapSeq.getCollinearSearchIntervals(2401, upperBoundIndex);
+        Interval[] collinearSearchIntervals = trapSeq.getCollinearSearchIntervals(2401);
         System.out.println(Arrays.toString(collinearSearchIntervals));
     }
 
@@ -65,8 +64,7 @@ public class TrapezoidSequenceTests {
     @Test
     public void testAllIntervalsCollinearity() {
         TrapezoidSequence<Fraction<WholeAndRt3>> trapSeq = new TrapezoidSequence<>(2, zeroPt);
-        int upperBoundIndex = trapSeq.indexOfLastNewSubword(2401, null);
-        Interval[] collinearSearchIntervals = trapSeq.getCollinearSearchIntervals(2401, upperBoundIndex);
+        Interval[] collinearSearchIntervals = trapSeq.getCollinearSearchIntervals(2401);
         int overallMaxCollinear = 0;
         System.out.println(Arrays.toString(collinearSearchIntervals));
         long startTime = System.currentTimeMillis();

@@ -17,10 +17,7 @@ public class CountCollinearTrapezoids {
             if (numberSystem.equals("wholeAndRt3")) {
                 Point<WholeAndRt3> zeroPoint = new Point<>(WholeAndRt3.ZERO, WholeAndRt3.ZERO);
                 TrapezoidSequence<WholeAndRt3> trapSeq = new TrapezoidSequence<>(2, zeroPoint);
-                int lastNewSubwordIndex = trapSeq.indexOfLastNewSubword(maxIndexGap, null);
-                Interval[] searchIntervals = trapSeq.getCollinearSearchIntervals(
-                        maxIndexGap, lastNewSubwordIndex + maxIndexGap
-                );
+                Interval[] searchIntervals = trapSeq.getCollinearSearchIntervals(maxIndexGap);
                 System.out.printf("Intervals to search: %s.\n", Arrays.toString(searchIntervals));
                 int maxCollinearCount = 0;
                 for (Interval searchInterval: searchIntervals) {
@@ -38,10 +35,7 @@ public class CountCollinearTrapezoids {
             } else if (numberSystem.equals("wholeNumber")) {
                 Point<WholeNumber> zeroPoint = new Point<>(WholeNumber.ZERO, WholeNumber.ZERO);
                 TrapezoidSequence<WholeNumber> trapSeq = new TrapezoidSequence<>(2, zeroPoint);
-                int lastNewSubwordIndex = trapSeq.indexOfLastNewSubword(maxIndexGap, null);
-                Interval[] searchIntervals = trapSeq.getCollinearSearchIntervals(
-                        maxIndexGap, lastNewSubwordIndex + maxIndexGap
-                );
+                Interval[] searchIntervals = trapSeq.getCollinearSearchIntervals(maxIndexGap);
                 System.out.printf("Intervals to search: %s.\n", Arrays.toString(searchIntervals));
                 int maxCollinearCount = 0;
                 for (Interval searchInterval: searchIntervals) {

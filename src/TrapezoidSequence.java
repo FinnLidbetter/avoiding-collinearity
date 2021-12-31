@@ -41,6 +41,11 @@ public class TrapezoidSequence<T extends AbstractNumber<T>> {
         buildTrapezoidSequenceFromTrapezoidTypeSequence();
     }
 
+    /**
+     * Construct a symbol sequence of the specified length by iterating the morphism.
+     *
+     * @param sequenceLength: the length of the sequence to produce.
+     */
     private void buildSymbolSequence(int sequenceLength) {
         symbolSequence = new ArrayList<>(sequenceLength);
         int index = 0;
@@ -58,6 +63,9 @@ public class TrapezoidSequence<T extends AbstractNumber<T>> {
         }
     }
 
+    /**
+     * Construct the trapezoid type sequence from the symbol sequence.
+     */
     private void buildTrapezoidTypeSequenceFromSymbolSequence() {
         trapezoidTypeSequence = new ArrayList<>(symbolSequence.size());
         for (int symbol: symbolSequence) {
@@ -65,6 +73,9 @@ public class TrapezoidSequence<T extends AbstractNumber<T>> {
         }
     }
 
+    /**
+     * Construct trapezoids from the trapezoid type sequence.
+     */
     private void buildTrapezoidSequenceFromTrapezoidTypeSequence() {
         Point<T> prevPoint = startPoint;
         trapezoids = new ArrayList<>();
@@ -74,7 +85,24 @@ public class TrapezoidSequence<T extends AbstractNumber<T>> {
         }
     }
 
-    public int indexOfLastNewSubword(int wordLength, Integer[] dp) {
+    /**
+     * Get the start index of the last new subword produced by iterating the morphism.
+     *
+     * @param wordLength: the length of the subword.
+     * @return the index of the last new subword.
+     */
+    public int indexOfLastNewSubword(int wordLength) {
+        return indexOfLastNewSubword(wordLength, null);
+    }
+
+    /**
+     * Get the index of the last new subword produced by iterating the morphism.
+     *
+     * @param wordLength: the length of the subword.
+     * @param dp: the Dynamic Programming memoization array.
+     * @return the index of the last new subword.
+     */
+    private int indexOfLastNewSubword(int wordLength, Integer[] dp) {
         if (dp==null) {
             dp = new Integer[wordLength + 1];
         }
@@ -120,6 +148,16 @@ public class TrapezoidSequence<T extends AbstractNumber<T>> {
         return lastNewSubwordIndex;
     }
 
+    /**
+     * Get a canonical string representation for a trapezoid sequence that captures relative positioning information.
+     *
+     * The first element is normalized to the identity element in the group. All others are normalized by
+     * applying the same group operation to each element of the sequence, i.e., by applying the inverse of
+     * the first element.
+     * @param startIndex: the start index for the sequence.
+     * @param sequenceLength: the length of the sequence.
+     * @return A string canonical representation for the subsequence.
+     */
     private String positioningCanonicalString(int startIndex, int sequenceLength) {
         StringBuilder sb = new StringBuilder();
         TrapezoidType normalizer = trapezoidTypeSequence.get(startIndex).inverse();
@@ -129,7 +167,14 @@ public class TrapezoidSequence<T extends AbstractNumber<T>> {
         return sb.toString();
     }
 
-    public int indexOfLastNewRelativePositioning(int sequenceLength, int upperBoundIndex) {
+    /**
+     * Get the index of the last new relative positioning of a sequence of the specified length.
+     *
+     * @param sequenceLength: the length of the sequence.
+     * @return the index of the last new relative positioning.
+     */
+    public int indexOfLastNewRelativePositioning(int sequenceLength) {
+        int upperBoundIndex = indexOfLastNewSubword(sequenceLength, null) + sequenceLength;
         if (upperBoundIndex + sequenceLength > trapezoidTypeSequence.size()) {
             buildSymbolSequence(upperBoundIndex + sequenceLength);
             buildTrapezoidTypeSequenceFromSymbolSequence();
@@ -146,7 +191,19 @@ public class TrapezoidSequence<T extends AbstractNumber<T>> {
         return lastNewIndex;
     }
 
-    public Interval[] getCollinearSearchIntervals(int sequenceLength, int upperBoundIndex) {
+    /**
+     * Get intervals of indices to check for the largest number of collinear trapezoids.
+     *
+     * Indices that are not within sequenceLength indices of the first occurrence of a
+     * distinct canonical positioning of trapezoids are not included. Some indices that
+     * are redundant to check are excluded.
+     * @param sequenceLength: the length of the sequence to check collinearity for
+     *     (the maximum difference in indices allowed for two of the trapezoids
+     *      intersected by a single line).
+     * @return the intervals to check for collinear trapezoids.
+     */
+    public Interval[] getCollinearSearchIntervals(int sequenceLength) {
+        int upperBoundIndex = indexOfLastNewSubword(sequenceLength, null) + sequenceLength;
         if (upperBoundIndex + sequenceLength > trapezoidTypeSequence.size()) {
             buildSymbolSequence(upperBoundIndex + sequenceLength);
             buildTrapezoidTypeSequenceFromSymbolSequence();
@@ -176,6 +233,9 @@ public class TrapezoidSequence<T extends AbstractNumber<T>> {
         return result;
     }
 
+    /**
+     * Get the smallest distance squared between points in a pair of trapezoids.
+     */
     public T getMinDistanceSq(int trapIndex1, int trapIndex2) {
         if (trapIndex1 >= trapezoids.size() || trapIndex2 >= trapezoids.size()) {
             throw new IndexOutOfBoundsException(
@@ -184,6 +244,9 @@ public class TrapezoidSequence<T extends AbstractNumber<T>> {
         return trapezoids.get(trapIndex1).minDistanceSq(trapezoids.get(trapIndex2));
     }
 
+    /**
+     * Get the largest distance squared between points in a pair of trapezoids.
+     */
     public T getMaxDistanceSq(int trapIndex1, int trapIndex2) {
         if (trapIndex1 >= trapezoids.size() || trapIndex2 >= trapezoids.size()) {
             throw new IndexOutOfBoundsException(
@@ -192,6 +255,9 @@ public class TrapezoidSequence<T extends AbstractNumber<T>> {
         return trapezoids.get(trapIndex1).maxDistanceSq(trapezoids.get(trapIndex2));
     }
 
+    /**
+     * Get the smallest and largest x and y coordinates of constructed trapezoids.
+     */
     public List<T> getBounds() {
         T xMin = null, xMax = null, yMin = null, yMax = null;
         for (Trapezoid<T> trap: trapezoids) {
@@ -300,7 +366,12 @@ public class TrapezoidSequence<T extends AbstractNumber<T>> {
                     firstVertex = false;
                     continue;
                 }
+                // Initialize a segment tree.
+                // Each index of the segment tree corresponds to an interval of size maxIndexDiff. Incrementing
+                // the count at an index corresponds to increasing the number of active trapezoids in a particular
+                // interval of trapezoid indices.
                 SegmentTreeNode activeTrapezoidsRoot = new SegmentTreeNode(minIndex, maxIndex + maxIndexDiff);
+
                 Point<T> pivotPositiveDirectionPoint = new Point<>(pivotVertex.x.add(pivotVertex.x.one()), pivotVertex.y);
                 ArrayList<EventPoint<T>> eventPoints = new ArrayList<>();
                 PointComparator<T> positivePointComparator = new PointComparator<>(pivotVertex, true);
@@ -387,6 +458,19 @@ public class TrapezoidSequence<T extends AbstractNumber<T>> {
         return maxMaxDistanceSq;
     }
 
+    /**
+     * Assert that distance ratios between trapezoid pairs are below a given upper bound.
+     *
+     * @param gapMin: the minimum number of indices separating a pair of trapezoids.
+     * @param gapMax: the maximum number of indices separating a pair of trapezoids.
+     * @param startIndex: the first index to consider in the sequence of trapezoids.
+     * @param endIndex: the last index to consider in the sequence of trapezoids.
+     * @param baseUpperBound: the upper bound to compare against.
+     * @return Considering pairs of trapezoids that are separated by at least gapMin indices and at most
+     *  gapMax indices, return True iff the result of dividing the largest distance between points in a
+     *  pair of trapezoids and the smallest distance between points in another pair of trapezoids is less
+     *  than baseUpperBound.
+     */
     public boolean assertBoundedRatio(int gapMin, int gapMax, int startIndex, int endIndex, T baseUpperBound) {
         if (trapezoids.size() <= endIndex + gapMax + 1) {
             buildSymbolSequence(endIndex + gapMax + 2);

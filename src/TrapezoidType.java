@@ -1,3 +1,6 @@
+/**
+ * The trapezoid types form a group isomorphic to the dihedral group of order 6.
+ */
 public enum TrapezoidType {
     ZERO(0),
     ONE(1),
@@ -8,6 +11,7 @@ public enum TrapezoidType {
 
     private final int typeNumber;
 
+    // Define the Cayley table with the group operations.
     private final static TrapezoidType[][] cayleyTable = {
             {TrapezoidType.ZERO, TrapezoidType.ONE, TrapezoidType.TWO, TrapezoidType.THREE, TrapezoidType.FOUR, TrapezoidType.FIVE},
             {TrapezoidType.ONE, TrapezoidType.ZERO, TrapezoidType.THREE, TrapezoidType.TWO, TrapezoidType.FIVE, TrapezoidType.FOUR},
@@ -36,6 +40,11 @@ public enum TrapezoidType {
         };
     }
 
+    /**
+     * Get the index of the element for use in the 2D Cayley table array.
+     *
+     * @return the index of the group element in the Cayley table.
+     */
     public int index() {
         return typeNumber;
     }
