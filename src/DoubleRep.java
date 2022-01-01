@@ -75,6 +75,10 @@ public class DoubleRep extends AbstractNumber<DoubleRep> {
         return ""+value;
     }
 
+    public DoubleRep sqrt() {
+        return new DoubleRep(Math.sqrt(value));
+    }
+
     @Override
     public DoubleRep one() {
         return new DoubleRep(1);

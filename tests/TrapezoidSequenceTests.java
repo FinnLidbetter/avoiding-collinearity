@@ -55,6 +55,46 @@ public class TrapezoidSequenceTests {
     }
 
     @Test
+    public void testLoDistanceSquared() {
+        Point<DoubleRep> pt = new Point<>(new DoubleRep(0), new DoubleRep(0));
+        int n = 1000000;
+        TrapezoidSequence<DoubleRep> trapSeq = new TrapezoidSequence<>(n, pt);
+        DoubleRep maxVal = new DoubleRep(0);
+        for (int i=0; i<n-16898; i++) {
+            if (i%10000==0) {
+                System.out.printf("Progress %d\n", i);
+            }
+            for (int j=2401; j<16897; j++) {
+                DoubleRep curr = (new DoubleRep(j+1)).divide(trapSeq.getMinDistanceSq(i, i+j).sqrt());
+                if (curr.compareTo(maxVal) > 0) {
+                    maxVal = curr;
+                }
+            }
+        }
+        System.out.println(maxVal);
+    }
+
+    @Test
+    public void testHiDistanceSquared() {
+        Point<DoubleRep> pt = new Point<>(new DoubleRep(0), new DoubleRep(0));
+        int n = 1000000;
+        TrapezoidSequence<DoubleRep> trapSeq = new TrapezoidSequence<>(n, pt);
+        DoubleRep maxVal = new DoubleRep(0);
+        for (int i=0; i<n-16898; i++) {
+            if (i%10000==0) {
+                System.out.printf("Progress %d\n", i);
+            }
+            for (int j=2401; j<16897; j++) {
+                DoubleRep curr = trapSeq.getMaxDistanceSq(i, i+j).sqrt().divide(new DoubleRep(j));
+                if (curr.compareTo(maxVal) > 0) {
+                    maxVal = curr;
+                }
+            }
+        }
+        System.out.println(maxVal);
+    }
+
+    @Test
     public void testRadialSweep() {
         TrapezoidSequence<Fraction<WholeAndRt3>> trapSeq = new TrapezoidSequence<>(6002, zeroPt);
         int result = trapSeq.radialSweepCountCollinear(0, 6000, 2401);
