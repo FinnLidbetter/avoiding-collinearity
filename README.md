@@ -3,6 +3,9 @@ Code and tests for determining an upper bound on the number of collinear points 
 
 Navigate to the `src` folder and compile everything with `javac *.java`
 
+Get the index of the last new subword of a given length using:
+
+```java IndexOfLastNewSubword 9```
 
 Draw a sequence of trapezoids using:
 
