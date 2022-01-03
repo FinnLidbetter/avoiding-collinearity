@@ -35,7 +35,7 @@ public class AssertBoundedDistanceRatio {
                         new Fraction<>(WholeAndRt3.ZERO, WholeAndRt3.ONE)
                 );
                 TrapezoidSequence<Fraction<WholeAndRt3>> trapSeq = new TrapezoidSequence<>(1, zeroPoint);
-                int lastNewRelativePositioningIndex = trapSeq.indexOfLastNewRelativePositioning(gapMax);
+                int lastNewRelativePositioningIndex = trapSeq.indexOfLastNewRelativePositioning(gapMax + 1);
                 boolean belowBound = trapSeq.assertBoundedRatio(
                         gapMin, gapMax, 0, lastNewRelativePositioningIndex, upperBound
                 );
@@ -58,7 +58,7 @@ public class AssertBoundedDistanceRatio {
                 DoubleRep upperBound = new DoubleRep(Double.parseDouble(args[3]));
                 Point<DoubleRep> zeroPoint = new Point<>(new DoubleRep(0), new DoubleRep(0));
                 TrapezoidSequence<DoubleRep> trapSeq = new TrapezoidSequence<>(1, zeroPoint);
-                int lastNewRelativePositioningIndex = trapSeq.indexOfLastNewRelativePositioning(gapMax);
+                int lastNewRelativePositioningIndex = trapSeq.indexOfLastNewRelativePositioning(gapMax+1);
                 boolean belowBound = trapSeq.assertBoundedRatio(gapMin, gapMax, 0, lastNewRelativePositioningIndex, upperBound);
                 if (belowBound) {
                     System.out.println("SUCCESS");
