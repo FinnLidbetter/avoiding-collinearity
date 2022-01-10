@@ -477,21 +477,154 @@ public class TrapezoidSequence<T extends AbstractNumber<T>> {
             buildTrapezoidTypeSequenceFromSymbolSequence();
             buildTrapezoidSequenceFromTrapezoidTypeSequence();
         }
-        for (int cGap=gapMin; cGap<=gapMax; cGap++) {
-            T loDistanceSq = loDistanceSq(startIndex, endIndex, cGap);
-            for (int dGap=gapMin; dGap<=gapMax; dGap++) {
-                T hiDistanceSq = hiDistanceSq(startIndex, endIndex, dGap);
-                // Want to assert ((c+1)*sqrt(hiDistanceSq(d))) / (d*sqrt(loDistanceSq(c))) < baseUpperBound
-                // All quantities are greater than 0, so evaluate:
-                //    hiDistanceSq(d) / loDistanceSq(c) < ((d * baseUpperBound) / (c+1))^2
-                T lhs = hiDistanceSq.divide(loDistanceSq);
-                T rhsSqrt = baseUpperBound.multiply(baseUpperBound.whole(dGap)).divide(baseUpperBound.whole(cGap + 1));
-                T rhs = rhsSqrt.multiply(rhsSqrt);
-                if (lhs.compareTo(rhs) >= 0) {
-                    return false;
-                }
+        DistanceSqIndexRatio maxLoDistanceSqRatio = maxLoDistanceSqIndexRatio(gapMin, gapMax, startIndex, endIndex);
+        DistanceSqIndexRatio maxHiDistanceSqRatio = maxHiDistanceSqIndexRatio(gapMin, gapMax, startIndex, endIndex);
+        System.out.printf("maxLoDistanceRatio: %s\n", maxLoDistanceSqRatio);
+        System.out.printf("maxHiDistanceRatio: %s\n", maxHiDistanceSqRatio);
+        T lhs = maxHiDistanceSqRatio.distanceSq.divide(maxLoDistanceSqRatio.distanceSq);
+        T rhsSqrt = baseUpperBound.multiply(baseUpperBound.whole(maxHiDistanceSqRatio.indexGap)).divide(
+                baseUpperBound.whole(maxLoDistanceSqRatio.indexGap));
+        T rhs = rhsSqrt.multiply(rhsSqrt);
+        return lhs.compareTo(rhs) < 0;
+    }
+
+    /**
+     * Assert that max distance divided by the index gap for all trapezoid pairs is below a given upper bound.
+     *
+     * @param gapMin: the minimum number of indices separating a pair of trapezoids.
+     * @param gapMax: the maximum number of indices separating a pair of trapezoids.
+     * @param startIndex: the first index to consider in the sequence of trapezoids.
+     * @param endIndex: the last index to consider in the sequence of trapezoids.
+     * @return Considering pairs of trapezoids that are separated by at least gapMin indices and at most
+     *  gapMax indices, return the largest result of dividing the largest distance between points in a
+     *  trapezoid by the index gap.
+     */
+    private DistanceSqIndexRatio maxHiDistanceSqIndexRatio(int gapMin, int gapMax, int startIndex, int endIndex) {
+        if (trapezoids.size() <= endIndex + gapMax + 1) {
+            buildSymbolSequence(endIndex + gapMax + 2);
+            buildTrapezoidTypeSequenceFromSymbolSequence();
+            buildTrapezoidSequenceFromTrapezoidTypeSequence();
+        }
+        DistanceSqIndexRatio maxHiDistanceSqIndexRatio = null;
+        for (int gap=gapMin; gap<=gapMax; gap++) {
+            System.out.printf("Progress: considering gap %d in range [%d,%d]\n", gap, gapMin, gapMax);
+            T hiDistanceSq = hiDistanceSq(startIndex, endIndex, gap);
+            DistanceSqIndexRatio curr = new DistanceSqIndexRatio(hiDistanceSq, gap, false);
+            if (maxHiDistanceSqIndexRatio == null || maxHiDistanceSqIndexRatio.compareTo(curr) < 0) {
+                maxHiDistanceSqIndexRatio = curr;
             }
         }
-        return true;
+        return maxHiDistanceSqIndexRatio;
+    }
+
+    private DistanceSqIndexRatio maxLoDistanceSqIndexRatio(int gapMin, int gapMax, int startIndex, int endIndex) {
+        if (trapezoids.size() <= endIndex + gapMax + 1) {
+            buildSymbolSequence(endIndex + gapMax + 2);
+            buildTrapezoidTypeSequenceFromSymbolSequence();
+            buildTrapezoidSequenceFromTrapezoidTypeSequence();
+        }
+        DistanceSqIndexRatio maxLoDistanceSqIndexRatio = null;
+        for (int gap=gapMin; gap<=gapMax; gap++) {
+            System.out.printf("Progress: considering gap %d in range [%d,%d]\n", gap, gapMin, gapMax);
+            T loDistanceSq = loDistanceSq(startIndex, endIndex, gap);
+            DistanceSqIndexRatio curr = new DistanceSqIndexRatio(loDistanceSq, gap+1, true);
+            if (maxLoDistanceSqIndexRatio == null || maxLoDistanceSqIndexRatio.compareTo(curr) < 0) {
+                maxLoDistanceSqIndexRatio = curr;
+            }
+        }
+        return maxLoDistanceSqIndexRatio;
+    }
+
+    /**
+     * Assert that max distance divided by the index gap for all trapezoid pairs is below a given upper bound.
+     *
+     * @param gapMin: the minimum number of indices separating a pair of trapezoids.
+     * @param gapMax: the maximum number of indices separating a pair of trapezoids.
+     * @param startIndex: the first index to consider in the sequence of trapezoids.
+     * @param endIndex: the last index to consider in the sequence of trapezoids.
+     * @param baseUpperBound: the upper bound to compare against.
+     * @return Considering pairs of trapezoids that are separated by at least gapMin indices and at most
+     *  gapMax indices, return True iff the result of dividing the largest distance between points in a
+     *  trapezoid by the index gap is at most baseUpperBound.
+     */
+    public boolean assertBoundedMaxDistance(int gapMin, int gapMax, int startIndex, int endIndex, T baseUpperBound) {
+        if (trapezoids.size() <= endIndex + gapMax + 1) {
+            buildSymbolSequence(endIndex + gapMax + 2);
+            buildTrapezoidTypeSequenceFromSymbolSequence();
+            buildTrapezoidSequenceFromTrapezoidTypeSequence();
+        }
+        DistanceSqIndexRatio maxHiDistanceSqRatio = maxHiDistanceSqIndexRatio(gapMin, gapMax, startIndex, endIndex);
+        System.out.printf("maxHiDistanceRatio: %s\n", maxHiDistanceSqRatio.toString());
+        T rhsSqrt = baseUpperBound.multiply(baseUpperBound.whole(maxHiDistanceSqRatio.indexGap));
+        T rhs = rhsSqrt.multiply(rhsSqrt);
+        return maxHiDistanceSqRatio.distanceSq.compareTo(rhs) < 0;
+    }
+
+    /**
+     * Assert that max distance divided by the index gap for all trapezoid pairs is below a given upper bound.
+     *
+     * @param gapMin: the minimum number of indices separating a pair of trapezoids.
+     * @param gapMax: the maximum number of indices separating a pair of trapezoids.
+     * @param startIndex: the first index to consider in the sequence of trapezoids.
+     * @param endIndex: the last index to consider in the sequence of trapezoids.
+     * @param baseUpperBound: the upper bound to compare against.
+     * @return Considering pairs of trapezoids that are separated by at least gapMin indices and at most
+     *  gapMax indices, return True iff the result of dividing the index gap plus 1 by the smallest
+     *  distance between points in a pair of trapezoids is at most baseUpperBound.
+     */
+    public boolean assertBoundedMinDistance(int gapMin, int gapMax, int startIndex, int endIndex, T baseUpperBound) {
+        if (trapezoids.size() <= endIndex + gapMax + 1) {
+            buildSymbolSequence(endIndex + gapMax + 2);
+            buildTrapezoidTypeSequenceFromSymbolSequence();
+            buildTrapezoidSequenceFromTrapezoidTypeSequence();
+        }
+        DistanceSqIndexRatio maxLoDistanceSqRatio = maxLoDistanceSqIndexRatio(gapMin, gapMax, startIndex, endIndex);
+        System.out.printf("maxLoDistanceRatio: %s\n", maxLoDistanceSqRatio.toString());
+        T lhsSqrt = baseUpperBound.whole(maxLoDistanceSqRatio.indexGap);
+        T lhs = lhsSqrt.multiply(lhsSqrt);
+        T rhs = maxLoDistanceSqRatio.distanceSq.multiply(baseUpperBound.multiply(baseUpperBound));
+        return lhs.compareTo(rhs) < 0;
+    }
+
+    /**
+     * Inner class for storing squared distances and index gaps.
+     */
+    class DistanceSqIndexRatio implements Comparable<DistanceSqIndexRatio> {
+        T distanceSq;
+        int indexGap;
+        boolean inverse;
+        public DistanceSqIndexRatio(T distanceSq, int indexGap, boolean inverse) {
+            this.distanceSq = distanceSq;
+            this.indexGap = indexGap;
+            this.inverse = inverse;
+        }
+        public int compareTo(DistanceSqIndexRatio r2) {
+            if (inverse ^ r2.inverse) {
+                throw new RuntimeException("Should not compare an inverse ratio to a non-inverse ratio.");
+            }
+            if (inverse) {
+                T lhs = r2.distanceSq.divide(distanceSq);
+                T tIndexGap1 = distanceSq.whole(indexGap);
+                T tIndexGap2 = r2.distanceSq.whole(r2.indexGap);
+                T rhsSqrt = tIndexGap2.divide(tIndexGap1);
+                T rhs = rhsSqrt.multiply(rhsSqrt);
+                return lhs.compareTo(rhs);
+            } else {
+                T lhs = distanceSq.divide(r2.distanceSq);
+                T tIndexGap1 = distanceSq.whole(indexGap);
+                T tIndexGap2 = r2.distanceSq.whole(r2.indexGap);
+                T rhsSqrt = tIndexGap1.divide(tIndexGap2);
+                T rhs = rhsSqrt.multiply(rhsSqrt);
+                return lhs.compareTo(rhs);
+            }
+        }
+
+        public String toString() {
+            if (inverse) {
+                return String.format("%d / sqrt(%s)", indexGap, distanceSq.toString());
+            } else {
+                return String.format("sqrt(%s) / %d", distanceSq.toString(), indexGap);
+            }
+        }
     }
 }
