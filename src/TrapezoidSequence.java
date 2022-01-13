@@ -8,7 +8,7 @@ import java.util.List;
 public class TrapezoidSequence<T extends AbstractNumber<T>> {
     private final TrapezoidFactory<T> tf = new TrapezoidFactory<>();
 
-    private static final int[][] morphism = {
+    public static final int[][] morphism = {
         { 0, 4, 9, 0, 8, 9, 0},
         { 1, 5,10, 1, 6,10, 1},
         { 2, 3,11, 2, 7,11, 2},
@@ -22,11 +22,12 @@ public class TrapezoidSequence<T extends AbstractNumber<T>> {
         {10, 1, 5,10, 1, 6,10},
         {11, 2, 3,11, 2, 7,11},
     };
-    private static final TrapezoidType[] trapezoidTypeMap = {
+    public static final TrapezoidType[] trapezoidTypeMap = {
             TrapezoidType.ZERO, TrapezoidType.THREE, TrapezoidType.FIVE, TrapezoidType.ONE, TrapezoidType.TWO, TrapezoidType.FOUR,
             TrapezoidType.ONE, TrapezoidType.TWO, TrapezoidType.FOUR, TrapezoidType.ZERO, TrapezoidType.THREE, TrapezoidType.FIVE
     };
-    private static final int NUM_SYMBOLS = morphism.length;
+    public static final char[] vectorMap = {'i', 'i', 'i', 'i', 'j', 'j', 'j', 'j', 'k', 'k', 'k', 'k'};
+    public static final int NUM_SYMBOLS = morphism.length;
 
     ArrayList<Integer> symbolSequence;
     ArrayList<TrapezoidType> trapezoidTypeSequence;
@@ -146,6 +147,27 @@ public class TrapezoidSequence<T extends AbstractNumber<T>> {
         }
         dp[wordLength] = lastNewSubwordIndex;
         return lastNewSubwordIndex;
+    }
+
+    public int indexOfLastNewVectorSequence(int sequenceLength) {
+        int upperBoundIndex = indexOfLastNewSubword(sequenceLength) + sequenceLength;
+        if (upperBoundIndex + sequenceLength > trapezoidTypeSequence.size()) {
+            buildSymbolSequence(upperBoundIndex + sequenceLength);
+        }
+        HashSet<String> vectorSequences = new HashSet<>();
+        int lastNewIndex = 0;
+        for (int i=0; i<upperBoundIndex; i++) {
+            StringBuilder sb = new StringBuilder();
+            for (int j=0; j<sequenceLength; j++) {
+                sb.append(vectorMap[symbolSequence.get(i+j)]);
+            }
+            String vectorSequence = sb.toString();
+            if (!vectorSequences.contains(vectorSequence)) {
+                vectorSequences.add(vectorSequence);
+                lastNewIndex = i;
+            }
+        }
+        return lastNewIndex;
     }
 
     /**

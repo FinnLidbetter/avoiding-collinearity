@@ -262,7 +262,7 @@ public class WholeAndRt3 extends AbstractNumber<WholeAndRt3> {
 
     @Override
     public String toString() {
-        return String.format("%d + %d * sqrt(3)", ones, rt3);
+        return String.format("(%d + %d * sqrt(3))", ones, rt3);
     }
 
     @Override
