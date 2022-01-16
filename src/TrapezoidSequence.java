@@ -26,7 +26,7 @@ public class TrapezoidSequence<T extends AbstractNumber<T>> {
             TrapezoidType.ZERO, TrapezoidType.THREE, TrapezoidType.FIVE, TrapezoidType.ONE, TrapezoidType.TWO, TrapezoidType.FOUR,
             TrapezoidType.ONE, TrapezoidType.TWO, TrapezoidType.FOUR, TrapezoidType.ZERO, TrapezoidType.THREE, TrapezoidType.FIVE
     };
-    public static final char[] vectorMap = {'i', 'i', 'i', 'i', 'j', 'j', 'j', 'j', 'k', 'k', 'k', 'k'};
+    public static final char[] vectorMap = {'i', 'j', 'k', 'i', 'j', 'k', 'i', 'j', 'k', 'i', 'j', 'k'};
     public static final int NUM_SYMBOLS = morphism.length;
 
     ArrayList<Integer> symbolSequence;
