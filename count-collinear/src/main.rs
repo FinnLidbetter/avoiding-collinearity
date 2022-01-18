@@ -1,4 +1,5 @@
 use std::env;
+use std::cmp::Ordering;
 use std::collections::HashMap;
 
 fn main() {
@@ -8,6 +9,17 @@ fn main() {
         .trim()
         .parse()
         .expect("Enter a positive integer for a sequence length.");
+    let start_index: usize = match args.get(2) {
+        Some(element) => element.to_string().trim().parse().expect("Enter a positive integer"),
+        None => 0
+    };
+    let mut end_index: usize = match args.get(3) {
+        Some(element) => element.to_string().trim().parse().expect("Enter a positive integer"),
+        None => sequence_length.try_into().unwrap()
+    };
+    if end_index > sequence_length.try_into().unwrap() {
+        end_index = sequence_length.try_into().unwrap();
+    }
     
     let morphism: [[u8; 7]; 12] = [
         [ 0, 4, 9, 0, 8, 9, 0],
@@ -64,11 +76,43 @@ fn main() {
         num: i128,
         denom: i128,
     }
+    impl Ord for Fraction {
+        fn cmp(&self, other: &Fraction) -> Ordering {
+            match self.num.cmp(&other.num) {
+                Ordering::Less => Ordering::Less,
+                Ordering::Greater => Ordering::Greater,
+                Ordering::Equal => self.denom.cmp(&other.denom)
+            }
+        }
+    }
+    impl PartialOrd for Fraction {
+        fn partial_cmp(&self, other: &Fraction) -> Option<Ordering> {
+            Some(self.cmp(other))
+        }
+    }
+
     #[derive(PartialEq, Eq, Hash)]
     struct Line3D {
         point: (Fraction, Fraction, Fraction),
         direction: (Fraction, Fraction, Fraction),
     }
+
+    impl Ord for Line3D {
+        fn cmp(&self, other: &Line3D) -> Ordering {
+            match self.point.cmp(&other.point) {
+                Ordering::Less => Ordering::Less,
+                Ordering::Greater => Ordering::Greater,
+                Ordering::Equal => self.direction.cmp(&other.direction)
+            }
+        }
+    }
+    impl PartialOrd for Line3D {
+        fn partial_cmp(&self, other: &Line3D) -> Option<Ordering> {
+            Some(self.cmp(other))
+        }
+    }
+
+
     fn gcd(a: i128, b: i128) -> i128 {
         if a < 0 {
             gcd(-a, b)
@@ -148,7 +192,7 @@ fn main() {
         z_sequence.push(next_z);
     }
     let mut max_count = 0;
-    for i in 0..z_sequence.len() - 1 {
+    for i in start_index..end_index {
         println!("Progress: considering lines through {}, current max collinear is: {}", i, max_count);
         let mut line_counts = HashMap::new();
         for j in i+1..z_sequence.len() {
@@ -160,5 +204,33 @@ fn main() {
             }
         }
     }
-    println!("The largest number of collinear points in the first {} indices is {}.", sequence_length, max_count);
+    println!("Considering all lines through points from index {} to index {}, The largest number of collinear points in the first {} indices of the sequence is {}.", start_index, end_index, sequence_length, max_count);
+    /*
+    let mut max_count_2 = 0;
+    for i in 0..z_sequence.len() - 1 {
+        println!("Progress: considering lines through {}, current max collinear is: {}", i, max_count_2);
+        let mut lines: Vec<Line3D> = Vec::new();
+        for j in i+1..z_sequence.len() {
+            lines.push(build_line(&z_sequence[i], &z_sequence[j]));
+        }
+        lines.sort();
+        let mut curr_count = 0;
+        let mut prev = &lines[0];
+        for (j, curr_line) in lines.iter().enumerate() {
+            if j == 0 {
+                continue;
+            }
+            if prev.eq(&curr_line) {
+                curr_count += 1;
+                if curr_count > max_count_2 {
+                    max_count_2 = curr_count;
+                }
+            } else {
+                curr_count = 2;
+            }
+            prev = &curr_line;
+        }
+    }
+    println!("The largest number of collinear points in the first {} indices is {}.", sequence_length, max_count_2);
+    */
 }
