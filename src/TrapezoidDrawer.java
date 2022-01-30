@@ -12,10 +12,12 @@ public class TrapezoidDrawer<T extends AbstractNumber<T>> extends JFrame {
     static final int imageHeight = 600;
     static final int border = 50;
     TrapezoidSequence<T> trapezoidSequence;
+    boolean recursive;
 
-    public TrapezoidDrawer(TrapezoidSequence<T> trapezoidSequence, String path) {
+    public TrapezoidDrawer(TrapezoidSequence<T> trapezoidSequence, boolean recursive, String path) {
         super("Trapezoid sequence");
         this.trapezoidSequence = trapezoidSequence;
+        this.recursive = recursive;
 
         setSize(imageWidth, imageHeight);
         setVisible(true);
@@ -51,15 +53,22 @@ public class TrapezoidDrawer<T extends AbstractNumber<T>> extends JFrame {
         xScalar = Math.min(xScalar, yScalar);
         yScalar = Math.min(xScalar, yScalar);
         yScalar *= -1;
-        for (Trapezoid<T> trap: trapezoidSequence.trapezoids) {
-            for (LineSegment<T> line: trap.sides) {
-                int x1 = (int)(line.p1.x.toDouble() * xScalar + xOffset);
-                int y1 = (int)(line.p1.y.toDouble() * yScalar + yOffset);
-                int x2 = (int)(line.p2.x.toDouble() * xScalar + xOffset);
-                int y2 = (int)(line.p2.y.toDouble() * yScalar + yOffset);
-                canvas.drawLine(x1, y1, x2, y2);
+        double trapezoidOrderScalar = 1;
+        int upperBound = trapezoidSequence.trapezoids.size();
+        do {
+            for (int i = 0; i < upperBound; i++) {
+                Trapezoid<T> trap = trapezoidSequence.trapezoids.get(i);
+                for (LineSegment<T> line : trap.sides) {
+                    int x1 = (int) (line.p1.x.toDouble() * xScalar * trapezoidOrderScalar + xOffset);
+                    int y1 = (int) (line.p1.y.toDouble() * yScalar * trapezoidOrderScalar + yOffset);
+                    int x2 = (int) (line.p2.x.toDouble() * xScalar * trapezoidOrderScalar + xOffset);
+                    int y2 = (int) (line.p2.y.toDouble() * yScalar * trapezoidOrderScalar + yOffset);
+                    canvas.drawLine(x1, y1, x2, y2);
+                }
             }
-        }
+            upperBound /= 7;
+            trapezoidOrderScalar *= 4.0;
+        } while (upperBound>0 && this.recursive);
     }
 
     public void paint(Graphics g) {
