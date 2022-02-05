@@ -15,10 +15,10 @@ public enum TrapezoidType {
     private final static TrapezoidType[][] cayleyTable = {
             {TrapezoidType.ZERO, TrapezoidType.ONE, TrapezoidType.TWO, TrapezoidType.THREE, TrapezoidType.FOUR, TrapezoidType.FIVE},
             {TrapezoidType.ONE, TrapezoidType.ZERO, TrapezoidType.THREE, TrapezoidType.TWO, TrapezoidType.FIVE, TrapezoidType.FOUR},
-            {TrapezoidType.TWO, TrapezoidType.FIVE, TrapezoidType.ZERO, TrapezoidType.FOUR, TrapezoidType.THREE, TrapezoidType.ONE},
-            {TrapezoidType.THREE, TrapezoidType.FOUR, TrapezoidType.ONE, TrapezoidType.FIVE, TrapezoidType.TWO, TrapezoidType.ZERO},
-            {TrapezoidType.FOUR, TrapezoidType.THREE, TrapezoidType.FIVE, TrapezoidType.ONE, TrapezoidType.ZERO, TrapezoidType.TWO},
-            {TrapezoidType.FIVE, TrapezoidType.TWO, TrapezoidType.FOUR, TrapezoidType.ZERO, TrapezoidType.ONE, TrapezoidType.THREE},
+            {TrapezoidType.TWO, TrapezoidType.THREE, TrapezoidType.FIVE, TrapezoidType.FOUR, TrapezoidType.ONE, TrapezoidType.ZERO},
+            {TrapezoidType.THREE, TrapezoidType.TWO, TrapezoidType.FOUR, TrapezoidType.FIVE, TrapezoidType.ONE, TrapezoidType.ZERO},
+            {TrapezoidType.FOUR, TrapezoidType.FIVE, TrapezoidType.ONE, TrapezoidType.ZERO, TrapezoidType.TWO, TrapezoidType.THREE},
+            {TrapezoidType.FIVE, TrapezoidType.FOUR, TrapezoidType.ZERO, TrapezoidType.ONE, TrapezoidType.THREE, TrapezoidType.TWO},
     };
 
     TrapezoidType(int typeNumber) {
@@ -33,10 +33,10 @@ public enum TrapezoidType {
         return switch (this) {
             case ZERO -> TrapezoidType.ZERO;
             case ONE -> TrapezoidType.ONE;
-            case TWO -> TrapezoidType.TWO;
-            case THREE -> TrapezoidType.FIVE;
-            case FOUR -> TrapezoidType.FOUR;
-            case FIVE -> TrapezoidType.THREE;
+            case TWO -> TrapezoidType.FIVE;
+            case THREE -> TrapezoidType.FOUR;
+            case FOUR -> TrapezoidType.THREE;
+            case FIVE -> TrapezoidType.TWO;
         };
     }
 
