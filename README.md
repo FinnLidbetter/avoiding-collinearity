@@ -19,4 +19,4 @@ Find the largest count of trapezoids separated by at most a given number of indi
 
   ```java CountCollinearTrapezoids 7 wholeAndRt3```
 
-In the count-collinear subdirectory, the Rust program has been run for the first 211,800 points considering all points up to index 10 million. This computation has found that there is no set of 7 collinear points in the first 10 million points of the Gerver-Ramsey construction where at least one point is in the first 211,800 points. This computation has taken approximately one month so far. The computation has been paused and this note is to serve as a reminder for where it should be continued from.
+In the count-collinear subdirectory, the Rust program has been run for the first 211,800 points considering all points up to index 10 million. This computation has found that there is no set of 7 collinear points in the first 10 million points of the Gerver-Ramsey construction where at least one point is in the first 211,800 points. This computation has taken approximately 3 weeks so far. The computation has been paused and this note is to serve as a reminder for where it should be continued from.
