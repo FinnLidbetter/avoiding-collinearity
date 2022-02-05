@@ -15,7 +15,7 @@ public enum TrapezoidType {
     private final static TrapezoidType[][] cayleyTable = {
             {TrapezoidType.ZERO, TrapezoidType.ONE, TrapezoidType.TWO, TrapezoidType.THREE, TrapezoidType.FOUR, TrapezoidType.FIVE},
             {TrapezoidType.ONE, TrapezoidType.ZERO, TrapezoidType.THREE, TrapezoidType.TWO, TrapezoidType.FIVE, TrapezoidType.FOUR},
-            {TrapezoidType.TWO, TrapezoidType.FOUR, TrapezoidType.ZERO, TrapezoidType.FOUR, TrapezoidType.THREE, TrapezoidType.ONE},
+            {TrapezoidType.TWO, TrapezoidType.FIVE, TrapezoidType.ZERO, TrapezoidType.FOUR, TrapezoidType.THREE, TrapezoidType.ONE},
             {TrapezoidType.THREE, TrapezoidType.FOUR, TrapezoidType.ONE, TrapezoidType.FIVE, TrapezoidType.TWO, TrapezoidType.ZERO},
             {TrapezoidType.FOUR, TrapezoidType.THREE, TrapezoidType.FIVE, TrapezoidType.ONE, TrapezoidType.ZERO, TrapezoidType.TWO},
             {TrapezoidType.FIVE, TrapezoidType.TWO, TrapezoidType.FOUR, TrapezoidType.ZERO, TrapezoidType.ONE, TrapezoidType.THREE},

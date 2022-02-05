@@ -23,8 +23,8 @@ public class TrapezoidSequence<T extends AbstractNumber<T>> {
         {11, 2, 3,11, 2, 7,11},
     };
     public static final TrapezoidType[] trapezoidTypeMap = {
-            TrapezoidType.ZERO, TrapezoidType.THREE, TrapezoidType.FIVE, TrapezoidType.ONE, TrapezoidType.TWO, TrapezoidType.FOUR,
-            TrapezoidType.ONE, TrapezoidType.TWO, TrapezoidType.FOUR, TrapezoidType.ZERO, TrapezoidType.THREE, TrapezoidType.FIVE
+            TrapezoidType.ZERO, TrapezoidType.TWO, TrapezoidType.FIVE, TrapezoidType.ONE, TrapezoidType.THREE, TrapezoidType.FOUR,
+            TrapezoidType.ONE, TrapezoidType.THREE, TrapezoidType.FOUR, TrapezoidType.ZERO, TrapezoidType.TWO, TrapezoidType.FIVE
     };
     public static final char[] vectorMap = {'i', 'j', 'k', 'i', 'j', 'k', 'i', 'j', 'k', 'i', 'j', 'k'};
     public static final int NUM_SYMBOLS = morphism.length;
@@ -122,6 +122,7 @@ public class TrapezoidSequence<T extends AbstractNumber<T>> {
         if (maxCheckIndex + wordLength + 1 > symbolSequence.size()) {
             buildSymbolSequence(maxCheckIndex + wordLength + 2);
         }
+        System.out.printf("Working on word length: %d\n", wordLength);
         HashSet<BigInteger> wordSet = new HashSet<>();
         BigInteger base = new BigInteger("" + NUM_SYMBOLS);
         BigInteger maxPow = base.pow(wordLength-1);
@@ -134,6 +135,9 @@ public class TrapezoidSequence<T extends AbstractNumber<T>> {
         wordSet.add(word);
         int lastNewSubwordIndex = 0;
         for (int j=wordLength; j < maxCheckIndex + wordLength; j++) {
+            if ((j-wordLength) % 1000000 == 0) {
+                System.out.printf("\tConsidering index %d/%d\n", j-wordLength, maxCheckIndex);
+            }
             BigInteger subtractor = maxPow.multiply(new BigInteger("" + symbolSequence.get(j - wordLength)));
             word = word.subtract(subtractor);
             word = word.multiply(base);
