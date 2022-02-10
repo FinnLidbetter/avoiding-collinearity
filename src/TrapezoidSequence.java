@@ -87,6 +87,56 @@ public class TrapezoidSequence<T extends AbstractNumber<T>> {
     }
 
     /**
+     * Get the index of the last new symbol.
+     *
+     * This assumes that it occurs in the first 1000 indices and that there is a known
+     * set of 12 symbols, of which all will eventually appear.
+     * @return the index of the last new symbol.
+     */
+    private int indexOfLastNewSymbol() {
+        buildSymbolSequence(1000);
+        HashSet<Integer> symbolsSeen = new HashSet<>();
+        for (int i=0; i<symbolSequence.size(); i++) {
+            symbolsSeen.add(symbolSequence.get(i));
+            if (symbolsSeen.size() == morphism.length) {
+                return i;
+            }
+        }
+        throw new RuntimeException("Symbol sequence too short. Did not find one of the symbols.");
+    }
+
+    /**
+     * Get the start index of the last new pair of symbols.
+     *
+     * This assumes that all subwords of length 2 in the images of the morphism will appear
+     * and that they will appear in the first 1000 symbols.
+     * @return the index of the last new pair of symbols.
+     */
+    private int indexOfLastNewSymbolPair() {
+        buildSymbolSequence(1000);
+        HashSet<Integer> expectedPairs = new HashSet<>();
+        for (int[] morphismImage : morphism) {
+            for (int j = 0; j < morphismImage.length - 1; j++) {
+                int symbol1 = morphismImage[j];
+                int symbol2 = morphismImage[j + 1];
+                expectedPairs.add(symbol1 * morphism.length + symbol2);
+            }
+        }
+        for (int i=0; i<symbolSequence.size(); i++) {
+            int symbol1 = symbolSequence.get(i);
+            int symbol2 = symbolSequence.get(i + 1);
+            int pair = symbol1 * morphism.length + symbol2;
+            if (expectedPairs.contains(pair)) {
+                expectedPairs.remove(pair);
+            }
+            if (expectedPairs.size() == 0) {
+                return i;
+            }
+        }
+        throw new RuntimeException("Symbol sequence too short. Did not find an expected pair of symbols.");
+    }
+
+    /**
      * Get the start index of the last new subword produced by iterating the morphism.
      *
      * @param wordLength: the length of the subword.
@@ -111,11 +161,13 @@ public class TrapezoidSequence<T extends AbstractNumber<T>> {
             return dp[wordLength];
         }
         if (wordLength == 1) {
-            dp[wordLength] = 212;
-            return 212;
+            int index = indexOfLastNewSymbol();
+            dp[wordLength] = index;
+            return index;
         } else if (wordLength == 2) {
-            dp[wordLength] = 557;
-            return 557;
+            int index = indexOfLastNewSymbolPair();
+            dp[wordLength] = index;
+            return index;
         }
         int prevSubwordLength = (int)Math.ceil((double) wordLength / 7.0) + 1;
         int maxCheckIndex = 7 * (indexOfLastNewSubword(prevSubwordLength, dp) + prevSubwordLength);
