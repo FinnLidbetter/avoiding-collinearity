@@ -16,21 +16,20 @@ public class PrintSymbolSequence {
                     oneIndexed = true;
                 }
             }
-            TrapezoidSequence<WholeNumber> trapSeq = new TrapezoidSequence<>(
-                    sequenceLength, new Point<>(WholeNumber.ZERO, WholeNumber.ZERO));
+            SymbolSequence symbolSeq = new SymbolSequence(sequenceLength);
             if (oneIndexed) {
                 System.out.println("1-indexed Symbol Sequence");
             } else {
                 System.out.println("0-indexed Symbol Sequence");
             }
-            for (int i=0; i<sequenceLength; i++) {
+            for (int i=0; i < sequenceLength; i++) {
                 int indexToPrint = i;
                 if (oneIndexed) {
                     indexToPrint = i + 1;
                 }
-                String symbol = trapSeq.symbolSequence.get(i).toString();
+                String symbol = symbolSeq.sequence.get(i).toString();
                 if (alphabetic) {
-                    symbol = "" + (char)('a'+trapSeq.symbolSequence.get(i));
+                    symbol = "" + (char)('a'+symbolSeq.sequence.get(i));
                 }
                 System.out.printf("\t%d: %s\n", indexToPrint, symbol);
             }

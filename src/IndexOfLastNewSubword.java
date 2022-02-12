@@ -6,21 +6,20 @@ public class IndexOfLastNewSubword {
         }
         try {
             int subwordLength = Integer.parseInt(args[0]);
-            TrapezoidSequence<WholeNumber> trapSeq = new TrapezoidSequence<>(
-                    560, new Point<>(WholeNumber.ZERO, WholeNumber.ZERO));
+            SymbolSequence symbolSeq = new SymbolSequence(560);
             if (args.length==2 && args[1].equals("--vector-sequence")) {
-                int index = trapSeq.indexOfLastNewVectorSequence(subwordLength);
+                int index = symbolSeq.indexOfLastNewVectorSequence(subwordLength);
                 StringBuilder vectorSequence = new StringBuilder();
                 for (int i=index; i < index + subwordLength; i++) {
-                   vectorSequence.append(trapSeq.vectorMap[trapSeq.symbolSequence.get(i)]);
+                   vectorSequence.append(SymbolSequence.vectorMap[symbolSeq.sequence.get(i)]);
                 }
                 System.out.printf("The (0-based) index of the last new vector sequence of length %d is %d.\n", subwordLength, index);
                 System.out.printf("The vector sequence starting at this index is %s.\n", vectorSequence);
             } else {
-                int index = trapSeq.indexOfLastNewSubword(subwordLength);
+                int index = symbolSeq.indexOfLastNewSubword(subwordLength);
                 StringBuilder subword = new StringBuilder();
                 for (int i = index; i < index + subwordLength; i++) {
-                    subword.append((char) ('a' + trapSeq.symbolSequence.get(i)));
+                    subword.append((char) ('a' + symbolSeq.sequence.get(i)));
                 }
                 System.out.printf("The (0-based) index of the last new subword of length %d is %d.\n", subwordLength, index);
                 System.out.printf("The subword at this index is %s.\n", subword);

@@ -38,16 +38,6 @@ public class TrapezoidSequenceTests {
     }
 
     @Test
-    public void testSubwordIndex() {
-        TrapezoidSequence<Fraction<WholeAndRt3>> trapSeq = new TrapezoidSequence<>(600, zeroPt);
-
-        int upperBoundIndex = trapSeq.indexOfLastNewSubword(49);
-        System.out.println(upperBoundIndex);
-        int lastNewPositioningIndex = trapSeq.indexOfLastNewRelativePositioning(49);
-        System.out.println(lastNewPositioningIndex);
-    }
-
-    @Test
     public void testIntervals() {
         TrapezoidSequence<Fraction<WholeAndRt3>> trapSeq = new TrapezoidSequence<>(2, zeroPt);
         Interval[] collinearSearchIntervals = trapSeq.getCollinearSearchIntervals(2401);
