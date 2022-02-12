@@ -1,3 +1,4 @@
 *.class
-count-collinear/target/
-count-collinear/Cargo.lock
+maven/target/
+cargo/count-collinear/target/
+cargo/count-collinear/Cargo.lock
