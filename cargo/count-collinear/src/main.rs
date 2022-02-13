@@ -72,12 +72,12 @@ fn main() {
         z: i128,
     }
     #[derive(PartialEq, Eq, Hash)]
-    struct com.numbers.Fraction {
+    struct Fraction {
         num: i128,
         denom: i128,
     }
-    impl Ord for com.numbers.Fraction {
-        fn cmp(&self, other: &com.numbers.Fraction) -> Ordering {
+    impl Ord for Fraction {
+        fn cmp(&self, other: &Fraction) -> Ordering {
             match self.num.cmp(&other.num) {
                 Ordering::Less => Ordering::Less,
                 Ordering::Greater => Ordering::Greater,
@@ -85,16 +85,16 @@ fn main() {
             }
         }
     }
-    impl PartialOrd for com.numbers.Fraction {
-        fn partial_cmp(&self, other: &com.numbers.Fraction) -> Option<Ordering> {
+    impl PartialOrd for Fraction {
+        fn partial_cmp(&self, other: &Fraction) -> Option<Ordering> {
             Some(self.cmp(other))
         }
     }
 
     #[derive(PartialEq, Eq, Hash)]
     struct Line3D {
-        point: (com.numbers.Fraction, com.numbers.Fraction, com.numbers.Fraction),
-        direction: (com.numbers.Fraction, com.numbers.Fraction, com.numbers.Fraction),
+        point: (Fraction, Fraction, Fraction),
+        direction: (Fraction, Fraction, Fraction),
     }
 
     impl Ord for Line3D {
@@ -164,12 +164,12 @@ fn main() {
             pd[i] /= div;
         }
 
-        let point_x = com.numbers.Fraction {num: pn[0], denom: pd[0]};
-        let point_y = com.numbers.Fraction {num: pn[1], denom: pd[1]};
-        let point_z = com.numbers.Fraction {num: pn[2], denom: pd[2]};
-        let direction_x = com.numbers.Fraction {num: tn[0], denom: td[0]};
-        let direction_y = com.numbers.Fraction {num: tn[1], denom: td[1]};
-        let direction_z = com.numbers.Fraction {num: tn[2], denom: td[2]};
+        let point_x = Fraction {num: pn[0], denom: pd[0]};
+        let point_y = Fraction {num: pn[1], denom: pd[1]};
+        let point_z = Fraction {num: pn[2], denom: pd[2]};
+        let direction_x = Fraction {num: tn[0], denom: td[0]};
+        let direction_y = Fraction {num: tn[1], denom: td[1]};
+        let direction_z = Fraction {num: tn[2], denom: td[2]};
         Line3D { point: (point_x, point_y, point_z), direction: (direction_x, direction_y, direction_z)}
     }
 
