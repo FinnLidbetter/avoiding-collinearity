@@ -3,6 +3,7 @@ package com;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.HashMap;
 
 public class SymbolSequence {
     public static final int[][] morphism = {
@@ -67,9 +68,6 @@ public class SymbolSequence {
     public int earliestSubwordMatch(int startIndex, int subwordLength) {
         extendSequenceToLength(startIndex + subwordLength + 1);
         for (int i=0; i<=startIndex; i++) {
-            if (i%1000==0) {
-                System.out.printf("Progress: %d/%d\n", i, startIndex);
-            }
             boolean match = true;
             for (int j=0; j<subwordLength; j++) {
                 if (sequence.get(i + j) != (int)sequence.get(startIndex + j)) {
@@ -173,6 +171,45 @@ public class SymbolSequence {
             extendSequenceToLength(maxCheckIndex + wordLength + 2);
         }
         System.out.printf("Working on word length: %d\n", wordLength);
+
+        /*
+        HashMap<Integer, ArrayList<Integer>> wordHashes = new HashMap<>();
+        int lastNewSubwordIndex = 0;
+        for (int i=0; i<=maxCheckIndex; i++) {
+            StringBuilder sb = new StringBuilder();
+            for (int j=0; j<wordLength; j++) {
+                sb.append('a'+sequence.get(i+j));
+            }
+            int wordHash = sb.toString().hashCode();
+            if (wordHashes.containsKey(wordHash)) {
+                boolean hasMatch = false;
+                for (int otherStartIndex: wordHashes.get(wordHash)) {
+                    boolean isMatch = true;
+                    for (int j=0; j<wordLength; j++) {
+                        if (sequence.get(i+j) != (int)sequence.get(otherStartIndex + j)) {
+                            isMatch = false;
+                            break;
+                        }
+                    }
+                    if (isMatch) {
+                        hasMatch = true;
+                        break;
+                    }
+                }
+                if (!hasMatch) {
+                    wordHashes.get(wordHash).add(i);
+                    lastNewSubwordIndex = i;
+                }
+            } else {
+                ArrayList<Integer> indexList = new ArrayList<>();
+                indexList.add(i);
+                wordHashes.put(wordHash, indexList);
+                lastNewSubwordIndex = i;
+            }
+        }
+
+         */
+
         HashSet<BigInteger> wordSet = new HashSet<>();
         BigInteger base = new BigInteger("" + NUM_SYMBOLS);
         BigInteger maxPow = base.pow(wordLength-1);
@@ -199,6 +236,7 @@ public class SymbolSequence {
                 lastNewSubwordIndex = j - wordLength + 1;
             }
         }
+
         dp[wordLength] = lastNewSubwordIndex;
         return lastNewSubwordIndex;
     }

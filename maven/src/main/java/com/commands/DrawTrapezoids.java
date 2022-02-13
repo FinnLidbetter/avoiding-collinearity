@@ -17,11 +17,11 @@ public class DrawTrapezoids {
     public static void main(String[] args) {
         if (isHelpArgument(args[0])) {
             printHelp();
-            System.exit(0);
+            return;
         }
         if (args.length != 3 && args.length != 4) {
             printHelp();
-            System.exit(1);
+            return;
         }
         String numberSystem = args[0];
         String outputPath = args[2];
@@ -52,12 +52,11 @@ public class DrawTrapezoids {
                 }
                 default -> {
                     printHelp();
-                    System.exit(1);
+                    return;
                 }
             }
         } catch (NumberFormatException e) {
             printHelp();
-            System.exit(1);
         }
     }
 

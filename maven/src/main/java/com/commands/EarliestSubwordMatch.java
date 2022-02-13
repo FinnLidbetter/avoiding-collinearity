@@ -5,19 +5,35 @@ import com.SymbolSequence;
 public class EarliestSubwordMatch {
     public static void main(String[] args) {
 
-        if (isHelpArgument(args[0]) || args.length != 2) {
+        if (isHelpArgument(args[0]) || args.length < 2) {
             printHelp();
-            System.exit(0);
+            return;
         }
         try {
-            int startIndex = Integer.parseInt(args[0]);
-            int subwordLength = Integer.parseInt(args[1]);
-            SymbolSequence symbolSeq = new SymbolSequence(startIndex + subwordLength + 1);
-            int earliestSubwordMatch = symbolSeq.earliestSubwordMatch(startIndex, subwordLength);
-            System.out.println(earliestSubwordMatch);
+            if (args.length == 2) {
+                int startIndex = Integer.parseInt(args[0]);
+                int subwordLength = Integer.parseInt(args[1]);
+                SymbolSequence symbolSeq = new SymbolSequence(startIndex + subwordLength + 1);
+                int earliestSubwordMatch = symbolSeq.earliestSubwordMatch(startIndex, subwordLength);
+                System.out.println(earliestSubwordMatch);
+            } else if (args.length == 3) {
+                int startIndex = Integer.parseInt(args[0]);
+                int endIndex = Integer.parseInt(args[1]);
+                int subwordLength = Integer.parseInt(args[2]);
+                SymbolSequence symbolSeq = new SymbolSequence(endIndex + subwordLength + 1);
+                int largestEarliestMatch = 0;
+                for (int index=startIndex; index<=endIndex; index++) {
+                    System.out.printf("Progress: index %d/%d\n", index, endIndex);
+                    int earliestSubwordMatch = symbolSeq.earliestSubwordMatch(index, subwordLength);
+                    if (earliestSubwordMatch == index) {
+                        largestEarliestMatch = index;
+                    }
+                }
+                System.out.println(largestEarliestMatch);
+
+            }
         } catch (NumberFormatException e) {
             printHelp();
-            System.exit(1);
         }
     }
 

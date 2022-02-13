@@ -13,11 +13,11 @@ public class CountCollinearTrapezoids {
     public static void main(String[] args) {
         if (isHelpArgument(args[0])) {
             printHelp();
-            System.exit(0);
+            return;
         }
         if (args.length != 2) {
             printHelp();
-            System.exit(1);
+            return;
         }
         try {
             int maxIndexGap = Integer.parseInt(args[0]);
@@ -60,11 +60,10 @@ public class CountCollinearTrapezoids {
                 );
             } else {
                 printHelp();
-                System.exit(1);
+                return;
             }
         } catch (NumberFormatException e) {
             printHelp();
-            System.exit(1);
         }
 
     }

@@ -11,11 +11,11 @@ public class AssertBoundedMinDistance {
     public static void main(String[] args) {
         if (isHelpArgument(args[0])) {
             printHelp();
-            System.exit(0);
+            return;
         }
         if (args.length < 4) {
             printHelp();
-            System.exit(1);
+            return;
         }
         try {
             int gapMin = Integer.parseInt(args[0]);
@@ -23,15 +23,15 @@ public class AssertBoundedMinDistance {
             String numberSystem = args[2];
             if (!numberSystem.equals("wholeAndRt3") && !numberSystem.equals("double")) {
                 printHelp();
-                System.exit(1);
+                return;
             }
             if (numberSystem.equals("wholeAndRt3") && args.length != 5) {
                 printHelp();
-                System.exit(1);
+                return;
             }
             if (numberSystem.equals("double") && args.length != 4) {
                 printHelp();
-                System.exit(1);
+                return;
             }
             if (numberSystem.equals("wholeAndRt3")) {
                 Fraction<WholeAndRt3> upperBound = new Fraction<>(
@@ -86,7 +86,6 @@ public class AssertBoundedMinDistance {
             }
         } catch (NumberFormatException e) {
             printHelp();
-            System.exit(1);
         }
     }
     private static void printHelp() {

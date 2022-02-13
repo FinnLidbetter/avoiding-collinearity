@@ -6,7 +6,7 @@ public class PrintSymbolSequence {
     public static void main(String[] args) {
         if (args.length < 1 || isHelpArgument(args[0])) {
             printHelp();
-            System.exit(0);
+            return;
         }
         try {
             int sequenceLength = Integer.parseInt(args[0]);
@@ -40,7 +40,6 @@ public class PrintSymbolSequence {
 
         } catch (NumberFormatException e) {
             printHelp();
-            System.exit(1);
         }
     }
     private static void printHelp() {

@@ -6,7 +6,7 @@ public class IndexOfLastNewSubword {
     public static void main(String[] args) {
         if (isHelpArgument(args[0]) || (args.length != 1 && args.length != 2)) {
             printHelp();
-            System.exit(0);
+            return;
         }
         try {
             int subwordLength = Integer.parseInt(args[0]);
@@ -30,7 +30,6 @@ public class IndexOfLastNewSubword {
             }
         } catch (NumberFormatException e) {
             printHelp();
-            System.exit(1);
         }
     }
     private static void printHelp() {
