@@ -9,7 +9,7 @@ struct Point3D {
     z: i128,
 }
 
-#[derive(PartialEq, Eq, Hash)]
+#[derive(Debug, PartialEq, Eq, Hash)]
 struct Fraction {
     num: i128,
     denom: i128,
@@ -44,13 +44,6 @@ impl Line3D {
     /// Get a normalised 3-dimensional line object from two points.
     ///
     /// Normalise the line by getting a normalised direction and normalised point.
-    /// The direction is normalised by making the first nonzero coordinate (first
-    /// out of x, y, z) for the direction vector equal to one and representing the
-    /// remaining coordinates in reduced fractions of integers.
-    /// The point is normalised by shifting it along the line such that the coordinate
-    /// corresponding to the first nonzero coordinate of the direction vector is 0.
-    /// The remaining coordinates of the point are represented as reduced fractions
-    /// of integers.
     pub fn new_normalised(point_1: &Point3D, point_2: &Point3D) -> Self {
         let mut point_numerators: [i128; 3] = [point_1.x, point_1.y, point_1.z];
         let mut point_denominators: [i128; 3] = [1, 1, 1];
@@ -83,6 +76,9 @@ impl Line3D {
         }
     }
 
+    /// The direction is normalised by making the first nonzero coordinate (first
+    /// out of x, y, z) for the direction vector equal to one and representing the
+    /// remaining coordinates in reduced fractions of integers.
     fn normalise_direction(
         direction_numerators: &mut [i128; 3],
         direction_denominators: &mut [i128; 3],
@@ -120,6 +116,10 @@ impl Line3D {
         (direction_x, direction_y, direction_z)
     }
 
+    /// The point is normalised by shifting it along the line such that the coordinate
+    /// corresponding to the first nonzero coordinate of the direction vector is 0.
+    /// The remaining coordinates of the point are represented as reduced fractions
+    /// of integers.
     fn normalise_point(
         point_numerators: &mut [i128; 3],
         point_denominators: &mut [i128; 3],
@@ -145,7 +145,7 @@ impl Line3D {
 /// The result returned will always be a nonnegative integer. If
 /// one of the arguments is 0, then the result will be the absolute
 /// value of the other argument.
-fn gcd(a: i128, b: i128) -> i128 {
+pub fn gcd(a: i128, b: i128) -> i128 {
     if a < 0 {
         gcd(-a, b)
     } else {
@@ -280,12 +280,17 @@ fn main() {
             }
         }
     }
-    info!("Considering all lines through points from index {} to index {}, The largest number of collinear points in the first {} indices of the sequence is {}.", start_index, end_index, sequence_length, max_count);
+    info!(
+        "Considering all lines through points from index {} to index {}, \
+        the largest number of collinear points in the first {} indices of \
+        the sequence is {}.",
+        start_index, end_index, sequence_length, max_count
+    );
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::gcd;
+    use crate::{gcd, Fraction};
 
     #[test]
     fn test_gcd() {
@@ -312,5 +317,37 @@ mod tests {
         assert_eq!(gcd(0, -537), 537);
         assert_eq!(gcd(0, 0), 0);
         assert_eq!(gcd(2 * 3 * 5 * 7 * 11, 13 * 17 * 19 * 23), 1);
+    }
+
+    #[test]
+    fn test_normalised_fraction() {
+        assert_eq!(
+            Fraction::new_normalised(2, 4),
+            Fraction { num: 1, denom: 2 }
+        );
+        assert_eq!(
+            Fraction::new_normalised(2, -4),
+            Fraction { num: -1, denom: 2 }
+        );
+        assert_eq!(
+            Fraction::new_normalised(1, -2),
+            Fraction { num: -1, denom: 2 }
+        );
+        assert_eq!(
+            Fraction::new_normalised(-1, 1),
+            Fraction { num: -1, denom: 1 }
+        );
+        assert_eq!(
+            Fraction::new_normalised(1, 1),
+            Fraction { num: 1, denom: 1 }
+        );
+        assert_eq!(
+            Fraction::new_normalised(-2, -4),
+            Fraction { num: 1, denom: 2 }
+        );
+        assert_eq!(
+            Fraction::new_normalised(-1, -2),
+            Fraction { num: 1, denom: 2 }
+        );
     }
 }
