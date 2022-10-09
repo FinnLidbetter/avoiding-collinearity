@@ -389,6 +389,52 @@ mod tests {
     }
 
     #[test]
+    fn test_x_axis_parallel_line_normalisation() {
+        let p1 = Point3D { x: 0, y: 500, z: 2};
+        let p2 = Point3D { x: 1, y: 500, z: 2};
+        let p3 = Point3D { x: -4, y: 500, z: 2};
+        let p4 = Point3D { x: 7, y: 500, z: 2};
+        let p5 = Point3D { x: 39412, y: 500, z: 2};
+        let normalised_line = Line3D::new_normalised(&p1, &p2);
+        let points = [p1, p2, p3, p4, p5];
+        for point_1 in &points {
+            for point_2 in &points {
+                if point_1 == point_2 {
+                    continue;
+                }
+                assert_eq!(Line3D::new_normalised(point_1, point_2), normalised_line);
+            }
+        }
+        let p6 = Point3D { x: 428, y: 499, z: 2};
+        for point in &points {
+            assert_ne!(Line3D::new_normalised(&p6, point), normalised_line);
+        }
+    }
+
+    #[test]
+    fn test_y_axis_parallel_line_normalisation() {
+        let p1 = Point3D { x: 428, y: 0, z: 2};
+        let p2 = Point3D { x: 428, y: 1, z: 2};
+        let p3 = Point3D { x: 428, y: 2, z: 2};
+        let p4 = Point3D { x: 428, y: -3, z: 2};
+        let p5 = Point3D { x: 428, y: 500, z: 2};
+        let normalised_line = Line3D::new_normalised(&p1, &p2);
+        let points = [p1, p2, p3, p4, p5];
+        for point_1 in &points {
+            for point_2 in &points {
+                if point_1 == point_2 {
+                    continue;
+                }
+                assert_eq!(Line3D::new_normalised(point_1, point_2), normalised_line);
+            }
+        }
+        let p6 = Point3D { x: 428, y: 10, z: 3};
+        for point in &points {
+            assert_ne!(Line3D::new_normalised(&p6, point), normalised_line);
+        }
+    }
+
+    #[test]
     fn test_z_axis_parallel_line_normalisation() {
         let p1 = Point3D { x: 428, y: 500, z: 0};
         let p2 = Point3D { x: 428, y: 500, z: 1};
@@ -405,5 +451,33 @@ mod tests {
                 assert_eq!(Line3D::new_normalised(point_1, point_2), normalised_line);
             }
         }
+        let p6 = Point3D { x: 42329, y: 500, z: 412};
+        for point in &points {
+            assert_ne!(Line3D::new_normalised(&p6, point), normalised_line);
+        }
+    }
+
+    #[test]
+    fn test_other_line_normalisation() {
+        let p1 = Point3D { x: 345, y: 10, z: 97};
+        let p2 = Point3D { x: 375, y: 70, z: 106};
+        let p3 = Point3D { x: 355, y: 30, z: 100};
+        let p4 = Point3D { x: 445, y: 210, z: 127};
+        let p5 = Point3D { x: 455, y: 230, z: 130};
+        let normalised_line = Line3D::new_normalised(&p1, &p2);
+        let points = [p1, p2, p3, p4, p5];
+        for point_1 in &points {
+            for point_2 in &points {
+                if point_1 == point_2 {
+                    continue;
+                }
+                assert_eq!(Line3D::new_normalised(point_1, point_2), normalised_line);
+            }
+        }
+        let p6 = Point3D { x: 444, y: 444, z: 444};
+        for point in &points {
+            assert_ne!(Line3D::new_normalised(&p6, point), normalised_line);
+        }
+
     }
 }
