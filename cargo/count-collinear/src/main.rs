@@ -34,7 +34,7 @@ impl Fraction {
     }
 }
 
-#[derive(PartialEq, Eq, Hash)]
+#[derive(Debug, PartialEq, Eq, Hash)]
 struct Line3D {
     point: (Fraction, Fraction, Fraction),
     direction: (Fraction, Fraction, Fraction),
@@ -88,7 +88,7 @@ impl Line3D {
         for index in normalisation_coordinate_index..3 {
             direction_denominators[index] *= normalisation_multiplier;
             if direction_denominators[index] < 0 {
-                direction_denominators[index] *= -1;
+                direction_numerators[index] *= -1;
                 direction_denominators[index] *= -1;
             }
         }
@@ -290,7 +290,7 @@ fn main() {
 
 #[cfg(test)]
 mod tests {
-    use crate::{gcd, Fraction};
+    use crate::{gcd, Fraction, Line3D, Point3D};
 
     /// The Greatest Common Divisor function works as expected.
     #[test]
@@ -353,19 +353,57 @@ mod tests {
         );
         assert_eq!(
             Fraction::new_normalised(0, 1),
-            Fraction { num: 0, denom: 1}
+            Fraction { num: 0, denom: 1 }
         );
         assert_eq!(
             Fraction::new_normalised(0, 9762),
-            Fraction { num: 0, denom: 1}
+            Fraction { num: 0, denom: 1 }
         );
         assert_eq!(
             Fraction::new_normalised(0, -1),
-            Fraction { num: 0, denom: 1}
+            Fraction { num: 0, denom: 1 }
         );
         assert_eq!(
             Fraction::new_normalised(0, -9762),
-            Fraction { num: 0, denom: 1}
+            Fraction { num: 0, denom: 1 }
         );
+    }
+
+    #[test]
+    fn test_line_normalisation() {
+        assert_eq!(
+            Line3D::new_normalised(&Point3D { x: 1, y: 1, z: 1 }, &Point3D { x: 2, y: 2, z: 2 },),
+            Line3D {
+                point: (
+                    Fraction { num: 0, denom: 1 },
+                    Fraction { num: 0, denom: 1 },
+                    Fraction { num: 0, denom: 1 }
+                ),
+                direction: (
+                    Fraction { num: 1, denom: 1 },
+                    Fraction { num: 1, denom: 1 },
+                    Fraction { num: 1, denom: 1 }
+                )
+            }
+        );
+    }
+
+    #[test]
+    fn test_z_axis_parallel_line_normalisation() {
+        let p1 = Point3D { x: 428, y: 500, z: 0};
+        let p2 = Point3D { x: 428, y: 500, z: 1};
+        let p3 = Point3D { x: 428, y: 500, z: 2};
+        let p4 = Point3D { x: 428, y: 500, z: -5};
+        let p5 = Point3D { x: 428, y: 500, z: 37};
+        let normalised_line = Line3D::new_normalised(&p1, &p2);
+        let points = [p1, p2, p3, p4, p5];
+        for point_1 in &points {
+            for point_2 in &points {
+                if point_1 == point_2 {
+                    continue;
+                }
+                assert_eq!(Line3D::new_normalised(point_1, point_2), normalised_line);
+            }
+        }
     }
 }
