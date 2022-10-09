@@ -16,6 +16,7 @@ struct Fraction {
 }
 
 impl Fraction {
+    /// Get a normalised Fraction.
     pub fn new_normalised(numerator: i128, denominator: i128) -> Self {
         let gcf = gcd(numerator, denominator);
         let normalised_numerator = numerator / gcf;
@@ -369,6 +370,7 @@ mod tests {
         );
     }
 
+    /// Test normalisation functions as expected.
     #[test]
     fn test_line_normalisation() {
         assert_eq!(
@@ -388,6 +390,9 @@ mod tests {
         );
     }
 
+    /// Test that pairs of collinear points normalise to the same line.
+    ///
+    /// The points all lie on a line parallel to the x axis.
     #[test]
     fn test_x_axis_parallel_line_normalisation() {
         let p1 = Point3D { x: 0, y: 500, z: 2};
@@ -411,6 +416,9 @@ mod tests {
         }
     }
 
+    /// Test that pairs of collinear points normalise to the same line.
+    ///
+    /// The points all lie on a line parallel to the y axis.
     #[test]
     fn test_y_axis_parallel_line_normalisation() {
         let p1 = Point3D { x: 428, y: 0, z: 2};
@@ -434,6 +442,9 @@ mod tests {
         }
     }
 
+    /// Test that pairs of collinear points normalise to the same line.
+    ///
+    /// The points all lie on a line parallel to the z axis.
     #[test]
     fn test_z_axis_parallel_line_normalisation() {
         let p1 = Point3D { x: 428, y: 500, z: 0};
@@ -457,6 +468,7 @@ mod tests {
         }
     }
 
+    /// Test that pairs of collinear points normalise to the same line.
     #[test]
     fn test_other_line_normalisation() {
         let p1 = Point3D { x: 345, y: 10, z: 97};
@@ -478,6 +490,5 @@ mod tests {
         for point in &points {
             assert_ne!(Line3D::new_normalised(&p6, point), normalised_line);
         }
-
     }
 }
