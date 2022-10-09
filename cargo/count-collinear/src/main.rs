@@ -292,6 +292,7 @@ fn main() {
 mod tests {
     use crate::{gcd, Fraction};
 
+    /// The Greatest Common Divisor function works as expected.
     #[test]
     fn test_gcd() {
         assert_eq!(gcd(1, 1), 1);
@@ -319,6 +320,7 @@ mod tests {
         assert_eq!(gcd(2 * 3 * 5 * 7 * 11, 13 * 17 * 19 * 23), 1);
     }
 
+    /// Fractions are normalised as expected.
     #[test]
     fn test_normalised_fraction() {
         assert_eq!(
@@ -348,6 +350,22 @@ mod tests {
         assert_eq!(
             Fraction::new_normalised(-1, -2),
             Fraction { num: 1, denom: 2 }
+        );
+        assert_eq!(
+            Fraction::new_normalised(0, 1),
+            Fraction { num: 0, denom: 1}
+        );
+        assert_eq!(
+            Fraction::new_normalised(0, 9762),
+            Fraction { num: 0, denom: 1}
+        );
+        assert_eq!(
+            Fraction::new_normalised(0, -1),
+            Fraction { num: 0, denom: 1}
+        );
+        assert_eq!(
+            Fraction::new_normalised(0, -9762),
+            Fraction { num: 0, denom: 1}
         );
     }
 }
