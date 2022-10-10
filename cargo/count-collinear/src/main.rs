@@ -162,7 +162,9 @@ pub fn gcd(a: i128, b: i128) -> i128 {
 ///
 /// Get the sequence length, start index, and end index.
 fn parse_args(args: Vec<String>) -> (u32, usize, usize) {
-    let sequence_length = &args[1];
+    let sequence_length = &args
+        .get(1)
+        .expect("Supply at least one argument, the sequence length.");
     let sequence_length: u32 = sequence_length
         .to_string()
         .trim()
@@ -258,13 +260,18 @@ fn build_point_sequence(sequence_length: u32) -> Vec<Point3D> {
     point_sequence
 }
 
-fn main() {
-    env_logger::init();
-    let args: Vec<String> = env::args().collect();
-    let (sequence_length, start_index, end_index) = parse_args(args);
-
-    let point_sequence = build_point_sequence(sequence_length);
-
+/// Get the largest number of points in the sequence intersected by a single line.
+///
+/// Only lines going through points with indices in [`start_index`, `end_index`) are
+/// considered and only points after `start_index` are considered.
+/// Note that that all points after `start_index` in `point_sequence` are considered
+/// for counting points on lines having some point at an index in
+/// [`start_index`, `end_index`).
+fn count_collinear_points(
+    point_sequence: Vec<Point3D>,
+    start_index: usize,
+    end_index: usize,
+) -> i32 {
     let mut max_count = 0;
     for i in start_index..end_index {
         debug!(
@@ -281,6 +288,16 @@ fn main() {
             }
         }
     }
+    max_count
+}
+
+fn main() {
+    env_logger::init();
+    let args: Vec<String> = env::args().collect();
+    let (sequence_length, start_index, end_index) = parse_args(args);
+
+    let point_sequence = build_point_sequence(sequence_length);
+    let max_count = count_collinear_points(point_sequence, start_index, end_index);
     info!(
         "Considering all lines through points from index {} to index {}, \
         the largest number of collinear points in the first {} indices of \
@@ -291,7 +308,7 @@ fn main() {
 
 #[cfg(test)]
 mod tests {
-    use crate::{gcd, Fraction, Line3D, Point3D};
+    use crate::{build_point_sequence, count_collinear_points, gcd, Fraction, Line3D, Point3D};
 
     /// The Greatest Common Divisor function works as expected.
     #[test]
@@ -395,11 +412,19 @@ mod tests {
     /// The points all lie on a line parallel to the x axis.
     #[test]
     fn test_x_axis_parallel_line_normalisation() {
-        let p1 = Point3D { x: 0, y: 500, z: 2};
-        let p2 = Point3D { x: 1, y: 500, z: 2};
-        let p3 = Point3D { x: -4, y: 500, z: 2};
-        let p4 = Point3D { x: 7, y: 500, z: 2};
-        let p5 = Point3D { x: 39412, y: 500, z: 2};
+        let p1 = Point3D { x: 0, y: 500, z: 2 };
+        let p2 = Point3D { x: 1, y: 500, z: 2 };
+        let p3 = Point3D {
+            x: -4,
+            y: 500,
+            z: 2,
+        };
+        let p4 = Point3D { x: 7, y: 500, z: 2 };
+        let p5 = Point3D {
+            x: 39412,
+            y: 500,
+            z: 2,
+        };
         let normalised_line = Line3D::new_normalised(&p1, &p2);
         let points = [p1, p2, p3, p4, p5];
         for point_1 in &points {
@@ -410,7 +435,11 @@ mod tests {
                 assert_eq!(Line3D::new_normalised(point_1, point_2), normalised_line);
             }
         }
-        let p6 = Point3D { x: 428, y: 499, z: 2};
+        let p6 = Point3D {
+            x: 428,
+            y: 499,
+            z: 2,
+        };
         for point in &points {
             assert_ne!(Line3D::new_normalised(&p6, point), normalised_line);
         }
@@ -421,11 +450,19 @@ mod tests {
     /// The points all lie on a line parallel to the y axis.
     #[test]
     fn test_y_axis_parallel_line_normalisation() {
-        let p1 = Point3D { x: 428, y: 0, z: 2};
-        let p2 = Point3D { x: 428, y: 1, z: 2};
-        let p3 = Point3D { x: 428, y: 2, z: 2};
-        let p4 = Point3D { x: 428, y: -3, z: 2};
-        let p5 = Point3D { x: 428, y: 500, z: 2};
+        let p1 = Point3D { x: 428, y: 0, z: 2 };
+        let p2 = Point3D { x: 428, y: 1, z: 2 };
+        let p3 = Point3D { x: 428, y: 2, z: 2 };
+        let p4 = Point3D {
+            x: 428,
+            y: -3,
+            z: 2,
+        };
+        let p5 = Point3D {
+            x: 428,
+            y: 500,
+            z: 2,
+        };
         let normalised_line = Line3D::new_normalised(&p1, &p2);
         let points = [p1, p2, p3, p4, p5];
         for point_1 in &points {
@@ -436,7 +473,11 @@ mod tests {
                 assert_eq!(Line3D::new_normalised(point_1, point_2), normalised_line);
             }
         }
-        let p6 = Point3D { x: 428, y: 10, z: 3};
+        let p6 = Point3D {
+            x: 428,
+            y: 10,
+            z: 3,
+        };
         for point in &points {
             assert_ne!(Line3D::new_normalised(&p6, point), normalised_line);
         }
@@ -447,11 +488,31 @@ mod tests {
     /// The points all lie on a line parallel to the z axis.
     #[test]
     fn test_z_axis_parallel_line_normalisation() {
-        let p1 = Point3D { x: 428, y: 500, z: 0};
-        let p2 = Point3D { x: 428, y: 500, z: 1};
-        let p3 = Point3D { x: 428, y: 500, z: 2};
-        let p4 = Point3D { x: 428, y: 500, z: -5};
-        let p5 = Point3D { x: 428, y: 500, z: 37};
+        let p1 = Point3D {
+            x: 428,
+            y: 500,
+            z: 0,
+        };
+        let p2 = Point3D {
+            x: 428,
+            y: 500,
+            z: 1,
+        };
+        let p3 = Point3D {
+            x: 428,
+            y: 500,
+            z: 2,
+        };
+        let p4 = Point3D {
+            x: 428,
+            y: 500,
+            z: -5,
+        };
+        let p5 = Point3D {
+            x: 428,
+            y: 500,
+            z: 37,
+        };
         let normalised_line = Line3D::new_normalised(&p1, &p2);
         let points = [p1, p2, p3, p4, p5];
         for point_1 in &points {
@@ -462,7 +523,11 @@ mod tests {
                 assert_eq!(Line3D::new_normalised(point_1, point_2), normalised_line);
             }
         }
-        let p6 = Point3D { x: 42329, y: 500, z: 412};
+        let p6 = Point3D {
+            x: 42329,
+            y: 500,
+            z: 412,
+        };
         for point in &points {
             assert_ne!(Line3D::new_normalised(&p6, point), normalised_line);
         }
@@ -471,11 +536,31 @@ mod tests {
     /// Test that pairs of collinear points normalise to the same line.
     #[test]
     fn test_other_line_normalisation() {
-        let p1 = Point3D { x: 345, y: 10, z: 97};
-        let p2 = Point3D { x: 375, y: 70, z: 106};
-        let p3 = Point3D { x: 355, y: 30, z: 100};
-        let p4 = Point3D { x: 445, y: 210, z: 127};
-        let p5 = Point3D { x: 455, y: 230, z: 130};
+        let p1 = Point3D {
+            x: 345,
+            y: 10,
+            z: 97,
+        };
+        let p2 = Point3D {
+            x: 375,
+            y: 70,
+            z: 106,
+        };
+        let p3 = Point3D {
+            x: 355,
+            y: 30,
+            z: 100,
+        };
+        let p4 = Point3D {
+            x: 445,
+            y: 210,
+            z: 127,
+        };
+        let p5 = Point3D {
+            x: 455,
+            y: 230,
+            z: 130,
+        };
         let normalised_line = Line3D::new_normalised(&p1, &p2);
         let points = [p1, p2, p3, p4, p5];
         for point_1 in &points {
@@ -486,9 +571,110 @@ mod tests {
                 assert_eq!(Line3D::new_normalised(point_1, point_2), normalised_line);
             }
         }
-        let p6 = Point3D { x: 444, y: 444, z: 444};
+        let p6 = Point3D {
+            x: 444,
+            y: 444,
+            z: 444,
+        };
         for point in &points {
             assert_ne!(Line3D::new_normalised(&p6, point), normalised_line);
+        }
+    }
+
+    #[test]
+    fn test_build_point_sequence() {
+        // The zero point is always included.
+        let point_sequence = build_point_sequence(0);
+        assert_eq!(point_sequence.len(), 1);
+        assert_eq!(point_sequence[0], Point3D { x: 0, y: 0, z: 0 });
+        let point_sequence = build_point_sequence(1);
+        assert_eq!(point_sequence.len(), 2);
+        assert_eq!(point_sequence[0], Point3D { x: 0, y: 0, z: 0 });
+        assert_eq!(point_sequence[1], Point3D { x: 1, y: 0, z: 0 });
+        // The first 7 points.
+        let point_sequence = build_point_sequence(7);
+        assert_eq!(point_sequence.len(), 8);
+        assert_eq!(point_sequence[0], Point3D { x: 0, y: 0, z: 0 });
+        assert_eq!(point_sequence[1], Point3D { x: 1, y: 0, z: 0 });
+        assert_eq!(point_sequence[2], Point3D { x: 1, y: 1, z: 0 });
+        assert_eq!(point_sequence[3], Point3D { x: 2, y: 1, z: 0 });
+        assert_eq!(point_sequence[4], Point3D { x: 3, y: 1, z: 0 });
+        assert_eq!(point_sequence[5], Point3D { x: 3, y: 1, z: 1 });
+        assert_eq!(point_sequence[6], Point3D { x: 4, y: 1, z: 1 });
+        assert_eq!(point_sequence[7], Point3D { x: 5, y: 1, z: 1 });
+        // The first occurrence of 6 collinear points.
+        let point_sequence = build_point_sequence(185);
+        assert_eq!(point_sequence.len(), 186);
+        assert_eq!(
+            point_sequence[109],
+            Point3D {
+                x: 46,
+                y: 40,
+                z: 23
+            }
+        );
+        assert_eq!(
+            point_sequence[113],
+            Point3D {
+                x: 48,
+                y: 41,
+                z: 24
+            }
+        );
+        assert_eq!(
+            point_sequence[145],
+            Point3D {
+                x: 64,
+                y: 49,
+                z: 32
+            }
+        );
+        assert_eq!(
+            point_sequence[149],
+            Point3D {
+                x: 66,
+                y: 50,
+                z: 33
+            }
+        );
+        assert_eq!(
+            point_sequence[181],
+            Point3D {
+                x: 82,
+                y: 58,
+                z: 41
+            }
+        );
+        assert_eq!(
+            point_sequence[185],
+            Point3D {
+                x: 84,
+                y: 59,
+                z: 42
+            }
+        );
+    }
+
+    #[test]
+    fn test_count_collinear() {
+        let point_sequence = build_point_sequence(7);
+        assert_eq!(count_collinear_points(point_sequence, 0, 1), 2);
+        let cases = [
+            (7, 0, 1, 2),
+            (185, 0, 185, 6),
+            (185, 0, 110, 6),
+            (185, 0, 109, 5),
+            (185, 109, 110, 6),
+            (185, 110, 185, 5),
+            (184, 0, 185, 5),
+            (184, 0, 1000, 5),
+        ];
+        for (sequence_length, start_index, end_index, expected_collinear) in cases {
+            let point_sequence = build_point_sequence(sequence_length);
+            assert_eq!(
+                count_collinear_points(point_sequence, start_index, end_index),
+                expected_collinear
+            );
         }
     }
 }
