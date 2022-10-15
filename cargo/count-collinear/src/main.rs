@@ -299,7 +299,7 @@ fn main() {
     let point_sequence = build_point_sequence(sequence_length);
     let max_count = count_collinear_points(point_sequence, start_index, end_index);
     info!(
-        "Considering all lines through points from index {} to index {}, \
+        "Considering all lines with at least one point with an index in [{}, {}], \
         the largest number of collinear points in the first {} indices of \
         the sequence is {}.",
         start_index, end_index, sequence_length, max_count
