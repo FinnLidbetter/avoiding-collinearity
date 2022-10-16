@@ -1,6 +1,68 @@
-use log::{debug, info};
+use log::{debug, info, error};
 use std::collections::HashMap;
 use std::env;
+use std::error;
+use std::path::PathBuf;
+use std::process;
+
+use configparser::ini::Ini;
+use lettre::{
+    message::{Mailbox},
+    transport::smtp::authentication::Credentials,
+    Message, SmtpTransport, Transport,
+};
+use lettre::transport::smtp::Error;
+use lettre::transport::smtp::response::Response;
+
+#[derive(Debug, Clone)]
+pub struct Config {
+    from_email: String,
+    to_email: String,
+    smtp_url: String,
+    smtp_username: String,
+    smtp_password: String,
+    log_level: String,
+}
+
+impl Config {
+    pub fn new(config_ini: Ini) -> Config {
+        let from_email = config_ini.get("email", "from_email").unwrap();
+        let to_email = config_ini.get("email", "to_email").unwrap();
+        let smtp_url = config_ini.get("email", "smtp_url").unwrap();
+        let smtp_username = config_ini.get("email", "smtp_username").unwrap();
+        let smtp_password = config_ini.get("email", "smtp_password").unwrap();
+        let log_level = config_ini.get("main", "log_level").unwrap();
+        Config {
+            from_email,
+            to_email,
+            smtp_url,
+            smtp_username,
+            smtp_password,
+            log_level,
+        }
+    }
+}
+
+/// Get a path to the configuration file.
+fn get_config_path() -> PathBuf {
+    let mut default_config_path = PathBuf::new();
+    default_config_path.push("defaults.conf");
+    let home = dirs::home_dir();
+    let prod_config_dir = match home {
+        None => {
+            let mut default_dir = PathBuf::new();
+            default_dir.push("/home/ubuntu");
+            default_dir
+        }
+        Some(val) => val,
+    };
+    let prod_config_path = prod_config_dir.as_path().join(".count_collinear.conf");
+    let mut config_path = prod_config_path;
+    if !config_path.as_path().exists() {
+        config_path = default_config_path;
+    }
+    config_path
+}
 
 #[derive(Debug, PartialEq, Eq, Hash)]
 struct Point3D {
@@ -161,7 +223,14 @@ pub fn gcd(a: i128, b: i128) -> i128 {
 /// Parse the arguments.
 ///
 /// Get the sequence length, start index, and end index.
-fn parse_args(args: Vec<String>) -> (u32, usize, usize) {
+fn parse_args(mut args: Vec<String>) -> (u32, usize, usize, bool) {
+    let notify = match args.iter().position(|x| String::from("--notify").eq(x)) {
+        Some(position) => {
+            args.remove(position);
+            true
+        }
+        None => false,
+    };
     let sequence_length = &args
         .get(1)
         .expect("Supply at least one argument, the sequence length.");
@@ -189,7 +258,7 @@ fn parse_args(args: Vec<String>) -> (u32, usize, usize) {
     if end_index > sequence_length.try_into().unwrap() {
         end_index = sequence_length.try_into().unwrap();
     }
-    (sequence_length, start_index, end_index)
+    (sequence_length, start_index, end_index, notify)
 }
 
 fn build_symbol_sequence(sequence_length: u32) -> Vec<u8> {
@@ -291,10 +360,62 @@ fn count_collinear_points(
     max_count
 }
 
+fn send_result(sequence_length: u32, start_index: usize, end_index: usize, max_count: i32, config: &Config) -> Result<(), Box<dyn error::Error>> {
+    let mailer = SmtpTransport::starttls_relay(&config.smtp_url.clone())?
+        // Add credentials for authentication
+        .credentials(Credentials::new(
+            config.smtp_username.clone(),
+            config.smtp_password.clone(),
+        ))
+        .build();
+
+    let sender_mailbox: Mailbox = format!("<{}>", &config.from_email).parse()?;
+    let receiver_mailbox: Mailbox = format!("<{}>", &config.to_email).parse()?;
+    let subject = "Count Collinear Results";
+    let body = format!(
+        "Considering all lines with at least one point with an index in [{}, {}], \
+        the largest number of collinear points in the first {} indices of \
+        the sequence is {}.",
+        start_index, end_index, sequence_length, max_count
+    );
+    let email = match Message::builder()
+        .from(sender_mailbox)
+        .to(receiver_mailbox)
+        .subject(subject)
+        .body(body) {
+        Ok(email) => email,
+        Err(err) => {
+            error!("Failed to construct email: {}", err);
+            return Ok(());
+        }
+    };
+    match mailer.send(&email) {
+        Ok(_) => Ok(()),
+        Err(err) => {
+            error!("Failed to send email: {}", err);
+            Ok(())
+        }
+    }
+}
+
 fn main() {
+    let mut config_ini = Ini::new();
+    let config_path = get_config_path();
+    println!("Reading config from {:?}", config_path.clone());
+    if let Err(failure_reason) = config_ini.load(config_path.clone()) {
+        env::set_var("RUST_LOG", "count-collinear=info");
+        env_logger::init();
+        log::info!("Loading config from {:?}", &config_path);
+        log::error!("Failed to load config: {}", failure_reason);
+        process::exit(1);
+    }
+    let config = Config::new(config_ini);
+    let log_level_var = format!("count_collinear={}", &config.log_level);
+    env::set_var("RUST_LOG", log_level_var);
+
     env_logger::init();
     let args: Vec<String> = env::args().collect();
-    let (sequence_length, start_index, end_index) = parse_args(args);
+    let (sequence_length, start_index, end_index, notify) = parse_args(args);
 
     let point_sequence = build_point_sequence(sequence_length);
     let max_count = count_collinear_points(point_sequence, start_index, end_index);
@@ -304,6 +425,9 @@ fn main() {
         the sequence is {}.",
         start_index, end_index, sequence_length, max_count
     );
+    if notify {
+        send_result(sequence_length, start_index, end_index, max_count, &config);
+    }
 }
 
 #[cfg(test)]
