@@ -1,4 +1,4 @@
-use log::{debug, info, error};
+use log::{debug, error, info};
 use std::collections::HashMap;
 use std::env;
 use std::error;
@@ -7,12 +7,9 @@ use std::process;
 
 use configparser::ini::Ini;
 use lettre::{
-    message::{Mailbox},
-    transport::smtp::authentication::Credentials,
-    Message, SmtpTransport, Transport,
+    message::Mailbox, transport::smtp::authentication::Credentials, Message, SmtpTransport,
+    Transport,
 };
-use lettre::transport::smtp::Error;
-use lettre::transport::smtp::response::Response;
 
 #[derive(Debug, Clone)]
 pub struct Config {
@@ -360,7 +357,13 @@ fn count_collinear_points(
     max_count
 }
 
-fn send_result(sequence_length: u32, start_index: usize, end_index: usize, max_count: i32, config: &Config) -> Result<(), Box<dyn error::Error>> {
+fn send_result(
+    sequence_length: u32,
+    start_index: usize,
+    end_index: usize,
+    max_count: i32,
+    config: &Config,
+) -> Result<(), Box<dyn error::Error>> {
     let mailer = SmtpTransport::starttls_relay(&config.smtp_url.clone())?
         // Add credentials for authentication
         .credentials(Credentials::new(
@@ -382,7 +385,8 @@ fn send_result(sequence_length: u32, start_index: usize, end_index: usize, max_c
         .from(sender_mailbox)
         .to(receiver_mailbox)
         .subject(subject)
-        .body(body) {
+        .body(body)
+    {
         Ok(email) => email,
         Err(err) => {
             error!("Failed to construct email: {}", err);
@@ -426,7 +430,13 @@ fn main() {
         start_index, end_index, sequence_length, max_count
     );
     if notify {
-        send_result(sequence_length, start_index, end_index, max_count, &config);
+        match send_result(sequence_length, start_index, end_index, max_count, &config) {
+            Ok(_) => (),
+            Err(err) => {
+                error!("Error sending the email {}", err);
+                ()
+            }
+        }
     }
 }
 
