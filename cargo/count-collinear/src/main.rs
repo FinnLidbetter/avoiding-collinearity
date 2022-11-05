@@ -1,3 +1,7 @@
+mod aws_request;
+mod aws_signing;
+mod sqs;
+
 use log::{debug, error, info};
 use std::collections::HashMap;
 use std::env;
@@ -219,7 +223,8 @@ pub fn gcd(a: i128, b: i128) -> i128 {
 
 /// Parse the arguments.
 ///
-/// Get the sequence length, start index, and end index.
+/// Get the sequence length, start index, end index, and whether to notify
+/// results via email.
 fn parse_args(mut args: Vec<String>) -> (u32, usize, usize, bool) {
     let notify = match args.iter().position(|x| String::from("--notify").eq(x)) {
         Some(position) => {
