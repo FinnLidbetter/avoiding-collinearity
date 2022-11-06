@@ -34,21 +34,10 @@ fn get_signature_key(
     signature_key
 }
 
-/// Encode an array of bytes as a hexadecimal String.
-fn hex_encode(bytes: &[u8]) -> String {
-    let mut hex = String::new();
-    for byte in bytes.iter() {
-        let left = byte / 16;
-        let right = byte % 16;
-        hex.push(char::from_digit(left as u32, 16).unwrap());
-        hex.push(char::from_digit(right as u32, 16).unwrap());
-    }
-    hex.to_string()
-}
-
 #[cfg(test)]
 mod tests {
-    use crate::aws_signing::{get_signature_key, hex_encode};
+    use crate::aws_signing::get_signature_key;
+    use crate::utilities::hex_encode;
 
     /// Test constructing a signing key.
     ///

@@ -1,6 +1,7 @@
 mod aws_request;
 mod aws_signing;
 mod sqs;
+mod utilities;
 
 use log::{debug, error, info};
 use std::collections::HashMap;
