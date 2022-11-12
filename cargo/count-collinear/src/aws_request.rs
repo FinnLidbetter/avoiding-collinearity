@@ -1,3 +1,4 @@
+use crate::aws_signing::{get_signature_key, hmacsha256, SIGNING_ALGORITHM};
 use crate::utilities::{hex_encode, percent_encode, trim_whitespace};
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
@@ -111,6 +112,11 @@ fn get_canonical_query_string(params: HashMap<&str, &str>) -> Result<String> {
 }
 
 fn get_canonical_headers(headers: HashMap<&str, &str>) -> Result<String> {
+    if !headers.contains_key("Host") {
+        return Err(AWSRequestError {
+            msg: String::from("Missing 'Host' header."),
+        });
+    }
     let mut sorted_headers = headers
         .iter()
         .map(|(key, value)| ((*key).to_lowercase(), *value))
@@ -137,7 +143,7 @@ fn get_canonical_header_names(header_names: Vec<&str>) -> String {
     canonical_header_names
 }
 
-fn get_payload_hash(payload: &str) -> String {
+fn get_hash(payload: &str) -> String {
     let mut hasher = Sha256::new();
     hasher.update(payload.as_bytes());
     let result = hasher.finalize();
@@ -181,23 +187,135 @@ fn canonical_request(
     canonical_request.push_str(canonical_signed_header_names.as_str());
     canonical_request.push_str("\n");
 
-    let hash_payload = get_payload_hash(payload.unwrap_or(""));
+    let hash_payload = get_hash(payload.unwrap_or(""));
     canonical_request.push_str(hash_payload.as_str());
-    //canonical_request.push_str("\n");
 
     Ok(canonical_request)
 }
 
+fn get_credential_scope(header_date: &str, region: &str, service: &str) -> String {
+    format!("{}/{}/{}/aws4_request", header_date, region, service)
+}
+
+fn request_string_to_sign(
+    method: &str,
+    endpoint: &str,
+    params: HashMap<&str, &str>,
+    signing_headers: HashMap<&str, &str>,
+    payload: Option<&str>,
+    region: &str,
+    service: &str,
+) -> Result<String> {
+    let header_date_time = *signing_headers.get("X-Amz-Date").ok_or(AWSRequestError {
+        msg: String::from("Missing header 'X-Amz-Date'"),
+    })?;
+    let header_date = &header_date_time[..8];
+    let canonical_request = canonical_request(method, endpoint, params, signing_headers, payload)?;
+    let canonical_request_hash = get_hash(canonical_request.as_str());
+    let credential_scope = get_credential_scope(header_date, region, service);
+    let mut string_to_sign = String::new();
+    string_to_sign.push_str(SIGNING_ALGORITHM);
+    string_to_sign.push_str("\n");
+    string_to_sign.push_str(header_date_time);
+    string_to_sign.push_str("\n");
+    string_to_sign.push_str(credential_scope.as_str());
+    string_to_sign.push_str("\n");
+    string_to_sign.push_str(canonical_request_hash.as_str());
+    Ok(string_to_sign)
+}
+
+fn get_request_signature(
+    method: &str,
+    endpoint: &str,
+    params: HashMap<&str, &str>,
+    signing_headers: HashMap<&str, &str>,
+    payload: Option<&str>,
+    region: &str,
+    service: &str,
+    secret_key: &str,
+) -> Result<String> {
+    let header_date_time = *signing_headers.get("X-Amz-Date").ok_or(AWSRequestError {
+        msg: String::from("Missing header 'X-Amz-Date'"),
+    })?;
+    let header_date = &header_date_time[..8];
+    let string_to_sign = request_string_to_sign(
+        method,
+        endpoint,
+        params,
+        signing_headers,
+        payload,
+        region,
+        service,
+    )?;
+    let signing_key = get_signature_key(secret_key, header_date, region, service);
+    println!("{}", hex_encode(&signing_key));
+    let request_signature = hmacsha256(&string_to_sign, &signing_key);
+    Ok(hex_encode(&request_signature))
+}
+
+pub fn get_authorization_header(
+    method: &str,
+    endpoint: &str,
+    params: HashMap<&str, &str>,
+    signing_headers: HashMap<&str, &str>,
+    payload: Option<&str>,
+    region: &str,
+    service: &str,
+    access_key_id: &str,
+    secret_key: &str,
+) -> Result<String> {
+    let signing_header_names = signing_headers.keys().map(|key| *key).collect();
+    let canonical_header_names = get_canonical_header_names(signing_header_names);
+    let header_date_time = *signing_headers.get("X-Amz-Date").ok_or(AWSRequestError {
+        msg: String::from("Missing header 'X-Amz-Date'"),
+    })?;
+    let header_date = &header_date_time[..8];
+    let credential_scope = get_credential_scope(header_date, region, service);
+    let signature = get_request_signature(
+        method,
+        endpoint,
+        params,
+        signing_headers,
+        payload,
+        region,
+        service,
+        secret_key,
+    )?;
+    Ok(format!(
+        "{} Credential={}/{}, SignedHeaders={}, Signature={}",
+        SIGNING_ALGORITHM, access_key_id, credential_scope, canonical_header_names, signature
+    ))
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::aws_request::{canonical_request, get_canonical_uri, get_payload_hash};
+    use super::*;
     use std::collections::HashMap;
+
+    // Setup constants for use in tests. These values are from the example:
+    //  https://docs.aws.amazon.com/general/latest/gr/sigv4-create-canonical-request.html
+    const METHOD: &str = "GET";
+    const ENDPOINT: &str = "https://iam.amazonaws.com/?Action=ListUsers&Version=2010-05-08";
+    const PARAMS_ARR: [(&str, &str); 2] = [("Action", "ListUsers"), ("Version", "2010-05-08")];
+    const HEADERS_ARR: [(&str, &str); 3] = [
+        (
+            "Content-Type",
+            "application/x-www-form-urlencoded; charset=utf-8",
+        ),
+        ("Host", "iam.amazonaws.com"),
+        ("X-Amz-Date", "20150830T123600Z"),
+    ];
+    const PAYLOAD: Option<&str> = None;
+    const REGION: &str = "us-east-1";
+    const SERVICE: &str = "iam";
+    const EXAMPLE_ACCESS_KEY: &str = "AKIDEXAMPLE";
+    const EXAMPLE_SECRET_KEY: &str = "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY";
 
     /// Test SHA256 hash of empty string.
     #[test]
     fn test_payload_hash() {
         assert_eq!(
-            get_payload_hash(""),
+            get_hash(""),
             "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
         );
     }
@@ -256,20 +374,10 @@ mod tests {
     /// provided at https://docs.aws.amazon.com/general/latest/gr/sigv4-create-canonical-request.html
     #[test]
     fn test_canonical_request() {
-        let method = "GET";
-        let endpoint = "https://iam.amazonaws.com/?Action=ListUsers&Version=2010-05-08";
-        let params = HashMap::from([("Action", "ListUsers"), ("Version", "2010-05-08")]);
-        let headers = HashMap::from([
-            (
-                "Content-Type",
-                "application/x-www-form-urlencoded; charset=utf-8",
-            ),
-            ("Host", "iam.amazonaws.com"),
-            ("X-Amz-Date", "20150830T123600Z"),
-        ]);
-        let payload = None;
+        let params = HashMap::from(PARAMS_ARR);
+        let headers = HashMap::from(HEADERS_ARR);
         let canonical_request =
-            canonical_request(method, endpoint, params, headers, payload).unwrap();
+            canonical_request(METHOD, ENDPOINT, params, headers, PAYLOAD).unwrap();
         let expected_canonical_request = "GET
 /
 Action=ListUsers&Version=2010-05-08
@@ -280,8 +388,61 @@ x-amz-date:20150830T123600Z
 content-type;host;x-amz-date
 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
         assert_eq!(canonical_request, expected_canonical_request);
-        let hashed_canonical_request = get_payload_hash(canonical_request.as_str());
+        let hashed_canonical_request = get_hash(canonical_request.as_str());
         let expected_hash = "f536975d06c0309214f805bb90ccff089219ecd68b2577efef23edd43b7e1a59";
         assert_eq!(hashed_canonical_request, expected_hash);
+    }
+
+    #[test]
+    fn test_string_to_sign() {
+        let params = HashMap::from(PARAMS_ARR);
+        let headers = HashMap::from(HEADERS_ARR);
+        let string_to_sign =
+            request_string_to_sign(METHOD, ENDPOINT, params, headers, PAYLOAD, REGION, SERVICE)
+                .unwrap();
+        let expected_string_to_sign = "AWS4-HMAC-SHA256
+20150830T123600Z
+20150830/us-east-1/iam/aws4_request
+f536975d06c0309214f805bb90ccff089219ecd68b2577efef23edd43b7e1a59";
+        assert_eq!(string_to_sign, expected_string_to_sign);
+    }
+
+    #[test]
+    fn test_request_signature() {
+        let params = HashMap::from(PARAMS_ARR);
+        let headers = HashMap::from(HEADERS_ARR);
+        let request_signature = get_request_signature(
+            METHOD,
+            ENDPOINT,
+            params,
+            headers,
+            PAYLOAD,
+            REGION,
+            SERVICE,
+            EXAMPLE_SECRET_KEY,
+        )
+        .unwrap();
+        assert_eq!(
+            request_signature.as_str(),
+            "5d672d79c15b13162d9279b0855cfba6789a8edb4c82c400e06b5924a6f2b5d7"
+        );
+    }
+
+    #[test]
+    fn test_get_authorization_header() {
+        let params = HashMap::from(PARAMS_ARR);
+        let headers = HashMap::from(HEADERS_ARR);
+        let authorization_header = get_authorization_header(
+            METHOD,
+            ENDPOINT,
+            params,
+            headers,
+            PAYLOAD,
+            REGION,
+            SERVICE,
+            EXAMPLE_ACCESS_KEY,
+            EXAMPLE_SECRET_KEY,
+        );
+        let expected_authorization_header = "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20150830/us-east-1/iam/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=5d672d79c15b13162d9279b0855cfba6789a8edb4c82c400e06b5924a6f2b5d7";
     }
 }
