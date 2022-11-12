@@ -29,30 +29,41 @@ fn get_canonical_uri(endpoint: &str) -> Result<String> {
     };
     let query_string_start_byte_index = match endpoint.find("?") {
         Some(index) => index,
-        None =>  endpoint.len(),
+        None => endpoint.len(),
     };
     let mut canonical_uri =
         &endpoint[host_end_start_byte_index + host_end.len()..query_string_start_byte_index];
     if canonical_uri.len() == 0 {
         canonical_uri = "/";
     }
-    Ok(canonical_uri.to_string())
+    let fragments: Vec<&str> = canonical_uri
+        .split("/")
+        .filter(|fragment| *fragment != "")
+        .collect();
+    let mut encoded_fragments: Vec<String> = vec![];
+    for fragment in fragments {
+        let encoded_fragment = uri_encode_string(uri_encode_string(fragment)?.as_str())?;
+        encoded_fragments.push(encoded_fragment);
+    }
+    let mut result = String::from("/");
+    result.push_str(encoded_fragments.join("/").as_str());
+    if canonical_uri.len() > 1 && &canonical_uri[canonical_uri.len() - 1..] == "/" {
+        result.push_str("/");
+    }
+    Ok(result)
 }
 
 /// URI encode a character.
 ///
 /// This is according to:
 /// https://docs.aws.amazon.com/general/latest/gr/sigv4-create-canonical-request.html
-/// Note that the case where the character is an '=' is not handled.
 fn uri_encode(character: char) -> Result<String> {
     if character.is_ascii_alphanumeric() {
         return Ok(character.to_string());
     } else if character == '_' || character == '-' || character == '~' || character == '.' {
         return Ok(character.to_string());
     } else if character == '=' {
-        return Err(AWSRequestError {
-            msg: String::from("URI encoding '=' is not supported"),
-        });
+        return Ok(String::from("%253D"));
     }
     let mut buffer: [u8; 4] = [0; 4];
     let character_bytes = character.encode_utf8(&mut buffer);
@@ -172,14 +183,15 @@ fn canonical_request(
 
     let hash_payload = get_payload_hash(payload.unwrap_or(""));
     canonical_request.push_str(hash_payload.as_str());
-    canonical_request.push_str("\n");
+    //canonical_request.push_str("\n");
 
     Ok(canonical_request)
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::aws_request::{get_canonical_uri, get_payload_hash};
+    use crate::aws_request::{canonical_request, get_canonical_uri, get_payload_hash};
+    use std::collections::HashMap;
 
     /// Test SHA256 hash of empty string.
     #[test]
@@ -235,6 +247,41 @@ mod tests {
     }
 
     /// Test constructing a canonical request.
+    ///
+    /// This test uses the example request
+    ///     GET https://iam.amazonaws.com/?Action=ListUsers&Version=2010-05-08 HTTP/1.1
+    ///     Host: iam.amazonaws.com
+    ///     Content-Type: application/x-www-form-urlencoded; charset=utf-8
+    ///     X-Amz-Date: 20150830T123600Z
+    /// provided at https://docs.aws.amazon.com/general/latest/gr/sigv4-create-canonical-request.html
     #[test]
-    fn test_canonical_request() {}
+    fn test_canonical_request() {
+        let method = "GET";
+        let endpoint = "https://iam.amazonaws.com/?Action=ListUsers&Version=2010-05-08";
+        let params = HashMap::from([("Action", "ListUsers"), ("Version", "2010-05-08")]);
+        let headers = HashMap::from([
+            (
+                "Content-Type",
+                "application/x-www-form-urlencoded; charset=utf-8",
+            ),
+            ("Host", "iam.amazonaws.com"),
+            ("X-Amz-Date", "20150830T123600Z"),
+        ]);
+        let payload = None;
+        let canonical_request =
+            canonical_request(method, endpoint, params, headers, payload).unwrap();
+        let expected_canonical_request = "GET
+/
+Action=ListUsers&Version=2010-05-08
+content-type:application/x-www-form-urlencoded; charset=utf-8
+host:iam.amazonaws.com
+x-amz-date:20150830T123600Z
+
+content-type;host;x-amz-date
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
+        assert_eq!(canonical_request, expected_canonical_request);
+        let hashed_canonical_request = get_payload_hash(canonical_request.as_str());
+        let expected_hash = "f536975d06c0309214f805bb90ccff089219ecd68b2577efef23edd43b7e1a59";
+        assert_eq!(hashed_canonical_request, expected_hash);
+    }
 }
