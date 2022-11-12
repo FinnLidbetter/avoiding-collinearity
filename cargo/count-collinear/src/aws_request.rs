@@ -428,6 +428,7 @@ f536975d06c0309214f805bb90ccff089219ecd68b2577efef23edd43b7e1a59";
         );
     }
 
+    /// Test constructing the authorization header for a request.
     #[test]
     fn test_get_authorization_header() {
         let params = HashMap::from(PARAMS_ARR);
