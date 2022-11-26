@@ -1,5 +1,6 @@
 use crate::aws_signing::{get_signature_key, hmacsha256, SIGNING_ALGORITHM};
 use crate::utilities::{hex_encode, percent_encode, trim_whitespace};
+use chrono::{SecondsFormat, Utc};
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use std::fmt;
@@ -9,7 +10,7 @@ type Result<T> = std::result::Result<T, AWSRequestError>;
 
 #[derive(Debug, Clone)]
 pub struct AWSRequestError {
-    msg: String,
+    pub msg: String,
 }
 
 impl fmt::Display for AWSRequestError {
@@ -111,7 +112,7 @@ fn get_canonical_query_string(params: HashMap<&str, &str>) -> Result<String> {
     Ok(canonical_query_string)
 }
 
-fn get_canonical_headers(headers: HashMap<&str, &str>) -> Result<String> {
+fn get_canonical_headers(headers: &HashMap<&str, &str>) -> Result<String> {
     if !headers.contains_key("Host") {
         return Err(AWSRequestError {
             msg: String::from("Missing 'Host' header."),
@@ -162,7 +163,7 @@ fn canonical_request(
     method: &str,
     endpoint: &str,
     params: HashMap<&str, &str>,
-    signing_headers: HashMap<&str, &str>,
+    signing_headers: &HashMap<&str, &str>,
     payload: Option<&str>,
 ) -> Result<String> {
     let mut canonical_request = String::new();
@@ -201,7 +202,7 @@ fn request_string_to_sign(
     method: &str,
     endpoint: &str,
     params: HashMap<&str, &str>,
-    signing_headers: HashMap<&str, &str>,
+    signing_headers: &HashMap<&str, &str>,
     payload: Option<&str>,
     region: &str,
     service: &str,
@@ -228,7 +229,7 @@ fn get_request_signature(
     method: &str,
     endpoint: &str,
     params: HashMap<&str, &str>,
-    signing_headers: HashMap<&str, &str>,
+    signing_headers: &HashMap<&str, &str>,
     payload: Option<&str>,
     region: &str,
     service: &str,
@@ -257,7 +258,7 @@ pub fn get_authorization_header(
     method: &str,
     endpoint: &str,
     params: HashMap<&str, &str>,
-    signing_headers: HashMap<&str, &str>,
+    signing_headers: &HashMap<&str, &str>,
     payload: Option<&str>,
     region: &str,
     service: &str,
@@ -285,6 +286,19 @@ pub fn get_authorization_header(
         "{} Credential={}/{}, SignedHeaders={}, Signature={}",
         SIGNING_ALGORITHM, access_key_id, credential_scope, canonical_header_names, signature
     ))
+}
+
+pub fn get_base_headers<'a>(service: &'a str, region: &'a str) -> HashMap<&'a str, String> {
+    let mut headers = HashMap::<&str, String>::new();
+    headers.insert("Host", format!("{}.{}.amazonaws.com", service, region));
+    let now = Utc::now();
+    let iso_time = now.to_rfc3339_opts(SecondsFormat::Secs, true);
+    let stripped_iso_time: String = iso_time
+        .chars()
+        .filter(|ch| *ch != '-' && *ch != ':')
+        .collect();
+    headers.insert("X-Amz-Date", stripped_iso_time);
+    headers
 }
 
 #[cfg(test)]
@@ -377,7 +391,7 @@ mod tests {
         let params = HashMap::from(PARAMS_ARR);
         let headers = HashMap::from(HEADERS_ARR);
         let canonical_request =
-            canonical_request(METHOD, ENDPOINT, params, headers, PAYLOAD).unwrap();
+            canonical_request(METHOD, ENDPOINT, params, &headers, PAYLOAD).unwrap();
         let expected_canonical_request = "GET
 /
 Action=ListUsers&Version=2010-05-08
@@ -398,7 +412,7 @@ e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
         let params = HashMap::from(PARAMS_ARR);
         let headers = HashMap::from(HEADERS_ARR);
         let string_to_sign =
-            request_string_to_sign(METHOD, ENDPOINT, params, headers, PAYLOAD, REGION, SERVICE)
+            request_string_to_sign(METHOD, ENDPOINT, params, &headers, PAYLOAD, REGION, SERVICE)
                 .unwrap();
         let expected_string_to_sign = "AWS4-HMAC-SHA256
 20150830T123600Z
@@ -415,7 +429,7 @@ f536975d06c0309214f805bb90ccff089219ecd68b2577efef23edd43b7e1a59";
             METHOD,
             ENDPOINT,
             params,
-            headers,
+            &headers,
             PAYLOAD,
             REGION,
             SERVICE,
@@ -437,7 +451,7 @@ f536975d06c0309214f805bb90ccff089219ecd68b2577efef23edd43b7e1a59";
             METHOD,
             ENDPOINT,
             params,
-            headers,
+            &headers,
             PAYLOAD,
             REGION,
             SERVICE,
