@@ -57,6 +57,13 @@ impl SqsQueue {
         }
     }
 
+    fn get_endpoint(&self) -> String {
+        format!(
+            "https://sqs.{}.amazonaws.com/{}/{}",
+            self.region, self.account_number, self.queue_name
+        )
+    }
+
     pub fn receive_message(&self, visibility_timeout: Option<i32>) -> Result<Option<SqsMessage>> {
         let message = self.receive_messages(1, visibility_timeout)?;
         Ok(message.get(0).cloned())
@@ -83,10 +90,20 @@ impl SqsQueue {
         Ok(SqsQueue::parse_receive_message_xml(&xml_result)?)
     }
 
+    /// List the Sqs Queues available.
     pub fn list_queues(&self) -> Result<Vec<String>> {
         let params: HashMap<&str, &str> = HashMap::new();
         let xml_result = self.get_xml_result("ListQueues", params)?;
         Ok(SqsQueue::parse_list_queues_xml(&xml_result)?)
+    }
+
+    /// Delete a message from the queue.
+    pub fn delete_message(&self, receipt_handle: &str) -> Result<()> {
+        let params: HashMap<&str, &str> = HashMap::from(
+            [("ReceiptHandle", receipt_handle)]
+        );
+        let xml_result = self.get_xml_result("DeleteMessage", params)?;
+        Ok(SqsQueue::parse_delete_message_xml(&xml_result)?)
     }
 
     /// Make a GET request with the specified action and parameters.
@@ -135,6 +152,9 @@ impl SqsQueue {
         let result = request.send().map_err(|err| SqsError {
             msg: format!("Request to {} failed due to {}", endpoint, err),
         })?;
+        result.error_for_status_ref().map_err(|err| SqsError {
+            msg: format!("Request to {} failed due to {}", endpoint, err),
+        })?;
         let xml_result = result.text().map_err(|err| SqsError {
             msg: format!("Failed to parse text from response: {}", err),
         })?;
@@ -160,13 +180,6 @@ impl SqsQueue {
         Ok(())
     }
 
-    fn get_endpoint(&self) -> String {
-        format!(
-            "https://sqs.{}.amazonaws.com/{}/{}",
-            self.region, self.account_number, self.queue_name
-        )
-    }
-
     /// Parse a vector of SqsMessage structs from an XML response.
     fn parse_receive_message_xml(xml_text: &str) -> Result<Vec<SqsMessage>> {
         let mut reader = Reader::from_str(xml_text);
@@ -185,6 +198,7 @@ impl SqsQueue {
         Ok(messages)
     }
 
+    /// Get the queue urls from a ListQueues xml response.
     fn parse_list_queues_xml(xml_text: &str) -> Result<Vec<String>> {
         let mut reader = Reader::from_str(xml_text);
         reader.trim_text(true);
@@ -198,6 +212,10 @@ impl SqsQueue {
             }
         }
         Ok(queues)
+    }
+
+    fn parse_delete_message_xml(_xml_text: &str) -> Result<()> {
+        Ok(())
     }
 
     /// Read events until the tag with name result_start is reached.
@@ -315,6 +333,9 @@ impl SqsQueue {
         }
     }
 
+    /// Parse a queue url.
+    ///
+    /// This assumes that the reader has just read the ListQueuesResult start event.
     fn parse_queue(reader: &mut Reader<&[u8]>) -> Result<Option<String>> {
         loop {
             match reader.read_event() {
@@ -336,7 +357,7 @@ impl SqsQueue {
                     return match start_event.name().as_ref() {
                         b"QueueUrl" => {
                             let body = SqsQueue::parse_text(reader, "QueueUrl")?;
-                            return Ok(Some(body))
+                            return Ok(Some(body));
                         }
                         _ => Err(SqsError {
                             msg: format!("Encountered unexpected start event parsing queue name."),
@@ -398,11 +419,6 @@ impl SqsQueue {
                 _ => (),
             }
         }
-    }
-
-    /// Delete a message from the queue.
-    pub fn delete_message(&self, receipt_handle: &str) -> Result<()> {
-        Ok(())
     }
 }
 
@@ -498,7 +514,7 @@ mod tests {
     </ResponseMetadata>
 </ListQueuesResponse>";
         let parsed_queues = SqsQueue::parse_list_queues_xml(response_text);
-        let empty_vec: Vec<String> = vec!();
+        let empty_vec: Vec<String> = vec![];
         assert_eq!(parsed_queues.unwrap(), empty_vec);
     }
 
@@ -513,7 +529,10 @@ mod tests {
     </ResponseMetadata>
 </ListQueuesResponse>";
         let parsed_queue = SqsQueue::parse_list_queues_xml(response_text);
-        assert_eq!(parsed_queue.unwrap(), vec!("https://sqs.us-east-2.amazonaws.com/123456789012/MyQueue"));
+        assert_eq!(
+            parsed_queue.unwrap(),
+            vec!("https://sqs.us-east-2.amazonaws.com/123456789012/MyQueue")
+        );
     }
 
     #[test]
@@ -528,12 +547,14 @@ mod tests {
         <RequestId>725275ae-0b9b-4762-b238-436d7c65a1ac</RequestId>
     </ResponseMetadata>
 </ListQueuesResponse>";
-        let expected: Vec<String> = vec!(
+        let expected: Vec<String> = vec![
             String::from("https://sqs.us-east-2.amazonaws.com/123456789012/MyQueue"),
             String::from("https://sqs.us-east-1.amazonaws.com/123456789012/MyOtherQueue"),
             String::from("https://sqs.us-east-2.amazonaws.com/987654321/MySecretQueue"),
+        ];
+        assert_eq!(
+            SqsQueue::parse_list_queues_xml(response_text).unwrap(),
+            expected
         );
-        assert_eq!(SqsQueue::parse_list_queues_xml(response_text).unwrap(), expected);
     }
 }
-
