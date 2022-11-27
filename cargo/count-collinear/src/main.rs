@@ -23,6 +23,10 @@ pub struct Config {
     smtp_url: String,
     smtp_username: String,
     smtp_password: String,
+    aws_access_key: String,
+    aws_secret_key: String,
+    aws_account_number: String,
+    aws_region: String,
     log_level: String,
 }
 
@@ -34,12 +38,20 @@ impl Config {
         let smtp_username = config_ini.get("email", "smtp_username").unwrap();
         let smtp_password = config_ini.get("email", "smtp_password").unwrap();
         let log_level = config_ini.get("main", "log_level").unwrap();
+        let aws_access_key = config_ini.get("aws_auth", "access_key").unwrap();
+        let aws_secret_key = config_ini.get("aws_auth", "secret_key").unwrap();
+        let aws_account_number = config_ini.get("aws_auth", "account_number").unwrap();
+        let aws_region = config_ini.get("aws_auth", "region").unwrap();
         Config {
             from_email,
             to_email,
             smtp_url,
             smtp_username,
             smtp_password,
+            aws_access_key,
+            aws_secret_key,
+            aws_account_number,
+            aws_region,
             log_level,
         }
     }

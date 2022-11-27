@@ -24,57 +24,60 @@ impl fmt::Display for SqsError {
     }
 }
 
-pub struct SqsQueue {
+pub struct SqsController {
     access_key: String,
     secret_access_key: String,
     account_number: String,
     region: String,
-    queue_name: String,
     client: reqwest::blocking::Client,
 }
 
-impl SqsQueue {
+impl SqsController {
     pub fn new(
         access_key: &str,
         secret_access_key: &str,
         account_number: &str,
         region: &str,
-        queue_name: &str,
-    ) -> SqsQueue {
+    ) -> SqsController {
         let access_key = String::from(access_key);
         let secret_access_key = String::from(secret_access_key);
         let account_number = String::from(account_number);
         let region = String::from(region);
-        let queue_name = String::from(queue_name);
         let client = reqwest::blocking::Client::new();
-        SqsQueue {
+        SqsController {
             access_key,
             secret_access_key,
             account_number,
             region,
-            queue_name,
             client,
         }
     }
 
-    fn get_endpoint(&self) -> String {
-        format!(
-            "https://sqs.{}.amazonaws.com/{}/{}",
-            self.region, self.account_number, self.queue_name
-        )
+    fn get_endpoint(&self, queue_name: Option<&str>) -> String {
+        match queue_name {
+            Some(queue) =>
+                format!(
+                    "https://sqs.{}.amazonaws.com/{}/{}",
+                    self.region, self.account_number, queue
+                ),
+            None => format!("https://sqs.{}.amazonaws.com", self.region),
+        }
     }
 
-    pub fn receive_message(&self, visibility_timeout: Option<i32>) -> Result<Option<SqsMessage>> {
-        let message = self.receive_messages(1, visibility_timeout)?;
+    /// Get a single message from the queue.
+    pub fn receive_message(&self, queue_name: &str, visibility_timeout: Option<i32>) -> Result<Option<SqsMessage>> {
+        let message = self.receive_messages(queue_name, 1, visibility_timeout)?;
         Ok(message.get(0).cloned())
     }
 
+    /// Get the specified number of messages from the queue.
     pub fn receive_messages(
         &self,
+        queue_name: &str,
         num_messages: i32,
         visibility_timeout: Option<i32>,
     ) -> Result<Vec<SqsMessage>> {
-        SqsQueue::check_num_messages_bounds(num_messages)?;
+        SqsController::check_num_messages_bounds(num_messages)?;
         let visibility_timeout = visibility_timeout
             .unwrap_or(DEFAULT_VISIBILITY_TIMEOUT)
             .to_string();
@@ -86,24 +89,24 @@ impl SqsQueue {
             ("AttributeName", "All"),
             ("MaxNumberOfMessages", num_messages),
         ]);
-        let xml_result = self.get_xml_result("ReceiveMessage", params)?;
-        Ok(SqsQueue::parse_receive_message_xml(&xml_result)?)
+        let xml_result = self.get_xml_result("ReceiveMessage", Some(queue_name), params)?;
+        Ok(SqsController::parse_receive_message_xml(&xml_result)?)
     }
 
     /// List the Sqs Queues available.
     pub fn list_queues(&self) -> Result<Vec<String>> {
         let params: HashMap<&str, &str> = HashMap::new();
-        let xml_result = self.get_xml_result("ListQueues", params)?;
-        Ok(SqsQueue::parse_list_queues_xml(&xml_result)?)
+        let xml_result = self.get_xml_result("ListQueues", None,params)?;
+        Ok(SqsController::parse_list_queues_xml(&xml_result)?)
     }
 
     /// Delete a message from the queue.
-    pub fn delete_message(&self, receipt_handle: &str) -> Result<()> {
+    pub fn delete_message(&self, queue_name: &str, receipt_handle: &str) -> Result<()> {
         let params: HashMap<&str, &str> = HashMap::from(
             [("ReceiptHandle", receipt_handle)]
         );
-        let xml_result = self.get_xml_result("DeleteMessage", params)?;
-        Ok(SqsQueue::parse_delete_message_xml(&xml_result)?)
+        let xml_result = self.get_xml_result( "DeleteMessage", Some(queue_name), params)?;
+        Ok(SqsController::parse_delete_message_xml(&xml_result)?)
     }
 
     /// Make a GET request with the specified action and parameters.
@@ -112,12 +115,14 @@ impl SqsQueue {
     fn get_xml_result<'a>(
         &self,
         action: &'a str,
+        queue_name: Option<&'a str>,
         mut custom_params: HashMap<&str, &'a str>,
     ) -> Result<String> {
         custom_params.insert("Action", action);
         custom_params.insert("Version", API_VERSION);
+        let query_params: Vec<(&str, &str)> = custom_params.iter().map(|(key, value)| (*key, *value)).collect();
         let method = "GET";
-        let endpoint = self.get_endpoint();
+        let endpoint = self.get_endpoint(queue_name);
         let endpoint = endpoint.as_str();
         let base_headers = get_base_headers(SERVICE_NAME, self.region.as_str());
         let mut headers: HashMap<&str, &str> = base_headers
@@ -149,6 +154,7 @@ impl SqsQueue {
             msg: format!("Failed to convert headers into a HeaderMap due to {}", err),
         })?;
         request = request.headers(header_map);
+        request = request.query(&query_params);
         let result = request.send().map_err(|err| SqsError {
             msg: format!("Request to {} failed due to {}", endpoint, err),
         })?;
@@ -187,9 +193,9 @@ impl SqsQueue {
 
         let mut messages: Vec<SqsMessage> = Vec::new();
 
-        SqsQueue::seek_result_start_event(&mut reader, "ReceiveMessageResult")?;
+        SqsController::seek_result_start_event(&mut reader, "ReceiveMessageResult")?;
         loop {
-            let result = SqsQueue::parse_message(&mut reader)?;
+            let result = SqsController::parse_message(&mut reader)?;
             match result {
                 Some(message) => messages.push(message),
                 None => break,
@@ -203,9 +209,9 @@ impl SqsQueue {
         let mut reader = Reader::from_str(xml_text);
         reader.trim_text(true);
         let mut queues: Vec<String> = Vec::new();
-        SqsQueue::seek_result_start_event(&mut reader, "ListQueuesResult")?;
+        SqsController::seek_result_start_event(&mut reader, "ListQueuesResult")?;
         loop {
-            let result = SqsQueue::parse_queue(&mut reader)?;
+            let result = SqsController::parse_queue(&mut reader)?;
             match result {
                 Some(queue_name) => queues.push(queue_name),
                 None => break,
@@ -297,13 +303,13 @@ impl SqsQueue {
                                         match message_start_event.name().as_ref() {
                                             b"MessageId" => {
                                                 message_id =
-                                                    SqsQueue::parse_text(reader, "MessageId")?
+                                                    SqsController::parse_text(reader, "MessageId")?
                                             }
                                             b"ReceiptHandle" => {
                                                 receipt_handle =
-                                                    SqsQueue::parse_text(reader, "ReceiptHandle")?
+                                                    SqsController::parse_text(reader, "ReceiptHandle")?
                                             }
-                                            b"Body" => body = SqsQueue::parse_text(reader, "Body")?,
+                                            b"Body" => body = SqsController::parse_text(reader, "Body")?,
                                             _ => (),
                                         }
                                     }
@@ -356,7 +362,7 @@ impl SqsQueue {
                 Ok(Event::Start(start_event)) => {
                     return match start_event.name().as_ref() {
                         b"QueueUrl" => {
-                            let body = SqsQueue::parse_text(reader, "QueueUrl")?;
+                            let body = SqsController::parse_text(reader, "QueueUrl")?;
                             return Ok(Some(body));
                         }
                         _ => Err(SqsError {
@@ -431,7 +437,7 @@ pub struct SqsMessage {
 
 #[cfg(test)]
 mod tests {
-    use crate::sqs::{SqsMessage, SqsQueue};
+    use crate::sqs::{SqsMessage, SqsController};
 
     #[test]
     fn test_parse_messages() {
@@ -473,7 +479,7 @@ mod tests {
     <RequestId>b6633655-283d-45b4-aee4-4e84e0ae6afa</RequestId>
   </ResponseMetadata>
 </ReceiveMessageResponse>";
-        let messages = SqsQueue::parse_receive_message_xml(response_text);
+        let messages = SqsController::parse_receive_message_xml(response_text);
         let expected: Vec<SqsMessage> = vec![
             SqsMessage {
                 message_id: "5fea7756-0ea4-451a-a703-a558b933e274".to_string(),
@@ -499,7 +505,7 @@ mod tests {
   </ResponseMetadata>
 </ReceiveMessageResponse>";
         assert_eq!(
-            SqsQueue::parse_receive_message_xml(no_messages_response).unwrap(),
+            SqsController::parse_receive_message_xml(no_messages_response).unwrap(),
             vec![]
         );
     }
@@ -513,7 +519,7 @@ mod tests {
         <RequestId>725275ae-0b9b-4762-b238-436d7c65a1ac</RequestId>
     </ResponseMetadata>
 </ListQueuesResponse>";
-        let parsed_queues = SqsQueue::parse_list_queues_xml(response_text);
+        let parsed_queues = SqsController::parse_list_queues_xml(response_text);
         let empty_vec: Vec<String> = vec![];
         assert_eq!(parsed_queues.unwrap(), empty_vec);
     }
@@ -528,7 +534,7 @@ mod tests {
         <RequestId>725275ae-0b9b-4762-b238-436d7c65a1ac</RequestId>
     </ResponseMetadata>
 </ListQueuesResponse>";
-        let parsed_queue = SqsQueue::parse_list_queues_xml(response_text);
+        let parsed_queue = SqsController::parse_list_queues_xml(response_text);
         assert_eq!(
             parsed_queue.unwrap(),
             vec!("https://sqs.us-east-2.amazonaws.com/123456789012/MyQueue")
@@ -553,7 +559,7 @@ mod tests {
             String::from("https://sqs.us-east-2.amazonaws.com/987654321/MySecretQueue"),
         ];
         assert_eq!(
-            SqsQueue::parse_list_queues_xml(response_text).unwrap(),
+            SqsController::parse_list_queues_xml(response_text).unwrap(),
             expected
         );
     }
