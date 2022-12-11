@@ -1,5 +1,8 @@
+extern crate core;
+
 mod aws_request;
 mod aws_signing;
+mod dynamo_db;
 mod sqs;
 mod utilities;
 

@@ -55,17 +55,20 @@ impl SqsController {
 
     fn get_endpoint(&self, queue_name: Option<&str>) -> String {
         match queue_name {
-            Some(queue) =>
-                format!(
-                    "https://sqs.{}.amazonaws.com/{}/{}",
-                    self.region, self.account_number, queue
-                ),
+            Some(queue) => format!(
+                "https://sqs.{}.amazonaws.com/{}/{}",
+                self.region, self.account_number, queue
+            ),
             None => format!("https://sqs.{}.amazonaws.com", self.region),
         }
     }
 
     /// Get a single message from the queue.
-    pub fn receive_message(&self, queue_name: &str, visibility_timeout: Option<i32>) -> Result<Option<SqsMessage>> {
+    pub fn receive_message(
+        &self,
+        queue_name: &str,
+        visibility_timeout: Option<i32>,
+    ) -> Result<Option<SqsMessage>> {
         let message = self.receive_messages(queue_name, 1, visibility_timeout)?;
         Ok(message.get(0).cloned())
     }
@@ -96,16 +99,14 @@ impl SqsController {
     /// List the Sqs Queues available.
     pub fn list_queues(&self) -> Result<Vec<String>> {
         let params: HashMap<&str, &str> = HashMap::new();
-        let xml_result = self.get_xml_result("ListQueues", None,params)?;
+        let xml_result = self.get_xml_result("ListQueues", None, params)?;
         Ok(SqsController::parse_list_queues_xml(&xml_result)?)
     }
 
     /// Delete a message from the queue.
     pub fn delete_message(&self, queue_name: &str, receipt_handle: &str) -> Result<()> {
-        let params: HashMap<&str, &str> = HashMap::from(
-            [("ReceiptHandle", receipt_handle)]
-        );
-        let xml_result = self.get_xml_result( "DeleteMessage", Some(queue_name), params)?;
+        let params: HashMap<&str, &str> = HashMap::from([("ReceiptHandle", receipt_handle)]);
+        let xml_result = self.get_xml_result("DeleteMessage", Some(queue_name), params)?;
         Ok(SqsController::parse_delete_message_xml(&xml_result)?)
     }
 
@@ -120,7 +121,10 @@ impl SqsController {
     ) -> Result<String> {
         custom_params.insert("Action", action);
         custom_params.insert("Version", API_VERSION);
-        let query_params: Vec<(&str, &str)> = custom_params.iter().map(|(key, value)| (*key, *value)).collect();
+        let query_params: Vec<(&str, &str)> = custom_params
+            .iter()
+            .map(|(key, value)| (*key, *value))
+            .collect();
         let method = "GET";
         let endpoint = self.get_endpoint(queue_name);
         let endpoint = endpoint.as_str();
@@ -306,10 +310,14 @@ impl SqsController {
                                                     SqsController::parse_text(reader, "MessageId")?
                                             }
                                             b"ReceiptHandle" => {
-                                                receipt_handle =
-                                                    SqsController::parse_text(reader, "ReceiptHandle")?
+                                                receipt_handle = SqsController::parse_text(
+                                                    reader,
+                                                    "ReceiptHandle",
+                                                )?
                                             }
-                                            b"Body" => body = SqsController::parse_text(reader, "Body")?,
+                                            b"Body" => {
+                                                body = SqsController::parse_text(reader, "Body")?
+                                            }
                                             _ => (),
                                         }
                                     }
@@ -437,7 +445,7 @@ pub struct SqsMessage {
 
 #[cfg(test)]
 mod tests {
-    use crate::sqs::{SqsMessage, SqsController};
+    use crate::sqs::{SqsController, SqsMessage};
 
     #[test]
     fn test_parse_messages() {
