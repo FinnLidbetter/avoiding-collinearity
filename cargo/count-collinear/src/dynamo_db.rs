@@ -1,7 +1,7 @@
 use crate::aws_request::{get_authorization_header, get_base_headers};
 use base64;
 use http::HeaderMap;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::convert::TryInto;
 use std::fmt;
 use std::fmt::Formatter;
@@ -22,12 +22,13 @@ impl fmt::Display for DynamoError {
     }
 }
 
+#[derive(Clone)]
 enum AttributeValue {
     Binary(Vec<u8>),
     BinarySet(Vec<Vec<u8>>),
     Boolean(bool),
     List(Vec<AttributeValue>),
-    Map(HashMap<String, AttributeValue>),
+    Map(BTreeMap<String, AttributeValue>),
     Number(String),
     NumberSet(Vec<String>),
     Null(bool),
@@ -53,17 +54,19 @@ impl AttributeValue {
 
     fn encode(&self) -> String {
         let value_string = match self {
-            AttributeValue::Binary(value) => base64::encode(value),
+            AttributeValue::Binary(value) => format!("\"{}\"", base64::encode(value)),
             AttributeValue::Boolean(value) => format!("{}", value),
             AttributeValue::BinarySet(values) => {
-                let encoded_values: Vec<String> =
-                    values.iter().map(|data| base64::encode(data)).collect();
-                encoded_values.join(", ")
+                let encoded_values: Vec<String> = values
+                    .iter()
+                    .map(|data| format!("\"{}\"", base64::encode(data)))
+                    .collect();
+                format!("[{}]", encoded_values.join(", "))
             }
             AttributeValue::List(values) => {
                 let encoded_values: Vec<String> =
                     values.iter().map(|value| value.encode()).collect();
-                encoded_values.join(", ")
+                format!("[{}]", encoded_values.join(", "))
             }
             AttributeValue::Map(values) => {
                 let encoded_values: Vec<String> = values
@@ -87,7 +90,7 @@ impl AttributeValue {
                     .iter()
                     .map(|value| format!("\"{}\"", value))
                     .collect();
-                quoted_values.join(", ")
+                format!("[{}]", quoted_values.join(", "))
             }
         };
         format!("{{\"{}\": {}}}", self.name(), value_string)
@@ -126,8 +129,7 @@ impl DynamoController {
 
 #[cfg(test)]
 mod tests {
-    use crate::dynamo_db::AttributeValue;
-    use quick_xml::events::attributes::Attr;
+    use super::*;
 
     #[test]
     fn test_encode_number() {
@@ -164,6 +166,10 @@ mod tests {
         let item = AttributeValue::NumberSet(values);
         let expected = "{\"NS\": [\"0\", \"-1\", \"1\", \"1.0\", \"-9.432\"]}";
         assert_eq!(item.encode(), expected);
+
+        let empty_number_set = AttributeValue::NumberSet(vec![]);
+        let expected = "{\"NS\": []}";
+        assert_eq!(empty_number_set.encode(), expected);
     }
 
     #[test]
@@ -173,5 +179,84 @@ mod tests {
 
         let false_null = AttributeValue::Null(false);
         assert_eq!(false_null.encode(), "{\"NULL\": false}");
+    }
+
+    #[test]
+    fn test_encode_string() {
+        let item_1 = AttributeValue::String("Something".to_string());
+        assert_eq!(item_1.encode(), "{\"S\": \"Something\"}");
+
+        let item_2 = AttributeValue::String("a 😁".to_string());
+        assert_eq!(item_2.encode(), "{\"S\": \"a 😁\"}");
+    }
+
+    #[test]
+    fn test_encode_string_set() {
+        let strings: Vec<String> = vec!["", "abc", "Cat"]
+            .iter()
+            .map(|value| value.to_string())
+            .collect();
+        let string_set_item = AttributeValue::StringSet(strings);
+        let expected = "{\"SS\": [\"\", \"abc\", \"Cat\"]}";
+        assert_eq!(string_set_item.encode(), expected);
+
+        let empty_string_set = AttributeValue::StringSet(vec![]);
+        let expected = "{\"SS\": []}";
+        assert_eq!(empty_string_set.encode(), expected);
+    }
+
+    #[test]
+    fn test_encode_binary() {
+        let data: Vec<u8> = vec![0, 1, 3, 255];
+        let data_b64 = base64::encode(&data);
+        assert_eq!(data_b64, "AAED/w==");
+        let item = AttributeValue::Binary(data);
+        let expected = "{\"B\": \"AAED/w==\"}";
+        assert_eq!(item.encode(), expected);
+    }
+
+    #[test]
+    fn test_encode_binary_set() {
+        let data_0: Vec<u8> = vec![21, 42, 123];
+        let data_1: Vec<u8> = vec![7];
+        let data_2: Vec<u8> = vec![128, 111];
+        let data_0_b64 = base64::encode(&data_0);
+        let data_1_b64 = base64::encode(&data_1);
+        let data_2_b64 = base64::encode(&data_2);
+        assert_eq!(data_0_b64, "FSp7");
+        assert_eq!(data_1_b64, "Bw==");
+        assert_eq!(data_2_b64, "gG8=");
+        let item = AttributeValue::BinarySet(vec![data_0, data_1, data_2]);
+        let expected = "{\"BS\": [\"FSp7\", \"Bw==\", \"gG8=\"]}";
+        assert_eq!(item.encode(), expected);
+
+        let empty_binary_set = AttributeValue::BinarySet(vec![]);
+        let expected = "{\"BS\": []}";
+        assert_eq!(empty_binary_set.encode(), expected);
+    }
+
+    #[test]
+    fn test_encode_list() {
+        let number_item = AttributeValue::Number("0".to_string());
+        let true_item = AttributeValue::Boolean(true);
+        let nested_empty_list = AttributeValue::List(vec![]);
+
+        let list_item = AttributeValue::List(vec![number_item, true_item, nested_empty_list]);
+        let expected = "{\"L\": [{\"N\": \"0\"}, {\"BOOL\": true}, {\"L\": []}]}";
+        assert_eq!(list_item.encode(), expected);
+    }
+
+    #[test]
+    fn test_encode_map() {
+        let number_item = AttributeValue::Number("-1".to_string());
+        let false_item = AttributeValue::Boolean(false);
+        let list_item = AttributeValue::List(vec![number_item.clone(), false_item.clone()]);
+        let mut items_map = BTreeMap::new();
+        items_map.insert("number Thing".to_string(), number_item);
+        items_map.insert("boolean thing".to_string(), false_item);
+        items_map.insert("some_sort_of_list".to_string(), list_item);
+        let expected = "{\"M\": {\"boolean thing\": {\"BOOL\": false}, \"number Thing\": {\"N\": \"-1\"}, \"some_sort_of_list\": {\"L\": [{\"N\": \"-1\"}, {\"BOOL\": false}]}}}";
+        let map_item = AttributeValue::Map(items_map);
+        assert_eq!(map_item.encode(), expected);
     }
 }
