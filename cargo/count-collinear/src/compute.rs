@@ -4,7 +4,6 @@ use std::collections::HashMap;
 use std::env;
 use std::error;
 
-
 #[derive(Debug, PartialEq, Eq, Hash)]
 pub struct Point3D {
     x: i128,
@@ -259,7 +258,6 @@ pub fn count_collinear_points(
     }
     max_count
 }
-
 
 #[cfg(test)]
 mod tests {

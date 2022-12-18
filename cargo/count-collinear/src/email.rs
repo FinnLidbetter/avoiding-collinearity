@@ -13,7 +13,10 @@ pub fn send_result(
     max_count: i32,
     config: &Config,
 ) -> Result<(), Box<dyn error::Error>> {
-    let email_settings = config.email_settings.as_ref().ok_or("Email settings are not configured.")?;
+    let email_settings = config
+        .email_settings
+        .as_ref()
+        .ok_or("Email settings are not configured.")?;
     let mailer = SmtpTransport::starttls_relay(email_settings.smtp_url.as_str())?
         // Add credentials for authentication
         .credentials(Credentials::new(

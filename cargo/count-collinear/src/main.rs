@@ -4,20 +4,19 @@ mod aws_request;
 mod aws_signing;
 mod compute;
 mod dynamo_db;
+mod email;
 mod settings;
 mod sqs;
 mod utilities;
-mod email;
 
 use chrono::{Duration, Utc};
 use compute::{build_point_sequence, count_collinear_points};
 use email::send_result;
 use log::{debug, error, info};
 use std::collections::HashMap;
-use std::{env, fmt};
 use std::error;
 use std::fmt::Formatter;
-
+use std::{env, fmt};
 
 /// Parse the arguments.
 ///
@@ -90,8 +89,12 @@ impl CollinearCountResult {
         the largest number of collinear points in the first {} indices of \
         the sequence is {}. This took {} seconds to build the sequence and {} to count \
         the collinearity.",
-            self.start_index, self.end_index, self.sequence_length, self.max_count,
-            self.build_duration_seconds(), self.count_duration_seconds(),
+            self.start_index,
+            self.end_index,
+            self.sequence_length,
+            self.max_count,
+            self.build_duration_seconds(),
+            self.count_duration_seconds(),
         )
     }
 }
