@@ -1,7 +1,7 @@
 use crate::aws_request::{get_authorization_header, get_base_headers};
 use base64;
 use http::HeaderMap;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 use std::convert::TryInto;
 use std::fmt;
 use std::fmt::Formatter;
@@ -18,7 +18,7 @@ pub struct DynamoError {
 
 impl fmt::Display for DynamoError {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", format!("S3Error: {}", self.msg))
+        write!(f, "{}", format!("DynamoDB Error: {}", self.msg))
     }
 }
 
@@ -125,6 +125,66 @@ impl DynamoController {
             client,
         }
     }
+
+    fn get_endpoint(&self) -> String {
+        format!("https://sqs.{}.amazonaws.com", self.region)
+    }
+
+    /*
+    pub fn execute_statement(
+        &self,
+        partiql_statement: &str,
+        parameters: Vec<AttributeValue>,
+    ) -> Result<u16> {
+        custom_params.insert("Action", action);
+        custom_params.insert("Version", API_VERSION);
+        let query_params: Vec<(&str, &str)> = custom_params
+            .iter()
+            .map(|(key, value)| (*key, *value))
+            .collect();
+        let method = "POST";
+        let endpoint = self.get_endpoint();
+        let endpoint = endpoint.as_str();
+        let base_headers = get_base_headers(SERVICE_NAME, self.region.as_str());
+        let mut headers: HashMap<&str, &str> = base_headers
+            .iter()
+            .map(|(key, value)| (*key, value.as_str()))
+            .collect();
+        let authorization_header = get_authorization_header(
+            method,
+            endpoint,
+            custom_params,
+            &headers,
+            None,
+            self.region.as_str(),
+            SERVICE_NAME,
+            self.access_key.as_str(),
+            self.secret_access_key.as_str(),
+        )
+        .map_err(|err| DynamoError {
+            msg: format!("Failed to get authorization header due to '{}'", err.msg),
+        })?;
+        headers.insert("Authorization", authorization_header.as_str());
+        let headers: HashMap<String, String> = headers
+            .iter()
+            .map(|(key, value)| ((*key).to_string(), (*value).to_string()))
+            .collect();
+
+        let mut request = self.client.get(endpoint);
+        let header_map: HeaderMap = (&headers).try_into().map_err(|err| DynamoError {
+            msg: format!("Failed to convert headers into a HeaderMap due to {}", err),
+        })?;
+        request = request.headers(header_map);
+        request = request.query(&query_params);
+        let result = request.send().map_err(|err| DynamoError {
+            msg: format!("Request to {} failed due to {}", endpoint, err),
+        })?;
+        result.error_for_status_ref().map_err(|err| DynamoError {
+            msg: format!("Request to {} failed due to {}", endpoint, err),
+        })?;
+        Ok(result.status().as_u16())
+    }
+    */
 }
 
 #[cfg(test)]
