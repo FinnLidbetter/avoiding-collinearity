@@ -25,12 +25,13 @@ use std::error;
 use std::fmt::{Display, Formatter};
 use std::time::Instant;
 use std::{env, fmt};
+use crate::readers::sqs_reader::SqsReader;
 
 fn get_reader(config: &Config) -> Box<dyn CollinearReader> {
     match config.input_source {
         Source::Args => Box::new(ArgsReader::new(config).unwrap()),
+        Source::Sqs => Box::new(SqsReader::new(config).unwrap()),
         Source::StdIn => Box::new(StdInReader::new(config).unwrap()),
-        _ => Box::new(StdInReader::new(config).unwrap()),
     }
 }
 
