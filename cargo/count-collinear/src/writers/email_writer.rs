@@ -14,7 +14,7 @@ pub struct EmailController {
 }
 
 impl EmailController {
-    pub fn new(config: &Config) -> Result<Box<Self>, CollinearWriterError> {
+    pub fn new(config: &Config) -> Result<EmailController, CollinearWriterError> {
         let email_settings = config.email_settings.as_ref().ok_or(CollinearWriterError {
             msg: String::from("Missing email configuration settings"),
         })?;
@@ -40,11 +40,11 @@ impl EmailController {
                 .map_err(|err: AddressError| CollinearWriterError {
                     msg: err.to_string(),
                 })?;
-        Ok(Box::new(EmailController {
+        Ok(EmailController {
             mailer,
             sender_mailbox,
             receiver_mailbox,
-        }))
+        })
     }
 }
 

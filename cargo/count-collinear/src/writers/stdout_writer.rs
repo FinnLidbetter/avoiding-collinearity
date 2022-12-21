@@ -4,8 +4,8 @@ use crate::{CollinearWriter, Config, CountCollinearResult};
 pub struct StdOutWriter;
 
 impl StdOutWriter {
-    pub fn new(config: &Config) -> Result<Box<Self>, CollinearWriterError> {
-        Ok(Box::new(StdOutWriter {}))
+    pub fn new(config: &Config) -> Result<StdOutWriter, CollinearWriterError> {
+        Ok(StdOutWriter {})
     }
 }
 

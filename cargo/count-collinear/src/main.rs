@@ -28,9 +28,9 @@ use std::{env, fmt};
 
 fn get_reader(config: &Config) -> Box<dyn CollinearReader> {
     match config.input_source {
-        Source::Args => Box::new(*ArgsReader::new(config).unwrap()),
-        Source::StdIn => Box::new(*StdInReader::new(config).unwrap()),
-        _ => Box::new(*StdInReader::new(config).unwrap()),
+        Source::Args => Box::new(ArgsReader::new(config).unwrap()),
+        Source::StdIn => Box::new(StdInReader::new(config).unwrap()),
+        _ => Box::new(StdInReader::new(config).unwrap()),
     }
 }
 
@@ -38,9 +38,9 @@ fn get_writer(config: &Config) -> Box<dyn CollinearWriter> {
     match config.output_destination {
         //Destination::DynamoDb => {}
         // TODO: add error handling for failed initialisation, instead of unwrap.
-        Destination::Email => Box::new(*EmailController::new(config).unwrap()),
-        Destination::StdOut => Box::new(*StdOutWriter::new(config).unwrap()),
-        _ => Box::new(*StdOutWriter::new(config).unwrap()),
+        Destination::Email => Box::new(EmailController::new(config).unwrap()),
+        Destination::StdOut => Box::new(StdOutWriter::new(config).unwrap()),
+        _ => Box::new(StdOutWriter::new(config).unwrap()),
     }
 }
 

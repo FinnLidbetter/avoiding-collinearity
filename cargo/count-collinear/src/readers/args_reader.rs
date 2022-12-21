@@ -10,10 +10,10 @@ pub struct ArgsReader {
     is_args_used: bool,
 }
 impl ArgsReader {
-    pub fn new(config: &Config) -> Result<Box<Self>, CollinearReaderError> {
-        Ok(Box::new(ArgsReader {
+    pub fn new(config: &Config) -> Result<ArgsReader, CollinearReaderError> {
+        Ok(ArgsReader {
             is_args_used: false,
-        }))
+        })
     }
 }
 
