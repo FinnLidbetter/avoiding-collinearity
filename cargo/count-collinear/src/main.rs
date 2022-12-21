@@ -15,22 +15,22 @@ use crate::readers::{CollinearReader, CollinearReaderError, CountCollinearArgs};
 use crate::settings::{Config, Destination, Source};
 use crate::writers::email_writer::EmailController;
 use crate::writers::stdout_writer::StdOutWriter;
-use crate::writers::{CollinearCountResult, CollinearWriter};
-use crate::Source::Args;
+use crate::writers::{CollinearWriter, CountCollinearResult};
+use crate::Source::{Args, StdIn};
 use chrono::{Duration, Utc};
 use compute::{build_point_sequence, count_collinear_points};
 use log::{debug, error, info};
 use std::collections::HashMap;
 use std::error;
-use std::fmt::Formatter;
+use std::fmt::{Display, Formatter};
 use std::time::Instant;
 use std::{env, fmt};
 
-fn get_reader(config: &Config) -> impl CollinearReader {
+fn get_reader(config: &Config) -> Box<dyn CollinearReader> {
     match config.input_source {
-        //Source::Args => *ArgsReader::new(config).unwrap(),
-        Source::StdIn => *StdInReader::new(config).unwrap(),
-        _ => *StdInReader::new(config).unwrap(),
+        Source::Args => Box::new(*ArgsReader::new(config).unwrap()),
+        Source::StdIn => Box::new(*StdInReader::new(config).unwrap()),
+        _ => Box::new(*StdInReader::new(config).unwrap()),
     }
 }
 
@@ -44,6 +44,34 @@ fn get_writer(config: &Config) -> impl CollinearWriter {
     }
 }
 
+fn process_count_collinear_args(
+    point_sequence: &mut Vec<Point3D>,
+    count_collinear_args: CountCollinearArgs,
+) -> CountCollinearResult {
+    let sequence_length = count_collinear_args.sequence_length;
+    let start_index = count_collinear_args.start_index;
+    let end_index = count_collinear_args.end_index;
+    let build_sequence_start_time = Instant::now();
+    let mut build_sequence_end_time = build_sequence_start_time;
+    if sequence_length > point_sequence.len().try_into().unwrap() {
+        *point_sequence = build_point_sequence(sequence_length);
+        build_sequence_end_time = Instant::now();
+    }
+    let build_duration = build_sequence_end_time - build_sequence_start_time;
+    let count_start_time = Instant::now();
+    let max_count = count_collinear_points(&point_sequence, start_index, end_index);
+    let count_end_time = Instant::now();
+    let count_duration = count_end_time - count_start_time;
+    CountCollinearResult {
+        sequence_length,
+        start_index,
+        end_index,
+        max_count,
+        build_duration,
+        count_duration,
+    }
+}
+
 fn main() {
     let config = settings::read_config();
 
@@ -54,40 +82,26 @@ fn main() {
     let mut point_sequence: Vec<Point3D> = Vec::new();
 
     let mut reader = get_reader(&config);
+    debug!("Using reader: {}", reader);
     let writer = get_writer(&config);
     while !reader.is_finished_reading() {
         let count_collinear_args = reader.read_count_collinear_args();
         match count_collinear_args {
             Ok(count_collinear_args) => {
-                let sequence_length = count_collinear_args.sequence_length;
-                let start_index = count_collinear_args.start_index;
-                let end_index = count_collinear_args.end_index;
-                let build_sequence_start_time = Instant::now();
-                let mut build_sequence_end_time = build_sequence_start_time;
-                if sequence_length > point_sequence.len().try_into().unwrap() {
-                    point_sequence = build_point_sequence(sequence_length);
-                    build_sequence_end_time = Instant::now();
-                }
-                let build_duration = build_sequence_end_time - build_sequence_start_time;
-                let count_start_time = Instant::now();
-                let max_count = count_collinear_points(&point_sequence, start_index, end_index);
-                let count_end_time = Instant::now();
-                let count_duration = count_end_time - count_start_time;
-                let count_collinear_result = CollinearCountResult {
-                    sequence_length,
-                    start_index,
-                    end_index,
-                    max_count,
-                    build_duration,
-                    count_duration,
+                match count_collinear_args {
+                    Some(count_collinear_args) => {
+                        let count_collinear_result =
+                            process_count_collinear_args(&mut point_sequence, count_collinear_args);
+                        match writer
+                            .write_count_collinear_result(count_collinear_result)
+                            .err()
+                        {
+                            Some(err) => error!("{}", err),
+                            None => (),
+                        }
+                    }
+                    None => continue,
                 };
-                match writer
-                    .write_count_collinear_result(count_collinear_result)
-                    .err()
-                {
-                    Some(err) => error!("{}", err),
-                    None => (),
-                }
             }
             Err(reader_error) => {
                 error!("{}", reader_error)

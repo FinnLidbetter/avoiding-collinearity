@@ -1,5 +1,5 @@
 use crate::writers::CollinearWriterError;
-use crate::{CollinearCountResult, CollinearWriter, Config};
+use crate::{CollinearWriter, Config, CountCollinearResult};
 
 pub struct StdOutWriter;
 
@@ -10,7 +10,7 @@ impl CollinearWriter for StdOutWriter {
 
     fn write_count_collinear_result(
         &self,
-        count_collinear_result: CollinearCountResult,
+        count_collinear_result: CountCollinearResult,
     ) -> Result<(), CollinearWriterError> {
         print!("{}\n", count_collinear_result.to_string());
         Ok(())

@@ -1,5 +1,5 @@
 use crate::settings::Config;
-use crate::writers::{CollinearCountResult, CollinearWriter, CollinearWriterError};
+use crate::writers::{CollinearWriter, CollinearWriterError, CountCollinearResult};
 use lettre::address::AddressError;
 use lettre::message::Mailbox;
 use lettre::transport::smtp::authentication::Credentials;
@@ -48,7 +48,7 @@ impl CollinearWriter for EmailController {
 
     fn write_count_collinear_result(
         &self,
-        count_collinear_result: CollinearCountResult,
+        count_collinear_result: CountCollinearResult,
     ) -> Result<(), CollinearWriterError> {
         let subject = "Count Collinear Results";
         let body = count_collinear_result.verbose_string();

@@ -3,6 +3,7 @@ use crate::readers::{
 };
 use crate::Config;
 use std::env;
+use std::fmt::{Display, Formatter};
 use std::num::ParseIntError;
 
 pub struct ArgsReader {
@@ -16,11 +17,19 @@ impl ArgsReader {
     }
 }
 
+impl Display for ArgsReader {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "ArgsReader")
+    }
+}
+
 impl CollinearReader for ArgsReader {
     /// Parse the arguments.
     ///
     /// Get the sequence length, start index, end index.
-    fn read_count_collinear_args(&mut self) -> Result<CountCollinearArgs, CollinearReaderError> {
+    fn read_count_collinear_args(
+        &mut self,
+    ) -> Result<Option<CountCollinearArgs>, CollinearReaderError> {
         let mut is_first = true;
         let args: Vec<String> = env::args()
             .filter(|_val| {

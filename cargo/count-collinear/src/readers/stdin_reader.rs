@@ -1,5 +1,6 @@
 use crate::readers::parse_args_from_strings;
 use crate::{CollinearReader, CollinearReaderError, Config, CountCollinearArgs};
+use std::fmt::{Display, Formatter};
 use std::io;
 
 pub struct StdInReader {
@@ -14,17 +15,25 @@ impl StdInReader {
     }
 }
 
+impl Display for StdInReader {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "StdInReader")
+    }
+}
+
 impl CollinearReader for StdInReader {
-    fn read_count_collinear_args(&mut self) -> Result<CountCollinearArgs, CollinearReaderError> {
+    fn read_count_collinear_args(
+        &mut self,
+    ) -> Result<Option<CountCollinearArgs>, CollinearReaderError> {
         let mut line = String::new();
-        io::stdin().read_line(&mut line);
+        io::stdin()
+            .read_line(&mut line)
+            .map_err(|err| CollinearReaderError {
+                msg: err.to_string(),
+            })?;
         if line.trim().is_empty() {
             self.has_read_blank_line = true;
-            // TODO: change this such that end of input is not an error. Maybe
-            //  the return type should be Result<Option<CountCollinearArgs>, CollinearReaderError>
-            return Err(CollinearReaderError {
-                msg: String::from("End of input reached."),
-            });
+            return Ok(None);
         }
         let tokens: Vec<String> = line
             .split_whitespace()

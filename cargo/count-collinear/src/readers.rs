@@ -4,7 +4,7 @@ pub mod stdin_reader;
 use crate::settings::Config;
 use chrono::{Duration, Utc};
 use std::fmt;
-use std::fmt::Formatter;
+use std::fmt::{Display, Formatter};
 use std::num::ParseIntError;
 
 #[derive(Debug, Clone)]
@@ -20,7 +20,7 @@ impl fmt::Display for CollinearReaderError {
 
 pub fn parse_args_from_strings(
     values: Vec<String>,
-) -> Result<CountCollinearArgs, CollinearReaderError> {
+) -> Result<Option<CountCollinearArgs>, CollinearReaderError> {
     let sequence_length = values.get(0).ok_or(CollinearReaderError {
         msg: String::from("Supply at least one argument, the sequence length"),
     })?;
@@ -64,11 +64,11 @@ pub fn parse_args_from_strings(
     if end_index > sequence_length.try_into().unwrap() {
         end_index = sequence_length.try_into().unwrap();
     }
-    Ok(CountCollinearArgs {
+    Ok(Some(CountCollinearArgs {
         sequence_length,
         start_index,
         end_index,
-    })
+    }))
 }
 
 pub struct CountCollinearArgs {
@@ -77,8 +77,13 @@ pub struct CountCollinearArgs {
     pub(crate) end_index: usize,
 }
 
-pub trait CollinearReader {
-    fn read_count_collinear_args(&mut self) -> Result<CountCollinearArgs, CollinearReaderError>;
+pub trait CollinearReader
+where
+    Self: Display,
+{
+    fn read_count_collinear_args(
+        &mut self,
+    ) -> Result<Option<CountCollinearArgs>, CollinearReaderError>;
 
     fn is_finished_reading(&self) -> bool;
 

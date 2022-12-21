@@ -17,7 +17,7 @@ impl fmt::Display for CollinearWriterError {
     }
 }
 
-pub struct CollinearCountResult {
+pub struct CountCollinearResult {
     pub(crate) sequence_length: u32,
     pub(crate) start_index: usize,
     pub(crate) end_index: usize,
@@ -25,7 +25,7 @@ pub struct CollinearCountResult {
     pub(crate) build_duration: Duration,
     pub(crate) count_duration: Duration,
 }
-impl CollinearCountResult {
+impl CountCollinearResult {
     fn build_duration(&self) -> Duration {
         self.build_duration
     }
@@ -54,7 +54,7 @@ impl CollinearCountResult {
     }
 }
 
-impl fmt::Display for CollinearCountResult {
+impl fmt::Display for CountCollinearResult {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(
             f,
@@ -74,6 +74,6 @@ pub trait CollinearWriter {
     fn new(config: &Config) -> Result<Box<Self>, CollinearWriterError>;
     fn write_count_collinear_result(
         &self,
-        count_collinear_result: CollinearCountResult,
+        count_collinear_result: CountCollinearResult,
     ) -> Result<(), CollinearWriterError>;
 }
