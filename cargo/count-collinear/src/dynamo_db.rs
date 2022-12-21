@@ -9,14 +9,14 @@ use std::io::Bytes;
 
 const API_VERSION: &str = "2012-08-10";
 const SERVICE_NAME: &str = "dynamodb";
-type Result<T> = std::result::Result<T, DynamoError>;
+type Result<T> = std::result::Result<T, DynamoDbError>;
 
 #[derive(Debug, Clone)]
-pub struct DynamoError {
+pub struct DynamoDbError {
     msg: String,
 }
 
-impl fmt::Display for DynamoError {
+impl fmt::Display for DynamoDbError {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(f, "{}", format!("DynamoDB Error: {}", self.msg))
     }
@@ -97,7 +97,7 @@ impl AttributeValue {
     }
 }
 
-pub struct DynamoController {
+pub struct DynamoDbController {
     access_key: String,
     secret_access_key: String,
     account_number: String,
@@ -105,19 +105,19 @@ pub struct DynamoController {
     client: reqwest::blocking::Client,
 }
 
-impl DynamoController {
+impl DynamoDbController {
     pub fn new(
         access_key: &str,
         secret_access_key: &str,
         account_number: &str,
         region: &str,
-    ) -> DynamoController {
+    ) -> DynamoDbController {
         let access_key = String::from(access_key);
         let secret_access_key = String::from(secret_access_key);
         let account_number = String::from(account_number);
         let region = String::from(region);
         let client = reqwest::blocking::Client::new();
-        DynamoController {
+        DynamoDbController {
             access_key,
             secret_access_key,
             account_number,
@@ -161,7 +161,7 @@ impl DynamoController {
             self.access_key.as_str(),
             self.secret_access_key.as_str(),
         )
-        .map_err(|err| DynamoError {
+        .map_err(|err| DynamoDbError {
             msg: format!("Failed to get authorization header due to '{}'", err.msg),
         })?;
         headers.insert("Authorization", authorization_header.as_str());
@@ -171,15 +171,15 @@ impl DynamoController {
             .collect();
 
         let mut request = self.client.get(endpoint);
-        let header_map: HeaderMap = (&headers).try_into().map_err(|err| DynamoError {
+        let header_map: HeaderMap = (&headers).try_into().map_err(|err| DynamoDbError {
             msg: format!("Failed to convert headers into a HeaderMap due to {}", err),
         })?;
         request = request.headers(header_map);
         request = request.query(&query_params);
-        let result = request.send().map_err(|err| DynamoError {
+        let result = request.send().map_err(|err| DynamoDbError {
             msg: format!("Request to {} failed due to {}", endpoint, err),
         })?;
-        result.error_for_status_ref().map_err(|err| DynamoError {
+        result.error_for_status_ref().map_err(|err| DynamoDbError {
             msg: format!("Request to {} failed due to {}", endpoint, err),
         })?;
         Ok(result.status().as_u16())
