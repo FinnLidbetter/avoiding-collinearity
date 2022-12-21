@@ -92,8 +92,10 @@ fn main() {
             Ok(count_collinear_args) => {
                 match count_collinear_args {
                     Some(count_collinear_args) => {
+                        info!("Processing: {}", count_collinear_args);
                         let count_collinear_result =
                             process_count_collinear_args(&mut point_sequence, count_collinear_args);
+                        info!("{}", count_collinear_result);
                         match writer
                             .write_count_collinear_result(count_collinear_result)
                             .err()

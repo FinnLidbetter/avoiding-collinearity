@@ -79,6 +79,16 @@ pub struct CountCollinearArgs {
     pub(crate) end_index: usize,
 }
 
+impl fmt::Display for CountCollinearArgs {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "sequence length: {}, start index: {}, end_index: {}",
+            self.sequence_length, self.start_index, self.end_index
+        )
+    }
+}
+
 /// Parse the digits that come after a particular search pattern.
 ///
 /// This assumes that base_str is ascii and that only the digits
