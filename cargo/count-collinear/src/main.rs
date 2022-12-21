@@ -10,6 +10,7 @@ mod writers;
 
 use crate::compute::Point3D;
 use crate::readers::args_reader::ArgsReader;
+use crate::readers::sqs_reader::SqsReader;
 use crate::readers::stdin_reader::StdInReader;
 use crate::readers::{CollinearReader, CollinearReaderError, CountCollinearArgs};
 use crate::settings::{Config, Destination, Source};
@@ -25,7 +26,6 @@ use std::error;
 use std::fmt::{Display, Formatter};
 use std::time::Instant;
 use std::{env, fmt};
-use crate::readers::sqs_reader::SqsReader;
 
 fn get_reader(config: &Config) -> Box<dyn CollinearReader> {
     match config.input_source {
