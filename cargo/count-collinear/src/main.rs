@@ -34,13 +34,13 @@ fn get_reader(config: &Config) -> Box<dyn CollinearReader> {
     }
 }
 
-fn get_writer(config: &Config) -> impl CollinearWriter {
+fn get_writer(config: &Config) -> Box<dyn CollinearWriter> {
     match config.output_destination {
         //Destination::DynamoDb => {}
         // TODO: add error handling for failed initialisation, instead of unwrap.
-        //Destination::Email => *EmailController::new(config).unwrap(),
-        Destination::StdOut => *StdOutWriter::new(config).unwrap(),
-        _ => *StdOutWriter::new(config).unwrap(),
+        Destination::Email => Box::new(*EmailController::new(config).unwrap()),
+        Destination::StdOut => Box::new(*StdOutWriter::new(config).unwrap()),
+        _ => Box::new(*StdOutWriter::new(config).unwrap()),
     }
 }
 

@@ -71,7 +71,6 @@ impl fmt::Display for CountCollinearResult {
 }
 
 pub trait CollinearWriter {
-    fn new(config: &Config) -> Result<Box<Self>, CollinearWriterError>;
     fn write_count_collinear_result(
         &self,
         count_collinear_result: CountCollinearResult,

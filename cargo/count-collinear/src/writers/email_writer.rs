@@ -12,8 +12,9 @@ pub struct EmailController {
     sender_mailbox: Mailbox,
     receiver_mailbox: Mailbox,
 }
-impl CollinearWriter for EmailController {
-    fn new(config: &Config) -> Result<Box<Self>, CollinearWriterError> {
+
+impl EmailController {
+    pub fn new(config: &Config) -> Result<Box<Self>, CollinearWriterError> {
         let email_settings = config.email_settings.as_ref().ok_or(CollinearWriterError {
             msg: String::from("Missing email configuration settings"),
         })?;
@@ -45,7 +46,9 @@ impl CollinearWriter for EmailController {
             receiver_mailbox,
         }))
     }
+}
 
+impl CollinearWriter for EmailController {
     fn write_count_collinear_result(
         &self,
         count_collinear_result: CountCollinearResult,
