@@ -5,7 +5,8 @@ use lettre::message::Mailbox;
 use lettre::transport::smtp::authentication::Credentials;
 use lettre::{Message, SmtpTransport, Transport};
 use log::error;
-use std::error;
+use std::fmt::Formatter;
+use std::{error, fmt};
 
 pub struct EmailController {
     mailer: SmtpTransport,
@@ -45,6 +46,12 @@ impl EmailController {
             sender_mailbox,
             receiver_mailbox,
         })
+    }
+}
+
+impl fmt::Display for EmailController {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "Email Writer")
     }
 }
 

@@ -3,7 +3,7 @@ pub mod stdout_writer;
 
 use crate::settings::Config;
 use std::fmt;
-use std::fmt::Formatter;
+use std::fmt::{Display, Formatter};
 use std::time::Duration;
 
 #[derive(Debug, Clone)]
@@ -42,8 +42,8 @@ impl CountCollinearResult {
         format!(
             "Considering all lines with at least one point with an index in [{}, {}], \
         the largest number of collinear points in the first {} indices of \
-        the sequence is {}. This took {} seconds to build the sequence and {} to count \
-        the collinearity.",
+        the sequence is {}. This took {} seconds to build the sequence and {} seconds \
+        to count the collinearity.",
             self.start_index,
             self.end_index,
             self.sequence_length,
@@ -70,7 +70,10 @@ impl fmt::Display for CountCollinearResult {
     }
 }
 
-pub trait CollinearWriter {
+pub trait CollinearWriter
+where
+    Self: Display,
+{
     fn write_count_collinear_result(
         &self,
         count_collinear_result: CountCollinearResult,

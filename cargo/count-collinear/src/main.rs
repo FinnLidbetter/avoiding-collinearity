@@ -85,6 +85,7 @@ fn main() {
     let mut reader = get_reader(&config);
     debug!("Using reader: {}", reader);
     let writer = get_writer(&config);
+    debug!("Using writer: {}", writer);
     while !reader.is_finished_reading() {
         let count_collinear_args = reader.read_count_collinear_args();
         match count_collinear_args {

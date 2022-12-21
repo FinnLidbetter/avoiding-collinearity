@@ -1,11 +1,19 @@
 use crate::writers::CollinearWriterError;
 use crate::{CollinearWriter, Config, CountCollinearResult};
+use std::fmt;
+use std::fmt::Formatter;
 
 pub struct StdOutWriter;
 
 impl StdOutWriter {
     pub fn new(config: &Config) -> Result<StdOutWriter, CollinearWriterError> {
         Ok(StdOutWriter {})
+    }
+}
+
+impl fmt::Display for StdOutWriter {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "StdOutWriter")
     }
 }
 
