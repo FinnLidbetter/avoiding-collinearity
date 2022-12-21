@@ -73,15 +73,13 @@ impl CollinearReader for SqsReader {
 
     fn post_process_args_read(&self) -> Result<(), CollinearReaderError> {
         match &self.processed_message_receipt_handle {
-            Some(receipt_handle) => {
-                self.sqs_controller.delete_message(
-                    self.queue_name.as_str(),
-                    receipt_handle.as_str()
-                ).map_err(|err| CollinearReaderError{ msg: err.to_string() })
-            },
-            None => {
-                Ok(())
-            }
+            Some(receipt_handle) => self
+                .sqs_controller
+                .delete_message(self.queue_name.as_str(), receipt_handle.as_str())
+                .map_err(|err| CollinearReaderError {
+                    msg: err.to_string(),
+                }),
+            None => Ok(()),
         }
     }
 
