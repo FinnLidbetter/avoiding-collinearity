@@ -42,6 +42,10 @@ impl CollinearReader for StdInReader {
         parse_args_from_strings(tokens)
     }
 
+    fn post_process_args_read(&self) -> Result<(), CollinearReaderError> {
+        Ok(())
+    }
+
     fn is_finished_reading(&self) -> bool {
         self.has_read_blank_line
     }

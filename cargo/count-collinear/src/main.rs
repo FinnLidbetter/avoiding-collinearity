@@ -96,6 +96,9 @@ fn main() {
                         let count_collinear_result =
                             process_count_collinear_args(&mut point_sequence, count_collinear_args);
                         info!("{}", count_collinear_result);
+                        if let Result::Err(err) = reader.post_process_args_read() {
+                            error!("{}", err);
+                        }
                         match writer
                             .write_count_collinear_result(count_collinear_result)
                             .err()

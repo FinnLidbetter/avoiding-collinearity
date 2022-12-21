@@ -44,6 +44,10 @@ impl CollinearReader for ArgsReader {
         parse_args_from_strings(args)
     }
 
+    fn post_process_args_read(&self) -> Result<(), CollinearReaderError> {
+        Ok(())
+    }
+
     fn is_finished_reading(&self) -> bool {
         self.is_args_used
     }

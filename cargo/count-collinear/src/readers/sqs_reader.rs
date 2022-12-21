@@ -12,6 +12,7 @@ pub struct SqsReader {
     queue_name: String,
     consecutive_no_jobs_polls: i32,
     no_jobs_polls_max: i32,
+    processed_message_receipt_handle: Option<String>,
 }
 impl SqsReader {
     pub fn new(config: &Config) -> Result<SqsReader, CollinearReaderError> {
@@ -30,11 +31,13 @@ impl SqsReader {
         let consecutive_no_jobs_polls = 0;
         let no_jobs_polls_max = NO_JOBS_POLLS_MAX;
         let queue_name = QUEUE_NAME.to_string();
+        let processed_message_receipt_handle = None;
         Ok(SqsReader {
             sqs_controller,
             queue_name,
             consecutive_no_jobs_polls,
             no_jobs_polls_max,
+            processed_message_receipt_handle,
         })
     }
 }
@@ -58,6 +61,7 @@ impl CollinearReader for SqsReader {
                             msg: err.to_string(),
                         }
                     })?;
+                self.processed_message_receipt_handle = Some(message.receipt_handle.clone());
                 Ok(Some(count_collinear_args))
             }
             None => {
@@ -65,6 +69,20 @@ impl CollinearReader for SqsReader {
                 Ok(None)
             }
         };
+    }
+
+    fn post_process_args_read(&self) -> Result<(), CollinearReaderError> {
+        match &self.processed_message_receipt_handle {
+            Some(receipt_handle) => {
+                self.sqs_controller.delete_message(
+                    self.queue_name.as_str(),
+                    receipt_handle.as_str()
+                ).map_err(|err| CollinearReaderError{ msg: err.to_string() })
+            },
+            None => {
+                Ok(())
+            }
+        }
     }
 
     fn is_finished_reading(&self) -> bool {

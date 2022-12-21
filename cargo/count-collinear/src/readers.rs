@@ -167,6 +167,8 @@ where
         &mut self,
     ) -> Result<Option<CountCollinearArgs>, CollinearReaderError>;
 
+    fn post_process_args_read(&self) -> Result<(), CollinearReaderError>;
+
     fn is_finished_reading(&self) -> bool;
 
     fn stop_reading(&self) -> ();

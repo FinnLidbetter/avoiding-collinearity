@@ -440,7 +440,7 @@ impl SqsController {
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct SqsMessage {
     message_id: String,
-    receipt_handle: String,
+    pub(crate) receipt_handle: String,
     pub(crate) body: String,
 }
 
