@@ -236,7 +236,7 @@ pub fn build_point_sequence(sequence_length: u32) -> Vec<Point3D> {
 /// for counting points on lines having some point at an index in
 /// [`start_index`, `end_index`).
 pub fn count_collinear_points(
-    point_sequence: Vec<Point3D>,
+    point_sequence: &Vec<Point3D>,
     start_index: usize,
     end_index: usize,
 ) -> i32 {
@@ -611,7 +611,7 @@ mod tests {
     #[test]
     fn test_count_collinear() {
         let point_sequence = build_point_sequence(7);
-        assert_eq!(count_collinear_points(point_sequence, 0, 1), 2);
+        assert_eq!(count_collinear_points(&point_sequence, 0, 1), 2);
         let cases = [
             (7, 0, 1, 2),
             (185, 0, 185, 6),
@@ -625,7 +625,7 @@ mod tests {
         for (sequence_length, start_index, end_index, expected_collinear) in cases {
             let point_sequence = build_point_sequence(sequence_length);
             assert_eq!(
-                count_collinear_points(point_sequence, start_index, end_index),
+                count_collinear_points(&point_sequence, start_index, end_index),
                 expected_collinear
             );
         }
