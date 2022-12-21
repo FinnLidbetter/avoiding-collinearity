@@ -1,4 +1,5 @@
 use crate::aws_request::{get_authorization_header, get_base_headers};
+use crate::{CollinearReader, CollinearReaderError, CountCollinearArgs};
 use http::HeaderMap;
 use quick_xml::events::Event;
 use quick_xml::reader::Reader;
@@ -440,7 +441,7 @@ impl SqsController {
 pub struct SqsMessage {
     message_id: String,
     receipt_handle: String,
-    body: String,
+    pub(crate) body: String,
 }
 
 #[cfg(test)]

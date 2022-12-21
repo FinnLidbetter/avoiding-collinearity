@@ -62,10 +62,10 @@ impl EmailSettings {
 
 #[derive(Debug, Clone)]
 pub struct AWSAuthSettings {
-    access_key: String,
-    secret_key: String,
-    account_number: String,
-    region: String,
+    pub access_key: String,
+    pub secret_key: String,
+    pub account_number: String,
+    pub region: String,
 }
 impl AWSAuthSettings {
     pub fn new(

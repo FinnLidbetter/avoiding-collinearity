@@ -1,4 +1,5 @@
 pub mod args_reader;
+pub mod sqs_reader;
 pub mod stdin_reader;
 
 use crate::settings::Config;
@@ -6,6 +7,7 @@ use chrono::{Duration, Utc};
 use std::fmt;
 use std::fmt::{Display, Formatter};
 use std::num::ParseIntError;
+use std::str::FromStr;
 
 #[derive(Debug, Clone)]
 pub struct CollinearReaderError {
@@ -75,6 +77,76 @@ pub struct CountCollinearArgs {
     pub(crate) sequence_length: u32,
     pub(crate) start_index: usize,
     pub(crate) end_index: usize,
+}
+
+/// Parse the digits that come after a particular search pattern.
+///
+/// This assumes that base_str is ascii and that only the digits
+/// should be parsed. As such, this only works for nonnegative integers.
+/// Parsing will stop when a comma ',' is reached.
+fn parse_digits_after_pattern<T: FromStr>(
+    text: &str,
+    pattern: &str,
+) -> Result<T, ParseCountCollinearArgsErr> {
+    let pattern_start = text.find(pattern);
+    let text_chars: Vec<char> = text.chars().collect();
+    match pattern_start {
+        Some(sequence_length_start) => {
+            let mut sequence_length_digits = String::new();
+            let mut char_index = sequence_length_start;
+            while text_chars[char_index] as char != ',' {
+                if text_chars[char_index].is_digit(10) {
+                    sequence_length_digits.push(text_chars[char_index]);
+                }
+                char_index += 1;
+            }
+            Ok(sequence_length_digits
+                .parse::<T>()
+                .map_err(|_| ParseCountCollinearArgsErr {
+                    msg: format!("Could not parse {}", sequence_length_digits.as_str()),
+                })?)
+        }
+        None => {
+            return Err(ParseCountCollinearArgsErr {
+                msg: format!(
+                    "{} not found in {} when trying to parse CountCollinearArgs.",
+                    pattern, text
+                ),
+            })
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct ParseCountCollinearArgsErr {
+    msg: String,
+}
+
+impl fmt::Display for ParseCountCollinearArgsErr {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.msg)
+    }
+}
+
+impl FromStr for CountCollinearArgs {
+    type Err = ParseCountCollinearArgsErr;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let trimmed = s.trim();
+        if !trimmed.is_ascii() {
+            return Err(ParseCountCollinearArgsErr {
+                msg: String::from("Non-ascii characters when trying to parse CountCollinearArgs."),
+            });
+        }
+        let sequence_length = parse_digits_after_pattern::<u32>(trimmed, "sequence_length")?;
+        let start_index = parse_digits_after_pattern::<usize>(trimmed, "start_index")?;
+        let end_index = parse_digits_after_pattern::<usize>(trimmed, "end_index")?;
+        Ok(CountCollinearArgs {
+            sequence_length,
+            start_index,
+            end_index,
+        })
+    }
 }
 
 pub trait CollinearReader
