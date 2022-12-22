@@ -17,15 +17,11 @@ use crate::settings::{Config, Destination, Source};
 use crate::writers::email_writer::EmailController;
 use crate::writers::stdout_writer::StdOutWriter;
 use crate::writers::{CollinearWriter, CountCollinearResult};
-use crate::Source::{Args, StdIn};
-use chrono::{Duration, Utc};
 use compute::{build_point_sequence, count_collinear_points};
 use log::{debug, error, info};
-use std::collections::HashMap;
+use std::env;
 use std::error;
-use std::fmt::{Display, Formatter};
 use std::time::Instant;
-use std::{env, fmt};
 
 fn get_reader(config: &Config) -> Box<dyn CollinearReader> {
     match config.input_source {

@@ -4,9 +4,8 @@ use lettre::address::AddressError;
 use lettre::message::Mailbox;
 use lettre::transport::smtp::authentication::Credentials;
 use lettre::{Message, SmtpTransport, Transport};
-use log::error;
+use std::fmt;
 use std::fmt::Formatter;
-use std::{error, fmt};
 
 pub struct EmailController {
     mailer: SmtpTransport,

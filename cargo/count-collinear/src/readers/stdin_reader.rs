@@ -8,7 +8,7 @@ pub struct StdInReader {
 }
 
 impl StdInReader {
-    pub fn new(config: &Config) -> Result<StdInReader, CollinearReaderError> {
+    pub fn new(_config: &Config) -> Result<StdInReader, CollinearReaderError> {
         Ok(StdInReader {
             has_read_blank_line: false,
         })

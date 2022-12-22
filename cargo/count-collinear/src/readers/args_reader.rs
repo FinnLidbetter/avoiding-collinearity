@@ -4,13 +4,12 @@ use crate::readers::{
 use crate::Config;
 use std::env;
 use std::fmt::{Display, Formatter};
-use std::num::ParseIntError;
 
 pub struct ArgsReader {
     is_args_used: bool,
 }
 impl ArgsReader {
-    pub fn new(config: &Config) -> Result<ArgsReader, CollinearReaderError> {
+    pub fn new(_config: &Config) -> Result<ArgsReader, CollinearReaderError> {
         Ok(ArgsReader {
             is_args_used: false,
         })

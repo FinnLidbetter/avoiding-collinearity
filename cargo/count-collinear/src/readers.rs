@@ -2,8 +2,6 @@ pub mod args_reader;
 pub mod sqs_reader;
 pub mod stdin_reader;
 
-use crate::settings::Config;
-use chrono::{Duration, Utc};
 use std::fmt;
 use std::fmt::{Display, Formatter};
 use std::num::ParseIntError;

@@ -1,5 +1,4 @@
 use crate::aws_request::{get_authorization_header, get_base_headers};
-use crate::{CollinearReader, CollinearReaderError, CountCollinearArgs};
 use http::HeaderMap;
 use quick_xml::events::Event;
 use quick_xml::reader::Reader;
@@ -342,7 +341,7 @@ impl SqsController {
                         }),
                     }
                 }
-                Ok(Event::End(end_event)) => return Ok(None),
+                Ok(Event::End(_end_event)) => return Ok(None),
                 _ => (),
             };
         }
@@ -379,7 +378,7 @@ impl SqsController {
                         }),
                     }
                 }
-                Ok(Event::End(end_event)) => return Ok(None),
+                Ok(Event::End(_end_event)) => return Ok(None),
                 _ => (),
             };
         }
@@ -414,7 +413,7 @@ impl SqsController {
                     result = text
                         .unescape()
                         .map_err(|err| SqsError {
-                            msg: format!("Failed to decode {}", tag),
+                            msg: format!("Failed to decode {} due to {}", tag, err),
                         })?
                         .to_string();
                 }

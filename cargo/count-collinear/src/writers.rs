@@ -1,7 +1,6 @@
 pub mod email_writer;
 pub mod stdout_writer;
 
-use crate::settings::Config;
 use std::fmt;
 use std::fmt::{Display, Formatter};
 use std::time::Duration;

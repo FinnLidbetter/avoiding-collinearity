@@ -6,7 +6,7 @@ use std::fmt::Formatter;
 pub struct StdOutWriter;
 
 impl StdOutWriter {
-    pub fn new(config: &Config) -> Result<StdOutWriter, CollinearWriterError> {
+    pub fn new(_config: &Config) -> Result<StdOutWriter, CollinearWriterError> {
         Ok(StdOutWriter {})
     }
 }

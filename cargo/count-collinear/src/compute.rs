@@ -1,8 +1,5 @@
-use chrono::{Duration, Utc};
-use log::{debug, error, info};
+use log::debug;
 use std::collections::HashMap;
-use std::env;
-use std::error;
 
 #[derive(Debug, PartialEq, Eq, Hash)]
 pub struct Point3D {
