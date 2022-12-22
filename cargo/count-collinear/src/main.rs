@@ -26,6 +26,7 @@ use std::time::Instant;
 fn get_reader(config: &Config) -> Box<dyn CollinearReader> {
     match config.input_source {
         Source::Args => Box::new(ArgsReader::new(config).unwrap()),
+        // TODO: add error handling for failed initialisation, instead of unwrap.
         Source::Sqs => Box::new(SqsReader::new(config).unwrap()),
         Source::StdIn => Box::new(StdInReader::new(config).unwrap()),
     }

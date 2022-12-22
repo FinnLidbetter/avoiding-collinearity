@@ -3,15 +3,19 @@ use crate::{CollinearReader, CollinearReaderError, Config, CountCollinearArgs};
 use std::fmt;
 use std::fmt::Formatter;
 use std::str::FromStr;
+use std::thread::sleep;
+use std::time::{Duration, Instant};
 
 const QUEUE_NAME: &str = "collinearity";
 const NO_JOBS_POLLS_MAX: i32 = 5;
+const POLL_INTERVAL_SECONDS: u64 = 60;
 
 pub struct SqsReader {
     sqs_controller: SqsController,
     queue_name: String,
     consecutive_no_jobs_polls: i32,
     no_jobs_polls_max: i32,
+    last_poll_time: Option<Instant>,
     processed_message_receipt_handle: Option<String>,
 }
 impl SqsReader {
@@ -31,12 +35,14 @@ impl SqsReader {
         let consecutive_no_jobs_polls = 0;
         let no_jobs_polls_max = NO_JOBS_POLLS_MAX;
         let queue_name = QUEUE_NAME.to_string();
+        let last_poll_time = None;
         let processed_message_receipt_handle = None;
         Ok(SqsReader {
             sqs_controller,
             queue_name,
             consecutive_no_jobs_polls,
             no_jobs_polls_max,
+            last_poll_time,
             processed_message_receipt_handle,
         })
     }
@@ -46,6 +52,15 @@ impl CollinearReader for SqsReader {
     fn read_count_collinear_args(
         &mut self,
     ) -> std::result::Result<Option<CountCollinearArgs>, CollinearReaderError> {
+        if self.last_poll_time.is_some() {
+            let seconds_since_poll = self.last_poll_time.unwrap().elapsed().as_secs();
+            if seconds_since_poll < POLL_INTERVAL_SECONDS {
+                sleep(Duration::from_secs(
+                    POLL_INTERVAL_SECONDS - seconds_since_poll,
+                ));
+            }
+        }
+        self.last_poll_time = Some(Instant::now());
         let message = self
             .sqs_controller
             .receive_message(self.queue_name.as_str(), None)
