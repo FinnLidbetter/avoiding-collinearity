@@ -6,6 +6,7 @@ use std::collections::HashMap;
 use std::convert::TryInto;
 use std::fmt;
 use std::fmt::Formatter;
+use std::str::from_utf8;
 
 const RECEIVE_MESSAGES_MAX: i32 = 10;
 const DEFAULT_VISIBILITY_TIMEOUT: i32 = 12 * 60 * 60 - 10;
@@ -402,7 +403,6 @@ impl SqsController {
     fn parse_text(reader: &mut Reader<&[u8]>, tag: &str) -> Result<String> {
         let mut parsed_text = false;
         let mut result = String::new();
-        let tag_bytes = tag.as_bytes();
         loop {
             match reader.read_event() {
                 Err(e) => {
@@ -429,17 +429,21 @@ impl SqsController {
                         .to_string();
                 }
                 Ok(Event::End(body_end)) => {
-                    return match body_end.name().as_ref() {
-                        _value @ tag_bytes => match parsed_text {
+                    let xml_tag =
+                        from_utf8(body_end.name().into_inner()).map_err(|err| SqsError {
+                            msg: format!("Could not convert xml tag to string due to {}.", err),
+                        })?;
+                    return match xml_tag == tag {
+                        true => match parsed_text {
                             true => Ok(result),
                             false => Err(SqsError {
                                 msg: format!("No value found for tag {}", tag),
                             }),
                         },
-                        _ => Err(SqsError {
+                        false => Err(SqsError {
                             msg: String::from("Unexpected nesting in Body."),
                         }),
-                    }
+                    };
                 }
                 _ => (),
             }
