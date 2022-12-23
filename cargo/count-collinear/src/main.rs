@@ -14,6 +14,7 @@ use crate::readers::sqs_reader::SqsReader;
 use crate::readers::stdin_reader::StdInReader;
 use crate::readers::{CollinearReader, CollinearReaderError, CountCollinearArgs};
 use crate::settings::{Config, Destination, Source};
+use crate::writers::dynamo_db_writer::DynamoDbWriter;
 use crate::writers::email_writer::EmailController;
 use crate::writers::stdout_writer::StdOutWriter;
 use crate::writers::{CollinearWriter, CountCollinearResult};
@@ -26,7 +27,6 @@ use std::time::Instant;
 fn get_reader(config: &Config) -> Box<dyn CollinearReader> {
     match config.input_source {
         Source::Args => Box::new(ArgsReader::new(config).unwrap()),
-        // TODO: add error handling for failed initialisation, instead of unwrap.
         Source::Sqs => Box::new(SqsReader::new(config).unwrap()),
         Source::StdIn => Box::new(StdInReader::new(config).unwrap()),
     }
@@ -34,11 +34,9 @@ fn get_reader(config: &Config) -> Box<dyn CollinearReader> {
 
 fn get_writer(config: &Config) -> Box<dyn CollinearWriter> {
     match config.output_destination {
-        //Destination::DynamoDb => {}
-        // TODO: add error handling for failed initialisation, instead of unwrap.
+        Destination::DynamoDb => Box::new(DynamoDbWriter::new(config).unwrap()),
         Destination::Email => Box::new(EmailController::new(config).unwrap()),
         Destination::StdOut => Box::new(StdOutWriter::new(config).unwrap()),
-        _ => Box::new(StdOutWriter::new(config).unwrap()),
     }
 }
 
@@ -57,14 +55,14 @@ fn process_count_collinear_args(
     }
     let build_duration = build_sequence_end_time - build_sequence_start_time;
     let count_start_time = Instant::now();
-    let max_count = count_collinear_points(&point_sequence, start_index, end_index);
+    let count_max = count_collinear_points(&point_sequence, start_index, end_index);
     let count_end_time = Instant::now();
     let count_duration = count_end_time - count_start_time;
     CountCollinearResult {
         sequence_length,
         start_index,
         end_index,
-        max_count,
+        count_max,
         build_duration,
         count_duration,
     }
@@ -81,7 +79,7 @@ fn main() {
 
     let mut reader = get_reader(&config);
     debug!("Using reader: {}", reader);
-    let writer = get_writer(&config);
+    let mut writer = get_writer(&config);
     debug!("Using writer: {}", writer);
     while !reader.is_finished_reading() {
         let count_collinear_args = reader.read_count_collinear_args();

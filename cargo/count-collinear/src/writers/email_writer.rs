@@ -56,7 +56,7 @@ impl fmt::Display for EmailController {
 
 impl CollinearWriter for EmailController {
     fn write_count_collinear_result(
-        &self,
+        &mut self,
         count_collinear_result: CountCollinearResult,
     ) -> Result<(), CollinearWriterError> {
         let subject = "Count Collinear Results";

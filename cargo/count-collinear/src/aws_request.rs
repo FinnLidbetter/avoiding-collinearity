@@ -8,7 +8,7 @@ use std::fmt::Formatter;
 
 type Result<T> = std::result::Result<T, AWSRequestError>;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct AWSRequestError {
     pub msg: String,
 }
@@ -459,5 +459,9 @@ f536975d06c0309214f805bb90ccff089219ecd68b2577efef23edd43b7e1a59";
             EXAMPLE_SECRET_KEY,
         );
         let expected_authorization_header = "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20150830/us-east-1/iam/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=5d672d79c15b13162d9279b0855cfba6789a8edb4c82c400e06b5924a6f2b5d7";
+        assert_eq!(
+            authorization_header,
+            Ok(expected_authorization_header.to_string())
+        );
     }
 }

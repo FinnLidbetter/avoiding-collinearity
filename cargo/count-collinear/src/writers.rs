@@ -1,3 +1,4 @@
+pub mod dynamo_db_writer;
 pub mod email_writer;
 pub mod stdout_writer;
 
@@ -20,7 +21,7 @@ pub struct CountCollinearResult {
     pub(crate) sequence_length: u32,
     pub(crate) start_index: usize,
     pub(crate) end_index: usize,
-    pub(crate) max_count: i32,
+    pub(crate) count_max: i32,
     pub(crate) build_duration: Duration,
     pub(crate) count_duration: Duration,
 }
@@ -46,7 +47,7 @@ impl CountCollinearResult {
             self.start_index,
             self.end_index,
             self.sequence_length,
-            self.max_count,
+            self.count_max,
             self.build_duration_seconds(),
             self.count_duration_seconds(),
         )
@@ -62,7 +63,7 @@ impl fmt::Display for CountCollinearResult {
             self.sequence_length,
             self.start_index,
             self.end_index,
-            self.max_count,
+            self.count_max,
             self.build_duration_seconds(),
             self.count_duration_seconds(),
         )
@@ -74,7 +75,7 @@ where
     Self: Display,
 {
     fn write_count_collinear_result(
-        &self,
+        &mut self,
         count_collinear_result: CountCollinearResult,
     ) -> Result<(), CollinearWriterError>;
 }

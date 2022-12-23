@@ -237,23 +237,23 @@ pub fn count_collinear_points(
     start_index: usize,
     end_index: usize,
 ) -> i32 {
-    let mut max_count = 0;
+    let mut count_max = 0;
     for i in start_index..end_index {
         debug!(
             "Progress: considering lines through {}, current max collinear is: {}",
-            i, max_count
+            i, count_max
         );
         let mut line_counts = HashMap::new();
         for j in i + 1..point_sequence.len() {
             let line = Line3D::new_normalised(&point_sequence[i], &point_sequence[j]);
             let count = line_counts.entry(line).or_insert(1);
             *count += 1;
-            if *count > max_count {
-                max_count = *count;
+            if *count > count_max {
+                count_max = *count;
             }
         }
     }
-    max_count
+    count_max
 }
 
 #[cfg(test)]

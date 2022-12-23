@@ -5,7 +5,6 @@ use std::collections::{BTreeMap, HashMap};
 use std::convert::TryInto;
 use std::fmt;
 use std::fmt::Formatter;
-use std::io::Bytes;
 
 const API_VERSION: &str = "2012-08-10";
 const SERVICE_NAME: &str = "dynamodb";
@@ -138,7 +137,7 @@ impl DynamoDbController {
         format!("https://sqs.{}.amazonaws.com", self.region)
     }
 
-    fn get_payload(partiql_statement: &str, parameters: Vec<AttributeValue>) -> String {
+    pub(crate) fn get_payload(partiql_statement: &str, parameters: Vec<AttributeValue>) -> String {
         let encoded_parameters = encode_parameters(parameters);
         format!(
             "{{\"Statement\": {}, \"Parameters\": {}}}",

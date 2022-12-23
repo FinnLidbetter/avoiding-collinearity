@@ -19,7 +19,7 @@ impl fmt::Display for StdOutWriter {
 
 impl CollinearWriter for StdOutWriter {
     fn write_count_collinear_result(
-        &self,
+        &mut self,
         count_collinear_result: CountCollinearResult,
     ) -> Result<(), CollinearWriterError> {
         print!("{}\n", count_collinear_result.to_string());
