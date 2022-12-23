@@ -53,13 +53,16 @@ impl CollinearReader for SqsReader {
     fn read_count_collinear_args(
         &mut self,
     ) -> std::result::Result<Option<CountCollinearArgs>, CollinearReaderError> {
-        if self.last_poll_time.is_some() {
-            let seconds_since_poll = self.last_poll_time.unwrap().elapsed().as_secs();
-            if seconds_since_poll < POLL_INTERVAL_SECONDS {
-                sleep(Duration::from_secs(
-                    POLL_INTERVAL_SECONDS - seconds_since_poll,
-                ));
+        match self.last_poll_time {
+            Some(last_poll_time) => {
+                let seconds_since_poll = last_poll_time.elapsed().as_secs();
+                if seconds_since_poll < POLL_INTERVAL_SECONDS {
+                    sleep(Duration::from_secs(
+                        POLL_INTERVAL_SECONDS - seconds_since_poll,
+                    ));
+                }
             }
+            None => (),
         }
         self.last_poll_time = Some(Instant::now());
         let message = self
