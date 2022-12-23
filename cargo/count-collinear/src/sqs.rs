@@ -197,7 +197,10 @@ impl SqsController {
 
         let mut messages: Vec<SqsMessage> = Vec::new();
 
-        SqsController::seek_result_start_event(&mut reader, "ReceiveMessageResult")?;
+        let found = SqsController::seek_result_start_event(&mut reader, "ReceiveMessageResult")?;
+        if !found {
+            return Ok(messages);
+        }
         loop {
             let result = SqsController::parse_message(&mut reader)?;
             match result {
@@ -213,7 +216,10 @@ impl SqsController {
         let mut reader = Reader::from_str(xml_text);
         reader.trim_text(true);
         let mut queues: Vec<String> = Vec::new();
-        SqsController::seek_result_start_event(&mut reader, "ListQueuesResult")?;
+        let found = SqsController::seek_result_start_event(&mut reader, "ListQueuesResult")?;
+        if !found {
+            return Ok(queues);
+        }
         loop {
             let result = SqsController::parse_queue(&mut reader)?;
             match result {
@@ -229,7 +235,7 @@ impl SqsController {
     }
 
     /// Read events until the tag with name result_start is reached.
-    fn seek_result_start_event(reader: &mut Reader<&[u8]>, result_start: &str) -> Result<()> {
+    fn seek_result_start_event(reader: &mut Reader<&[u8]>, result_start: &str) -> Result<bool> {
         loop {
             match reader.read_event() {
                 Err(e) => {
@@ -251,7 +257,12 @@ impl SqsController {
                 }
                 Ok(Event::Start(start_event)) => {
                     if start_event.name().as_ref() == result_start.as_bytes() {
-                        return Ok(());
+                        return Ok(true);
+                    }
+                }
+                Ok(Event::Empty(empty_event)) => {
+                    if empty_event.name().as_ref() == result_start.as_bytes() {
+                        return Ok(false)
                     }
                 }
                 _ => (),

@@ -59,13 +59,14 @@ fn get_canonical_uri(endpoint: &str) -> Result<String> {
 ///
 /// This is according to:
 /// https://docs.aws.amazon.com/general/latest/gr/sigv4-create-canonical-request.html
+/// There used to be a note about double-encoding the '=' sign in parameter values
+/// but I do not see that any more at the new URL and double-encoding '=' also appeared
+/// to give the incorrect result.
 fn uri_encode(character: char) -> Result<String> {
     if character.is_ascii_alphanumeric() {
         return Ok(character.to_string());
     } else if character == '_' || character == '-' || character == '~' || character == '.' {
         return Ok(character.to_string());
-    } else if character == '=' {
-        return Ok(String::from("%253D"));
     }
     let mut buffer: [u8; 4] = [0; 4];
     let character_bytes = character.encode_utf8(&mut buffer);
@@ -249,7 +250,6 @@ fn get_request_signature(
         service,
     )?;
     let signing_key = get_signature_key(secret_key, header_date, region, service);
-    println!("{}", hex_encode(&signing_key));
     let request_signature = hmacsha256(&string_to_sign, &signing_key);
     Ok(hex_encode(&request_signature))
 }
