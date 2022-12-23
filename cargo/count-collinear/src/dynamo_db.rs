@@ -23,7 +23,7 @@ impl fmt::Display for DynamoDbError {
 }
 
 #[derive(Clone)]
-enum AttributeValue {
+pub enum AttributeValue {
     Binary(Vec<u8>),
     BinarySet(Vec<Vec<u8>>),
     Boolean(bool),
@@ -97,6 +97,14 @@ impl AttributeValue {
     }
 }
 
+fn encode_parameters(parameters: Vec<AttributeValue>) -> String {
+    let parameter_strs: Vec<String> = parameters
+        .iter()
+        .map(|attr_val| attr_val.encode())
+        .collect();
+    format!("[{}]", parameter_strs.join(","))
+}
+
 pub struct DynamoDbController {
     access_key: String,
     secret_access_key: String,
@@ -130,18 +138,20 @@ impl DynamoDbController {
         format!("https://sqs.{}.amazonaws.com", self.region)
     }
 
-    /*
+    fn get_payload(partiql_statement: &str, parameters: Vec<AttributeValue>) -> String {
+        let encoded_parameters = encode_parameters(parameters);
+        format!(
+            "{{\"Statement\": {}, \"Parameters\": {}}}",
+            partiql_statement, encoded_parameters,
+        )
+    }
+
     pub fn execute_statement(
         &self,
         partiql_statement: &str,
         parameters: Vec<AttributeValue>,
     ) -> Result<u16> {
-        custom_params.insert("Action", action);
-        custom_params.insert("Version", API_VERSION);
-        let query_params: Vec<(&str, &str)> = custom_params
-            .iter()
-            .map(|(key, value)| (*key, *value))
-            .collect();
+        let query_params: Vec<(&str, &str)> = Vec::new();
         let method = "POST";
         let endpoint = self.get_endpoint();
         let endpoint = endpoint.as_str();
@@ -150,12 +160,15 @@ impl DynamoDbController {
             .iter()
             .map(|(key, value)| (*key, value.as_str()))
             .collect();
+        let target_string = format!("DynamoDB_{}.ExecuteStatement", API_VERSION.replace("-", ""));
+        headers.insert("X-Amz-Target", target_string.as_str());
+        let payload = DynamoDbController::get_payload(partiql_statement, parameters);
         let authorization_header = get_authorization_header(
             method,
             endpoint,
-            custom_params,
+            HashMap::new(),
             &headers,
-            None,
+            Some(payload.as_str()),
             self.region.as_str(),
             SERVICE_NAME,
             self.access_key.as_str(),
@@ -170,12 +183,13 @@ impl DynamoDbController {
             .map(|(key, value)| ((*key).to_string(), (*value).to_string()))
             .collect();
 
-        let mut request = self.client.get(endpoint);
+        let mut request = self.client.post(endpoint);
         let header_map: HeaderMap = (&headers).try_into().map_err(|err| DynamoDbError {
             msg: format!("Failed to convert headers into a HeaderMap due to {}", err),
         })?;
         request = request.headers(header_map);
         request = request.query(&query_params);
+        request = request.body(payload);
         let result = request.send().map_err(|err| DynamoDbError {
             msg: format!("Request to {} failed due to {}", endpoint, err),
         })?;
@@ -184,7 +198,6 @@ impl DynamoDbController {
         })?;
         Ok(result.status().as_u16())
     }
-    */
 }
 
 #[cfg(test)]
@@ -318,5 +331,41 @@ mod tests {
         let expected = "{\"M\": {\"boolean thing\": {\"BOOL\": false}, \"number Thing\": {\"N\": \"-1\"}, \"some_sort_of_list\": {\"L\": [{\"N\": \"-1\"}, {\"BOOL\": false}]}}}";
         let map_item = AttributeValue::Map(items_map);
         assert_eq!(map_item.encode(), expected);
+    }
+
+    #[test]
+    fn test_encode_parameters() {
+        let empty_list: Vec<AttributeValue> = Vec::new();
+        assert_eq!(encode_parameters(empty_list), "[]");
+        let unit_list = vec![AttributeValue::Number("-1".to_string())];
+        assert_eq!(encode_parameters(unit_list), "[{\"N\": \"-1\"}]");
+        let two_list = vec![
+            AttributeValue::Number("-1".to_string()),
+            AttributeValue::String("something".to_string()),
+        ];
+        assert_eq!(
+            encode_parameters(two_list),
+            "[{\"N\": \"-1\"},{\"S\": \"something\"}]"
+        );
+        let three_list = vec![
+            AttributeValue::Number("42".to_string()),
+            AttributeValue::Boolean(true),
+            AttributeValue::Boolean(false),
+        ];
+        assert_eq!(
+            encode_parameters(three_list),
+            "[{\"N\": \"42\"},{\"BOOL\": true},{\"BOOL\": false}]"
+        );
+    }
+
+    #[test]
+    fn test_get_payload() {
+        let partiql_statement = "SELECT * FROM collinearity WHERE sequence_length=?";
+        let parameters = vec![AttributeValue::Number(100.to_string())];
+        let payload = DynamoDbController::get_payload(partiql_statement, parameters);
+        assert_eq!(
+            payload,
+            "{\"Statement\": SELECT * FROM collinearity WHERE sequence_length=?, \"Parameters\": [{\"N\": \"100\"}]}"
+        );
     }
 }
