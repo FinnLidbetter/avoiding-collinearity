@@ -1,5 +1,6 @@
 use crate::sqs::SqsController;
 use crate::{CollinearReader, CollinearReaderError, Config, CountCollinearArgs};
+use log::info;
 use std::fmt;
 use std::fmt::Formatter;
 use std::str::FromStr;
@@ -81,6 +82,10 @@ impl CollinearReader for SqsReader {
             }
             None => {
                 self.consecutive_no_jobs_polls += 1;
+                info!(
+                    "No jobs to process. Consecutive no jobs polls count is at {}/{}",
+                    self.consecutive_no_jobs_polls, self.no_jobs_polls_max,
+                );
                 Ok(None)
             }
         };
@@ -103,6 +108,7 @@ impl CollinearReader for SqsReader {
     }
 
     fn stop_reading(&self) -> () {
+        info!("Maximum number of queue polls with no jobs available reached. Stopping reading.");
         ()
     }
 }
