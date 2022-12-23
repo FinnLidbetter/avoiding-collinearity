@@ -21,7 +21,6 @@ use crate::writers::{CollinearWriter, CountCollinearResult};
 use compute::{build_point_sequence, count_collinear_points};
 use log::{debug, error, info};
 use std::env;
-use std::error;
 use std::time::Instant;
 
 fn get_reader(config: &Config) -> Box<dyn CollinearReader> {

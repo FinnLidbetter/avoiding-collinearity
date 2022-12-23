@@ -2,6 +2,7 @@ use crate::dynamo_db::{AttributeValue, DynamoDbController};
 use crate::settings::Config;
 use crate::writers::CollinearWriterError;
 use crate::{CollinearWriter, CountCollinearResult};
+use log::info;
 use std::fmt;
 use std::fmt::Formatter;
 use std::thread::sleep;
@@ -9,6 +10,7 @@ use std::time::{Duration, Instant};
 
 const TABLE_NAME: &str = "collinearity";
 const WRITE_INTERVAL_SECONDS: u64 = 60;
+const DELIMITER: &str = "#";
 
 pub struct DynamoDbWriter {
     dynamo_db_controller: DynamoDbController,
@@ -26,7 +28,6 @@ impl DynamoDbWriter {
         let dynamo_db_controller = DynamoDbController::new(
             aws_auth_settings.access_key.as_str(),
             aws_auth_settings.secret_key.as_str(),
-            aws_auth_settings.account_number.as_str(),
             aws_auth_settings.region.as_str(),
         );
         let last_write_time = None;
@@ -48,13 +49,25 @@ impl CollinearWriter for DynamoDbWriter {
         count_collinear_result: CountCollinearResult,
     ) -> Result<(), CollinearWriterError> {
         let partiql_statement = format!(
-            "INSERT INTO {} VALUE {{'seqeunce_length': ?, 'start_index': ?, 'end_index': ?, 'count_max': ?, 'build_duration_seconds': ?, 'count_duration_seconds': ?}}",
+            "INSERT INTO {} VALUE {{'count_collinear_args': ?, 'seqeunce_length': ?, 'start_index': ?, 'end_index': ?, 'count_max': ?, 'build_duration_seconds': ?, 'count_duration_seconds': ?}}",
             TABLE_NAME
         );
+        let sequence_length = count_collinear_result.sequence_length;
+        let start_index = count_collinear_result.start_index;
+        let end_index = count_collinear_result.end_index;
+        let count_collinear_args_key = format!(
+            "{}{delimiter}{}{delimiter}{}",
+            sequence_length,
+            start_index,
+            end_index,
+            delimiter = DELIMITER
+        );
         let parameters = vec![
+            AttributeValue::String(count_collinear_args_key.clone()),
             AttributeValue::Number(count_collinear_result.sequence_length.to_string()),
             AttributeValue::Number(count_collinear_result.start_index.to_string()),
             AttributeValue::Number(count_collinear_result.end_index.to_string()),
+            AttributeValue::Number(count_collinear_result.count_max.to_string()),
             AttributeValue::Number(
                 count_collinear_result
                     .build_duration
@@ -72,6 +85,10 @@ impl CollinearWriter for DynamoDbWriter {
             Some(last_write_time) => {
                 let seconds_since_write = last_write_time.elapsed().as_secs();
                 if seconds_since_write < WRITE_INTERVAL_SECONDS {
+                    info!(
+                        "Waiting {} seconds to perform write.",
+                        WRITE_INTERVAL_SECONDS - seconds_since_write
+                    );
                     sleep(Duration::from_secs(
                         WRITE_INTERVAL_SECONDS - seconds_since_write,
                     ));
@@ -85,6 +102,10 @@ impl CollinearWriter for DynamoDbWriter {
             .map_err(|err| CollinearWriterError {
                 msg: format!("DynamoDB write failed: {}", err),
             })?;
+        info!(
+            "Write of '{}' to key '{}' in table '{}' of DynamoDB succeeded.",
+            count_collinear_result, count_collinear_args_key, TABLE_NAME
+        );
         Ok(())
     }
 }

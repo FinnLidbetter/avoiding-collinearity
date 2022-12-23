@@ -107,40 +107,32 @@ fn encode_parameters(parameters: Vec<AttributeValue>) -> String {
 pub struct DynamoDbController {
     access_key: String,
     secret_access_key: String,
-    account_number: String,
     region: String,
     client: reqwest::blocking::Client,
 }
 
 impl DynamoDbController {
-    pub fn new(
-        access_key: &str,
-        secret_access_key: &str,
-        account_number: &str,
-        region: &str,
-    ) -> DynamoDbController {
+    pub fn new(access_key: &str, secret_access_key: &str, region: &str) -> DynamoDbController {
         let access_key = String::from(access_key);
         let secret_access_key = String::from(secret_access_key);
-        let account_number = String::from(account_number);
         let region = String::from(region);
         let client = reqwest::blocking::Client::new();
         DynamoDbController {
             access_key,
             secret_access_key,
-            account_number,
             region,
             client,
         }
     }
 
     fn get_endpoint(&self) -> String {
-        format!("https://sqs.{}.amazonaws.com", self.region)
+        format!("https://dynamodb.{}.amazonaws.com", self.region)
     }
 
-    pub(crate) fn get_payload(partiql_statement: &str, parameters: Vec<AttributeValue>) -> String {
+    pub fn get_payload(partiql_statement: &str, parameters: Vec<AttributeValue>) -> String {
         let encoded_parameters = encode_parameters(parameters);
         format!(
-            "{{\"Statement\": {}, \"Parameters\": {}}}",
+            "{{\"Statement\": \"{}\", \"Parameters\": {}}}",
             partiql_statement, encoded_parameters,
         )
     }
@@ -161,7 +153,15 @@ impl DynamoDbController {
             .collect();
         let target_string = format!("DynamoDB_{}.ExecuteStatement", API_VERSION.replace("-", ""));
         headers.insert("X-Amz-Target", target_string.as_str());
+        let content_type = "application/x-amz-json-1.0";
+        headers.insert("Content-Type", content_type);
         let payload = DynamoDbController::get_payload(partiql_statement, parameters);
+        let payload_bytes = payload.as_bytes().len();
+        let payload_bytes = payload_bytes.to_string();
+        let payload_bytes = payload_bytes.as_str();
+        headers.insert("Content-Length", payload_bytes);
+        headers.insert("User-Agent", "collinearity");
+        headers.insert("Accept-Encoding", "identity");
         let authorization_header = get_authorization_header(
             method,
             endpoint,
@@ -364,7 +364,7 @@ mod tests {
         let payload = DynamoDbController::get_payload(partiql_statement, parameters);
         assert_eq!(
             payload,
-            "{\"Statement\": SELECT * FROM collinearity WHERE sequence_length=?, \"Parameters\": [{\"N\": \"100\"}]}"
+            "{\"Statement\": \"SELECT * FROM collinearity WHERE sequence_length=?\", \"Parameters\": [{\"N\": \"100\"}]}"
         );
     }
 }
