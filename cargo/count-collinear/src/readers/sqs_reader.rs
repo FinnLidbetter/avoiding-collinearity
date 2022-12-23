@@ -33,9 +33,28 @@ impl SqsReader {
             aws_auth_settings.account_number.as_str(),
             aws_auth_settings.region.as_str(),
         );
+        let queue_name = QUEUE_NAME.to_string();
+        let expected_queue_url = format!(
+            "https://sqs.{}.amazonaws.com/{}/{}",
+            aws_auth_settings.region.as_str(),
+            aws_auth_settings.account_number.as_str(),
+            queue_name.as_str()
+        );
+        let existing_queues = sqs_controller
+            .list_queues()
+            .map_err(|err| CollinearReaderError {
+                msg: format!("{}", err),
+            })?;
+        if !existing_queues.contains(&expected_queue_url) {
+            return Err(CollinearReaderError {
+                msg: format!(
+                    "No queue named '{}' configured in AWS.",
+                    queue_name.as_str()
+                ),
+            });
+        }
         let consecutive_no_jobs_polls = 0;
         let no_jobs_polls_max = NO_JOBS_POLLS_MAX;
-        let queue_name = QUEUE_NAME.to_string();
         let last_poll_time = None;
         let processed_message_receipt_handle = None;
         Ok(SqsReader {
