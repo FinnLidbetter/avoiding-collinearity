@@ -262,7 +262,7 @@ impl SqsController {
                 }
                 Ok(Event::Empty(empty_event)) => {
                     if empty_event.name().as_ref() == result_start.as_bytes() {
-                        return Ok(false)
+                        return Ok(false);
                     }
                 }
                 _ => (),

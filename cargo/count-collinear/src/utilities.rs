@@ -23,8 +23,16 @@ pub fn percent_encode(bytes: &[u8]) -> String {
         let left = byte / 16;
         let right = byte % 16;
         hex.push('%');
-        hex.push(char::from_digit(left as u32, 16).unwrap().to_ascii_uppercase());
-        hex.push(char::from_digit(right as u32, 16).unwrap().to_ascii_uppercase());
+        hex.push(
+            char::from_digit(left as u32, 16)
+                .unwrap()
+                .to_ascii_uppercase(),
+        );
+        hex.push(
+            char::from_digit(right as u32, 16)
+                .unwrap()
+                .to_ascii_uppercase(),
+        );
     }
     hex.to_string()
 }
