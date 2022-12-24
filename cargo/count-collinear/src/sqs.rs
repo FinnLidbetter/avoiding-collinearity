@@ -64,6 +64,14 @@ impl SqsController {
         }
     }
 
+    pub fn region(&self) -> &str {
+        self.region.as_str()
+    }
+
+    pub fn account_number(&self) -> &str {
+        self.account_number.as_str()
+    }
+
     /// Get a single message from the queue.
     pub fn receive_message(
         &self,

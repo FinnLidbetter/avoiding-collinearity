@@ -84,12 +84,18 @@ impl AWSAuthSettings {
 }
 
 #[derive(Debug, Clone)]
+pub struct SqsSettings {
+    pub shutdown_on_polling_end: bool,
+}
+
+#[derive(Debug, Clone)]
 pub struct Config {
     pub log_level: String,
     pub input_source: Source,
     pub output_destination: Destination,
     pub email_settings: Option<EmailSettings>,
     pub aws_auth_settings: Option<AWSAuthSettings>,
+    pub sqs_settings: Option<SqsSettings>,
 }
 
 impl Config {
@@ -125,12 +131,22 @@ impl Config {
             "email" => Destination::Email,
             "stdout" | _ => Destination::StdOut,
         };
+        let sqs_shutdown_on_polling_end = config_ini
+            .getbool("sqs", "sqs_shutdown_on_polling_end")
+            .unwrap();
+        let sqs_settings = match input_source {
+            Source::Sqs => Some(SqsSettings {
+                shutdown_on_polling_end: sqs_shutdown_on_polling_end.unwrap_or(false),
+            }),
+            _ => None,
+        };
         Config {
             log_level,
             input_source,
             output_destination,
             email_settings,
             aws_auth_settings,
+            sqs_settings,
         }
     }
 }

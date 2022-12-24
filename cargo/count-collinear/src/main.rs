@@ -2,6 +2,8 @@ mod aws_request;
 mod aws_signing;
 mod compute;
 mod dynamo_db;
+mod ec2;
+mod email;
 mod readers;
 mod settings;
 mod sqs;
@@ -15,7 +17,7 @@ use crate::readers::stdin_reader::StdInReader;
 use crate::readers::{CollinearReader, CollinearReaderError, CountCollinearArgs};
 use crate::settings::{Config, Destination, Source};
 use crate::writers::dynamo_db_writer::DynamoDbWriter;
-use crate::writers::email_writer::EmailController;
+use crate::writers::email_writer::EmailWriter;
 use crate::writers::stdout_writer::StdOutWriter;
 use crate::writers::{CollinearWriter, CountCollinearResult};
 use compute::{build_point_sequence, count_collinear_points};
@@ -34,7 +36,7 @@ fn get_reader(config: &Config) -> Box<dyn CollinearReader> {
 fn get_writer(config: &Config) -> Box<dyn CollinearWriter> {
     match config.output_destination {
         Destination::DynamoDb => Box::new(DynamoDbWriter::new(config).unwrap()),
-        Destination::Email => Box::new(EmailController::new(config).unwrap()),
+        Destination::Email => Box::new(EmailWriter::new(config).unwrap()),
         Destination::StdOut => Box::new(StdOutWriter::new(config).unwrap()),
     }
 }
