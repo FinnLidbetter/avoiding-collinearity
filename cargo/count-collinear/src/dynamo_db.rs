@@ -22,6 +22,7 @@ impl fmt::Display for DynamoDbError {
 }
 
 #[derive(Clone)]
+#[allow(dead_code)]
 pub enum AttributeValue {
     Binary(Vec<u8>),
     BinarySet(Vec<Vec<u8>>),
