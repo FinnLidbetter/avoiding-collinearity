@@ -168,7 +168,7 @@ impl CollinearReader for SqsReader {
                             msg: err.to_string(),
                         }
                     })?;
-                self.processed_message_receipt_handle = Some(message.receipt_handle.clone());
+                self.processed_message_receipt_handle = Some(message.receipt_handle);
                 Ok(Some(count_collinear_args))
             }
             None => {
@@ -198,7 +198,7 @@ impl CollinearReader for SqsReader {
         self.consecutive_no_jobs_polls >= self.no_jobs_polls_max
     }
 
-    fn stop_reading(&self) -> () {
+    fn stop_reading(&self) {
         info!("Maximum number of queue polls with no jobs available reached. Stopping reading.");
         if self.shutdown_on_polling_end {
             let mut terminate_result = self.ec2_controller.terminate();
@@ -228,7 +228,6 @@ impl CollinearReader for SqsReader {
                 }
             }
         }
-        ()
     }
 }
 

@@ -22,7 +22,7 @@ impl CollinearWriter for StdOutWriter {
         &mut self,
         count_collinear_result: CountCollinearResult,
     ) -> Result<(), CollinearWriterError> {
-        print!("{}\n", count_collinear_result.to_string());
+        println!("{}", count_collinear_result);
         Ok(())
     }
 }

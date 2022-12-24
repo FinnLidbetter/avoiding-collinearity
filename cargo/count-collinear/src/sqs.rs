@@ -21,7 +21,7 @@ pub struct SqsError {
 
 impl fmt::Display for SqsError {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", format!("SqsError: {}", self.msg))
+        write!(f, "SqsError: {}", self.msg)
     }
 }
 
@@ -102,21 +102,21 @@ impl SqsController {
             ("MaxNumberOfMessages", num_messages),
         ]);
         let xml_result = self.get_xml_result("ReceiveMessage", Some(queue_name), params)?;
-        Ok(SqsController::parse_receive_message_xml(&xml_result)?)
+        SqsController::parse_receive_message_xml(&xml_result)
     }
 
     /// List the Sqs Queues available.
     pub fn list_queues(&self) -> Result<Vec<String>> {
         let params: HashMap<&str, &str> = HashMap::new();
         let xml_result = self.get_xml_result("ListQueues", None, params)?;
-        Ok(SqsController::parse_list_queues_xml(&xml_result)?)
+        SqsController::parse_list_queues_xml(&xml_result)
     }
 
     /// Delete a message from the queue.
     pub fn delete_message(&self, queue_name: &str, receipt_handle: &str) -> Result<()> {
         let params: HashMap<&str, &str> = HashMap::from([("ReceiptHandle", receipt_handle)]);
         let xml_result = self.get_xml_result("DeleteMessage", Some(queue_name), params)?;
-        Ok(SqsController::parse_delete_message_xml(&xml_result)?)
+        SqsController::parse_delete_message_xml(&xml_result)
     }
 
     /// Make a GET request with the specified action and parameters.
@@ -318,9 +318,9 @@ impl SqsController {
                                     }
                                     Ok(Event::Eof) => {
                                         return Err(SqsError {
-                                            msg: format!(
+                                            msg:
                                                 "Unexpectedly reached EOF while parsing a Message."
-                                            ),
+                                                    .to_string(),
                                         })
                                     }
                                     Ok(Event::Start(message_start_event)) => {
@@ -342,9 +342,8 @@ impl SqsController {
                                         }
                                     }
                                     Ok(Event::End(message_end_event)) => {
-                                        match message_end_event.name().as_ref() {
-                                            b"Message" => break,
-                                            _ => (),
+                                        if let b"Message" = message_end_event.name().as_ref() {
+                                            break;
                                         }
                                     }
                                     _ => (),
@@ -357,7 +356,7 @@ impl SqsController {
                             }))
                         }
                         _ => Err(SqsError {
-                            msg: format!("Encountered unexpected start event parsing message"),
+                            msg: "Encountered unexpected start event parsing message".to_string(),
                         }),
                     }
                 }
@@ -394,7 +393,8 @@ impl SqsController {
                             return Ok(Some(body));
                         }
                         _ => Err(SqsError {
-                            msg: format!("Encountered unexpected start event parsing queue name."),
+                            msg: "Encountered unexpected start event parsing queue name."
+                                .to_string(),
                         }),
                     }
                 }
@@ -424,7 +424,7 @@ impl SqsController {
                 }
                 Ok(Event::Eof) => {
                     return Err(SqsError {
-                        msg: format!("Unexpectedly reached EOF while parsing a Message."),
+                        msg: "Unexpectedly reached EOF while parsing a Message.".to_string(),
                     })
                 }
                 Ok(Event::Text(text)) => {

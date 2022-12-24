@@ -32,7 +32,7 @@ pub fn parse_args_from_strings(
             .map_err(|err: ParseIntError| CollinearReaderError {
                 msg: format!(
                     "The first argument should be a positive integer for a sequence length. {}",
-                    err.to_string()
+                    err
                 ),
             })?;
     let start_index: usize = match values.get(1) {
@@ -43,7 +43,7 @@ pub fn parse_args_from_strings(
             .map_err(|err: ParseIntError| CollinearReaderError {
                 msg: format!(
                     "The second argument should be a positive integer for the start index. {}",
-                    err.to_string()
+                    err
                 ),
             })?,
         None => 0,
@@ -56,7 +56,7 @@ pub fn parse_args_from_strings(
             .map_err(|err: ParseIntError| CollinearReaderError {
                 msg: format!(
                     "The third argument should be a positive integer for the end index. {}",
-                    err.to_string()
+                    err
                 ),
             })?,
         None => sequence_length.try_into().unwrap(),
@@ -170,7 +170,7 @@ where
 
     fn is_finished_reading(&self) -> bool;
 
-    fn stop_reading(&self) -> ();
+    fn stop_reading(&self);
 }
 
 #[cfg(test)]

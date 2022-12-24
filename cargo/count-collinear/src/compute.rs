@@ -147,14 +147,12 @@ impl Line3D {
 /// value of the other argument.
 pub fn gcd(a: i128, b: i128) -> i128 {
     if a < 0 {
-        gcd(-a, b)
-    } else {
-        if b == 0 {
-            a
-        } else {
-            gcd(b, a % b)
-        }
+        return gcd(-a, b);
     }
+    if b == 0 {
+        return a;
+    }
+    gcd(b, a % b)
 }
 
 fn build_symbol_sequence(sequence_length: u32) -> Vec<u8> {
@@ -207,8 +205,7 @@ pub fn build_point_sequence(sequence_length: u32) -> Vec<Point3D> {
         (0, 1, 0),
         (0, 0, 1),
     ];
-    let mut point_sequence: Vec<Point3D> = Vec::new();
-    point_sequence.push(Point3D { x: 0, y: 0, z: 0 });
+    let mut point_sequence: Vec<Point3D> = vec![Point3D { x: 0, y: 0, z: 0 }];
     for symbol in &symbol_sequence {
         let prev = match point_sequence.len() {
             0 => &Point3D { x: 0, y: 0, z: 0 },
@@ -233,7 +230,7 @@ pub fn build_point_sequence(sequence_length: u32) -> Vec<Point3D> {
 /// for counting points on lines having some point at an index in
 /// [`start_index`, `end_index`).
 pub fn count_collinear_points(
-    point_sequence: &Vec<Point3D>,
+    point_sequence: &[Point3D],
     start_index: usize,
     end_index: usize,
 ) -> i32 {

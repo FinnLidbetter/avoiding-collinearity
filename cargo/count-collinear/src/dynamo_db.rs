@@ -1,5 +1,4 @@
 use crate::aws_request::{get_authorization_header, get_base_headers};
-use base64;
 use http::HeaderMap;
 use std::collections::{BTreeMap, HashMap};
 use std::convert::TryInto;
@@ -17,7 +16,7 @@ pub struct DynamoDbError {
 
 impl fmt::Display for DynamoDbError {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", format!("DynamoDB Error: {}", self.msg))
+        write!(f, "DynamoDB Error: {}", self.msg)
     }
 }
 
@@ -152,7 +151,7 @@ impl DynamoDbController {
             .iter()
             .map(|(key, value)| (*key, value.as_str()))
             .collect();
-        let target_string = format!("DynamoDB_{}.ExecuteStatement", API_VERSION.replace("-", ""));
+        let target_string = format!("DynamoDB_{}.ExecuteStatement", API_VERSION.replace('-', ""));
         headers.insert("X-Amz-Target", target_string.as_str());
         let content_type = "application/x-amz-json-1.0";
         headers.insert("Content-Type", content_type);

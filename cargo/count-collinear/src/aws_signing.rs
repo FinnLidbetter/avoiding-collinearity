@@ -28,7 +28,7 @@ pub fn get_signature_key(
     if !date_stamp_matcher.is_match(date_stamp) {
         error!("{} is not a valid YYYYMMDD date.", date_stamp);
     }
-    let initial_key = format!("{}{}", "AWS4".to_string(), key);
+    let initial_key = format!("AWS4{}", key);
     let mut signature_key = hmacsha256(date_stamp, initial_key.as_bytes());
     signature_key = hmacsha256(region_name, &signature_key);
     signature_key = hmacsha256(service_name, &signature_key);

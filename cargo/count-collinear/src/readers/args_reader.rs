@@ -51,7 +51,5 @@ impl CollinearReader for ArgsReader {
         self.is_args_used
     }
 
-    fn stop_reading(&self) -> () {
-        ()
-    }
+    fn stop_reading(&self) {}
 }

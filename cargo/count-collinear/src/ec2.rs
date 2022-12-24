@@ -46,7 +46,7 @@ impl EC2Controller {
             msg: format!("Request to {} failed due to {}", endpoint, err),
         })?;
         result.text().map_err(|_| EC2Error {
-            msg: format!("Decoding response for get_instance_id failed."),
+            msg: "Decoding response for get_instance_id failed.".to_string(),
         })
     }
 

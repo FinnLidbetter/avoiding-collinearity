@@ -7,7 +7,7 @@ use std::process;
 pub fn read_config() -> Config {
     let mut config_ini = Ini::new();
     let config_path = get_config_path();
-    println!("Reading config from {:?}", config_path.clone());
+    println!("Reading config from {:?}", config_path);
     if let Err(failure_reason) = config_ini.load(config_path.clone()) {
         // If loading the config failed, then setup the logger and log
         // the failure reason.
@@ -124,12 +124,14 @@ impl Config {
         let input_source = match input_source.to_lowercase().as_str() {
             "args" => Source::Args,
             "sqs" => Source::Sqs,
-            "stdin" | _ => Source::StdIn,
+            "stdin" => Source::StdIn,
+            _ => Source::StdIn,
         };
         let output_destination = match output_destination.to_lowercase().as_str() {
             "dynamodb" => Destination::DynamoDb,
             "email" => Destination::Email,
-            "stdout" | _ => Destination::StdOut,
+            "stdout" => Destination::StdOut,
+            _ => Destination::StdOut,
         };
         let sqs_shutdown_on_polling_end = config_ini
             .getbool("sqs", "sqs_shutdown_on_polling_end")

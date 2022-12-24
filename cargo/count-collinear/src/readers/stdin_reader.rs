@@ -35,10 +35,7 @@ impl CollinearReader for StdInReader {
             self.has_read_blank_line = true;
             return Ok(None);
         }
-        let tokens: Vec<String> = line
-            .split_whitespace()
-            .map(|value| String::from(value))
-            .collect();
+        let tokens: Vec<String> = line.split_whitespace().map(String::from).collect();
         parse_args_from_strings(tokens)
     }
 
@@ -50,7 +47,5 @@ impl CollinearReader for StdInReader {
         self.has_read_blank_line
     }
 
-    fn stop_reading(&self) -> () {
-        ()
-    }
+    fn stop_reading(&self) {}
 }

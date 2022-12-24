@@ -56,7 +56,7 @@ fn process_count_collinear_args(
     }
     let build_duration = build_sequence_end_time - build_sequence_start_time;
     let count_start_time = Instant::now();
-    let count_max = count_collinear_points(&point_sequence, start_index, end_index);
+    let count_max = count_collinear_points(point_sequence, start_index, end_index);
     let count_end_time = Instant::now();
     let count_duration = count_end_time - count_start_time;
     CountCollinearResult {

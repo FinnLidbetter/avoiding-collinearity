@@ -15,7 +15,7 @@ pub struct AWSRequestError {
 
 impl fmt::Display for AWSRequestError {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", format!("SqsError: {}", self.msg))
+        write!(f, "SqsError: {}", self.msg)
     }
 }
 
@@ -29,18 +29,18 @@ fn get_canonical_uri(endpoint: &str) -> Result<String> {
             })
         }
     };
-    let query_string_start_byte_index = match endpoint.find("?") {
+    let query_string_start_byte_index = match endpoint.find('?') {
         Some(index) => index,
         None => endpoint.len(),
     };
     let mut canonical_uri =
         &endpoint[host_end_start_byte_index + host_end.len()..query_string_start_byte_index];
-    if canonical_uri.len() == 0 {
+    if canonical_uri.is_empty() {
         canonical_uri = "/";
     }
     let fragments: Vec<&str> = canonical_uri
-        .split("/")
-        .filter(|fragment| *fragment != "")
+        .split('/')
+        .filter(|fragment| !(*fragment).is_empty())
         .collect();
     let mut encoded_fragments: Vec<String> = vec![];
     for fragment in fragments {
@@ -50,7 +50,7 @@ fn get_canonical_uri(endpoint: &str) -> Result<String> {
     let mut result = String::from("/");
     result.push_str(encoded_fragments.join("/").as_str());
     if canonical_uri.len() > 1 && &canonical_uri[canonical_uri.len() - 1..] == "/" {
-        result.push_str("/");
+        result.push('/');
     }
     Ok(result)
 }
@@ -63,9 +63,12 @@ fn get_canonical_uri(endpoint: &str) -> Result<String> {
 /// but I do not see that any more at the new URL and double-encoding '=' also appeared
 /// to give the incorrect result.
 fn uri_encode(character: char) -> Result<String> {
-    if character.is_ascii_alphanumeric() {
-        return Ok(character.to_string());
-    } else if character == '_' || character == '-' || character == '~' || character == '.' {
+    if character.is_ascii_alphanumeric()
+        || character == '_'
+        || character == '-'
+        || character == '~'
+        || character == '.'
+    {
         return Ok(character.to_string());
     }
     let mut buffer: [u8; 4] = [0; 4];
@@ -91,7 +94,7 @@ fn get_canonical_query_string(params: HashMap<&str, &str>) -> Result<String> {
     for (key, value) in params.iter() {
         params_vec.push((*key, *value));
     }
-    params_vec.sort();
+    params_vec.sort_unstable();
     let mut canonical_query_string = String::new();
     let mut is_first = true;
     for (key, value) in params_vec.iter() {
@@ -130,7 +133,7 @@ fn get_canonical_headers(headers: &HashMap<&str, &str>) -> Result<String> {
         canonical_headers.push(':');
         let trimmed_value = trim_whitespace(value);
         canonical_headers.push_str(trimmed_value.as_str());
-        canonical_headers.push_str("\n");
+        canonical_headers.push('\n');
     }
     Ok(canonical_headers)
 }
@@ -141,8 +144,7 @@ fn get_canonical_header_names(header_names: Vec<&str>) -> String {
         .map(|name| (*name).to_lowercase())
         .collect::<Vec<String>>();
     sorted_headers.sort();
-    let canonical_header_names = sorted_headers.join(";");
-    canonical_header_names
+    sorted_headers.join(";")
 }
 
 fn get_hash(payload: &str) -> String {
@@ -169,25 +171,25 @@ fn canonical_request(
 ) -> Result<String> {
     let mut canonical_request = String::new();
     canonical_request.push_str(method.to_uppercase().as_str());
-    canonical_request.push_str("\n");
+    canonical_request.push('\n');
 
     let canonical_uri = get_canonical_uri(endpoint)?;
     canonical_request.push_str(canonical_uri.as_str());
-    canonical_request.push_str("\n");
+    canonical_request.push('\n');
 
     let canonical_query_string = get_canonical_query_string(params)?;
     canonical_request.push_str(canonical_query_string.as_str());
-    canonical_request.push_str("\n");
+    canonical_request.push('\n');
 
-    let signing_header_names = signing_headers.keys().map(|key| *key).collect();
+    let signing_header_names = signing_headers.keys().copied().collect();
 
     let canonical_headers = get_canonical_headers(signing_headers)?;
     canonical_request.push_str(canonical_headers.as_str());
-    canonical_request.push_str("\n");
+    canonical_request.push('\n');
 
     let canonical_signed_header_names = get_canonical_header_names(signing_header_names);
     canonical_request.push_str(canonical_signed_header_names.as_str());
-    canonical_request.push_str("\n");
+    canonical_request.push('\n');
 
     let hash_payload = get_hash(payload.unwrap_or(""));
     canonical_request.push_str(hash_payload.as_str());
@@ -217,11 +219,11 @@ fn request_string_to_sign(
     let credential_scope = get_credential_scope(header_date, region, service);
     let mut string_to_sign = String::new();
     string_to_sign.push_str(SIGNING_ALGORITHM);
-    string_to_sign.push_str("\n");
+    string_to_sign.push('\n');
     string_to_sign.push_str(header_date_time);
-    string_to_sign.push_str("\n");
+    string_to_sign.push('\n');
     string_to_sign.push_str(credential_scope.as_str());
-    string_to_sign.push_str("\n");
+    string_to_sign.push('\n');
     string_to_sign.push_str(canonical_request_hash.as_str());
     Ok(string_to_sign)
 }
@@ -265,7 +267,7 @@ pub fn get_authorization_header(
     access_key_id: &str,
     secret_key: &str,
 ) -> Result<String> {
-    let signing_header_names = signing_headers.keys().map(|key| *key).collect();
+    let signing_header_names = signing_headers.keys().copied().collect();
     let canonical_header_names = get_canonical_header_names(signing_header_names);
     let header_date_time = *signing_headers.get("X-Amz-Date").ok_or(AWSRequestError {
         msg: String::from("Missing header 'X-Amz-Date'"),
