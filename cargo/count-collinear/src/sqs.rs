@@ -119,6 +119,13 @@ impl SqsController {
         SqsController::parse_delete_message_xml(&xml_result)
     }
 
+    /// Send a message to the queue.
+    pub fn send_message(&self, queue_name: &str, body: &str) -> Result<()> {
+        let params: HashMap<&str, &str> = HashMap::from([("MessageBody", body)]);
+        let xml_result = self.get_xml_result("SendMessage", Some(queue_name), params)?;
+        SqsController::parse_send_message_xml(&xml_result)
+    }
+
     /// Make a GET request with the specified action and parameters.
     ///
     /// The xml text response is returned or an SqsError.
@@ -240,6 +247,10 @@ impl SqsController {
     }
 
     fn parse_delete_message_xml(_xml_text: &str) -> Result<()> {
+        Ok(())
+    }
+
+    fn parse_send_message_xml(_xml_text: &str) -> Result<()> {
         Ok(())
     }
 
