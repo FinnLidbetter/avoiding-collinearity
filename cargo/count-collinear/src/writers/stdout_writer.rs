@@ -1,5 +1,5 @@
-use crate::writers::CollinearWriterError;
-use crate::{CollinearWriter, Config, CountCollinearResult};
+use crate::settings::Config;
+use crate::writers::{CollinearWriter, CollinearWriterError, CountCollinearResult};
 use std::fmt;
 use std::fmt::Formatter;
 

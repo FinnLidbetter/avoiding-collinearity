@@ -73,9 +73,9 @@ pub fn parse_args_from_strings(
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CountCollinearArgs {
-    pub(crate) sequence_length: u32,
-    pub(crate) start_index: usize,
-    pub(crate) end_index: usize,
+    pub sequence_length: u32,
+    pub start_index: usize,
+    pub end_index: usize,
 }
 
 impl fmt::Display for CountCollinearArgs {
@@ -84,6 +84,15 @@ impl fmt::Display for CountCollinearArgs {
             f,
             "sequence length: {}, start index: {}, end_index: {}",
             self.sequence_length, self.start_index, self.end_index
+        )
+    }
+}
+
+impl CountCollinearArgs {
+    pub fn as_json(&self) -> String {
+        format!(
+            "{{\"seqeuence_length\": {}, \"start_index\": {}, \"end_index\": {}}}",
+            self.sequence_length, self.start_index, self.end_index,
         )
     }
 }

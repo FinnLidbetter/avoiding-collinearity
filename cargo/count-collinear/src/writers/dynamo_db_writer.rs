@@ -1,14 +1,13 @@
 use crate::dynamo_db::{AttributeValue, DynamoDbController};
 use crate::settings::Config;
-use crate::writers::CollinearWriterError;
-use crate::{CollinearWriter, CountCollinearResult};
+use crate::writers::{CollinearWriter, CollinearWriterError, CountCollinearResult};
 use log::info;
 use std::fmt;
 use std::fmt::Formatter;
 use std::thread::sleep;
 use std::time::{Duration, Instant};
 
-const TABLE_NAME: &str = "collinearity";
+pub const TABLE_NAME: &str = "collinearity";
 const WRITE_INTERVAL_SECONDS: u64 = 60;
 const DELIMITER: &str = "#";
 

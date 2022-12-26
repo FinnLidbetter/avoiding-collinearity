@@ -18,12 +18,12 @@ impl fmt::Display for CollinearWriterError {
 }
 
 pub struct CountCollinearResult {
-    pub(crate) sequence_length: u32,
-    pub(crate) start_index: usize,
-    pub(crate) end_index: usize,
-    pub(crate) count_max: i32,
-    pub(crate) build_duration: Duration,
-    pub(crate) count_duration: Duration,
+    pub sequence_length: u32,
+    pub start_index: usize,
+    pub end_index: usize,
+    pub count_max: i32,
+    pub build_duration: Duration,
+    pub count_duration: Duration,
 }
 impl CountCollinearResult {
     fn build_duration(&self) -> Duration {

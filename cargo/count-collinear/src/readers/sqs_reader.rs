@@ -1,7 +1,8 @@
 use crate::ec2::EC2Controller;
 use crate::email::EmailController;
+use crate::readers::{CollinearReader, CollinearReaderError, CountCollinearArgs};
+use crate::settings::Config;
 use crate::sqs::SqsController;
-use crate::{CollinearReader, CollinearReaderError, Config, CountCollinearArgs};
 use log::{error, info};
 use std::fmt;
 use std::fmt::Formatter;
@@ -9,7 +10,7 @@ use std::str::FromStr;
 use std::thread::sleep;
 use std::time::{Duration, Instant};
 
-const QUEUE_NAME: &str = "collinearity";
+pub const QUEUE_NAME: &str = "collinearity";
 const NO_JOBS_POLLS_MAX: i32 = 5;
 const POLL_INTERVAL_SECONDS: u64 = 60;
 const SHUTDOWN_ATTEMPTS_MAX: i32 = 5;

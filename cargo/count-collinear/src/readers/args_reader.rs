@@ -1,7 +1,7 @@
 use crate::readers::{
     parse_args_from_strings, CollinearReader, CollinearReaderError, CountCollinearArgs,
 };
-use crate::Config;
+use crate::settings::Config;
 use std::env;
 use std::fmt::{Display, Formatter};
 

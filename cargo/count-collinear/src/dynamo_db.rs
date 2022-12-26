@@ -418,7 +418,7 @@ impl DynamoDbController {
 
 #[derive(Debug, PartialEq)]
 pub struct DynamoDbExecuteStatementResponse {
-    items: Vec<BTreeMap<String, AttributeValue>>,
+    pub items: Vec<BTreeMap<String, AttributeValue>>,
     next_token: Option<String>,
 }
 
