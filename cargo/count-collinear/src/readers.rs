@@ -248,4 +248,17 @@ mod tests {
             })
         );
     }
+
+    #[test]
+    fn test_collinear_args_to_json() {
+        let value = CountCollinearArgs {
+            sequence_length: 123,
+            start_index: 0,
+            end_index: 56,
+        };
+        assert_eq!(
+            value.as_json(),
+            r#"{"sequence_length": 123, "start_index": 0, "end_index": 56}"#
+        );
+    }
 }
