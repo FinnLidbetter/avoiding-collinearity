@@ -1,3 +1,5 @@
+extern crate core;
+
 mod aws_request;
 mod aws_signing;
 mod compute;

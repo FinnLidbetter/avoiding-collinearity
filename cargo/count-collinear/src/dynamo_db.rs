@@ -1,4 +1,5 @@
 use crate::aws_request::{get_authorization_header, get_base_headers};
+use crate::utilities::split_top_level_comma_separated;
 use http::HeaderMap;
 use regex::Regex;
 use std::collections::{BTreeMap, HashMap};
@@ -138,59 +139,11 @@ impl AttributeValue {
         }
     }
 
-    fn split_top_level_comma_separated(value: &str) -> Result<Vec<&str>> {
-        let value = value.trim();
-        let mut left_brace_indices = value.match_indices('{');
-        let mut right_brace_indices = value.match_indices('}');
-        let mut comma_indices = value.match_indices(',');
-        let mut split_indices: Vec<usize> = Vec::new();
-        let mut nesting = 0;
-        let mut left_brace_index = left_brace_indices.next();
-        let mut right_brace_index = right_brace_indices.next();
-        let mut comma_index = comma_indices.next();
-        while left_brace_index.is_some() && right_brace_index.is_some() && comma_index.is_some() {
-            let unwrapped_left_index = left_brace_index.unwrap().0;
-            let unwrapped_right_index = right_brace_index.unwrap().0;
-            let unwrapped_comma_index = comma_index.unwrap().0;
-            if unwrapped_left_index < unwrapped_right_index
-                && unwrapped_left_index < unwrapped_comma_index
-            {
-                nesting += 1;
-                left_brace_index = left_brace_indices.next();
-            } else if unwrapped_right_index < unwrapped_comma_index {
-                nesting -= 1;
-                right_brace_index = right_brace_indices.next();
-            } else {
-                if nesting == 0 {
-                    split_indices.push(unwrapped_comma_index);
-                }
-                comma_index = comma_indices.next();
-            }
-        }
-        let mut top_level_strs: Vec<&str> = Vec::new();
-        let mut remaining_str = value;
-        let mut index_offset = 0;
-        for split_index in split_indices.iter() {
-            let (left, right) = remaining_str.split_at(split_index - index_offset);
-            top_level_strs.push(left);
-            if right.is_empty() {
-                remaining_str = "";
-            } else {
-                remaining_str = &right[1..];
-            }
-            index_offset = split_index + 1;
-        }
-        if !remaining_str.is_empty() {
-            top_level_strs.push(remaining_str);
-        }
-        Ok(top_level_strs)
-    }
-
     fn decode_list(value: &str) -> Result<AttributeValue> {
         let trimmed_value = value.trim();
         let stripped_value = value.strip_prefix('[').unwrap_or(trimmed_value);
         let stripped_value = stripped_value.strip_suffix(']').unwrap_or(stripped_value);
-        let attr_value_strs = AttributeValue::split_top_level_comma_separated(stripped_value)?;
+        let attr_value_strs = split_top_level_comma_separated(stripped_value);
         let attr_values: Result<Vec<AttributeValue>> = attr_value_strs
             .iter()
             .map(|val| AttributeValue::from_str(*val))
@@ -202,7 +155,7 @@ impl AttributeValue {
         let trimmed_value = value.trim();
         let stripped_value = value.strip_prefix('{').unwrap_or(trimmed_value);
         let stripped_value = stripped_value.strip_suffix('}').unwrap_or(stripped_value);
-        let named_attr_values = AttributeValue::split_top_level_comma_separated(stripped_value)?;
+        let named_attr_values = split_top_level_comma_separated(stripped_value);
         let name_matcher = Regex::new(r#""([^"]*)":"#).unwrap();
         let mut map: BTreeMap<String, AttributeValue> = BTreeMap::new();
         for named_attr_value in named_attr_values.into_iter() {
@@ -239,7 +192,7 @@ impl AttributeValue {
         let stripped_value = stripped_value.strip_suffix('"').unwrap_or(stripped_value);
         // Assume that the value should be able to be decoded into f64.
         let _number: f64 = stripped_value.parse().map_err(|_| DynamoDbError {
-            msg: format!("Could not parse number value {}", stripped_value),
+            msg: format!("Could not parse number value '{}'", stripped_value),
         })?;
         Ok(stripped_value.to_string())
     }
@@ -329,7 +282,7 @@ impl FromStr for AttributeValue {
     }
 }
 
-fn encode_parameters(parameters: Vec<AttributeValue>) -> String {
+fn encode_parameters(parameters: &[AttributeValue]) -> String {
     let parameter_strs: Vec<String> = parameters
         .iter()
         .map(|attr_val| attr_val.encode())
@@ -362,19 +315,29 @@ impl DynamoDbController {
         format!("https://dynamodb.{}.amazonaws.com", self.region)
     }
 
-    pub fn get_payload(partiql_statement: &str, parameters: Vec<AttributeValue>) -> String {
+    pub fn get_payload(
+        partiql_statement: &str,
+        parameters: &[AttributeValue],
+        next_token: Option<String>,
+    ) -> String {
         let encoded_parameters = encode_parameters(parameters);
-        format!(
-            "{{\"Statement\": \"{}\", \"Parameters\": {}}}",
-            partiql_statement, encoded_parameters,
-        )
+        let next_token_str = match next_token {
+            Some(next_token) => format!(", \"NextToken\": {}", next_token),
+            None => String::from(""),
+        };
+        let payload = format!(
+            "{{\"Statement\": \"{}\", \"Parameters\": {}{}}}",
+            partiql_statement, encoded_parameters, next_token_str,
+        );
+        payload
     }
 
     pub fn execute_statement(
         &self,
         partiql_statement: &str,
         parameters: Vec<AttributeValue>,
-    ) -> Result<u16> {
+        next_token: Option<String>,
+    ) -> Result<DynamoDbExecuteStatementResponse> {
         let query_params: Vec<(&str, &str)> = Vec::new();
         let method = "POST";
         let endpoint = self.get_endpoint();
@@ -388,7 +351,7 @@ impl DynamoDbController {
         headers.insert("X-Amz-Target", target_string.as_str());
         let content_type = "application/x-amz-json-1.0";
         headers.insert("Content-Type", content_type);
-        let payload = DynamoDbController::get_payload(partiql_statement, parameters);
+        let payload = DynamoDbController::get_payload(partiql_statement, &parameters, next_token);
         let payload_bytes = payload.as_bytes().len();
         let payload_bytes = payload_bytes.to_string();
         let payload_bytes = payload_bytes.as_str();
@@ -428,7 +391,111 @@ impl DynamoDbController {
         result.error_for_status_ref().map_err(|err| DynamoDbError {
             msg: format!("Request to {} failed due to {}", endpoint, err),
         })?;
-        Ok(result.status().as_u16())
+        let mut response = DynamoDbExecuteStatementResponse::from_str(
+            result
+                .text()
+                .map_err(|_| DynamoDbError {
+                    msg: "Bad text response from DynamoDb ExecuteStatement request. \
+                Unable to parse response body."
+                        .to_string(),
+                })?
+                .as_str(),
+        )?;
+        match response.next_token {
+            Some(ref next_token) => {
+                let next_response = self.execute_statement(
+                    partiql_statement,
+                    parameters,
+                    Some(next_token.to_string()),
+                )?;
+                response.items.extend(next_response.items);
+                Ok(response)
+            }
+            None => Ok(response),
+        }
+    }
+}
+
+pub struct DynamoDbExecuteStatementResponse {
+    items: Vec<BTreeMap<String, AttributeValue>>,
+    next_token: Option<String>,
+}
+
+impl DynamoDbExecuteStatementResponse {
+    fn parse_items_from_string(items_str: &str) -> Result<Vec<BTreeMap<String, AttributeValue>>> {
+        let trimmed = items_str.trim();
+        let stripped = trimmed.strip_prefix('[').unwrap_or(trimmed);
+        let stripped = stripped.strip_suffix(']').unwrap_or(stripped);
+        if stripped.trim().is_empty() {
+            return Ok(vec![]);
+        }
+        let item_strs = split_top_level_comma_separated(stripped);
+        let mut items: Vec<BTreeMap<String, AttributeValue>> = Vec::new();
+        for item_str in item_strs {
+            let trimmed_item_str = item_str.trim();
+            let stripped_item_str = trimmed_item_str
+                .strip_prefix('{')
+                .unwrap_or(trimmed_item_str);
+            let stripped_item_str = stripped_item_str
+                .strip_suffix('}')
+                .unwrap_or(stripped_item_str);
+            let named_attr_value_strs = split_top_level_comma_separated(stripped_item_str);
+            let name_matcher = Regex::new(r#""(.*)":"#).unwrap();
+            let mut item: BTreeMap<String, AttributeValue> = BTreeMap::new();
+            for named_attr_value in named_attr_value_strs {
+                let name = &name_matcher
+                    .captures(named_attr_value)
+                    .ok_or(DynamoDbError {
+                        msg: format!(
+                            "Could not parse attribute value name from '{}' in '{}'",
+                            named_attr_value, item_str
+                        ),
+                    })?[1];
+                let colon_index = named_attr_value.find(':').unwrap();
+                let remainder = &named_attr_value[colon_index + 1..];
+                let attr_value = AttributeValue::from_str(remainder.trim())?;
+                item.insert(name.to_string(), attr_value);
+            }
+            items.push(item)
+        }
+        Ok(items)
+    }
+}
+
+impl FromStr for DynamoDbExecuteStatementResponse {
+    type Err = DynamoDbError;
+
+    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
+        let trimmed = s.trim();
+        let stripped = trimmed.strip_prefix('{').unwrap_or(trimmed);
+        let stripped = stripped.strip_suffix('}').unwrap_or(stripped);
+        let top_level_strs = split_top_level_comma_separated(stripped);
+        let mut items_str = "[]";
+        let mut next_token_str: Option<&str> = None;
+        let items_name_regex = Regex::new(r#"^"Items"\s*:"#).unwrap();
+        let next_token_name_regex = Regex::new(r#"^"NextToken"\s*:"#).unwrap();
+        for value in top_level_strs {
+            if let Some(items_match) = items_name_regex.find(value) {
+                items_str = (&value[items_match.end() + 1..]).trim();
+            } else if let Some(token_match) = next_token_name_regex.find(value) {
+                next_token_str = Some(&value[token_match.end() + 1..]);
+            }
+        }
+        let items = DynamoDbExecuteStatementResponse::parse_items_from_string(items_str)?;
+        let next_token = match next_token_str {
+            Some(next_token_str) => {
+                let trimmed_next_token = next_token_str.trim();
+                let stripped_next_token = trimmed_next_token
+                    .strip_prefix('"')
+                    .unwrap_or(trimmed_next_token);
+                let stripped_next_token = stripped_next_token
+                    .strip_suffix('"')
+                    .unwrap_or(stripped_next_token);
+                Some(stripped_next_token.to_string())
+            }
+            None => None,
+        };
+        Ok(DynamoDbExecuteStatementResponse { items, next_token })
     }
 }
 
@@ -569,15 +636,15 @@ mod tests {
     #[test]
     fn test_encode_parameters() {
         let empty_list: Vec<AttributeValue> = Vec::new();
-        assert_eq!(encode_parameters(empty_list), "[]");
+        assert_eq!(encode_parameters(&empty_list), "[]");
         let unit_list = vec![AttributeValue::Number("-1".to_string())];
-        assert_eq!(encode_parameters(unit_list), "[{\"N\": \"-1\"}]");
+        assert_eq!(encode_parameters(&unit_list), "[{\"N\": \"-1\"}]");
         let two_list = vec![
             AttributeValue::Number("-1".to_string()),
             AttributeValue::String("something".to_string()),
         ];
         assert_eq!(
-            encode_parameters(two_list),
+            encode_parameters(&two_list),
             "[{\"N\": \"-1\"},{\"S\": \"something\"}]"
         );
         let three_list = vec![
@@ -586,7 +653,7 @@ mod tests {
             AttributeValue::Boolean(false),
         ];
         assert_eq!(
-            encode_parameters(three_list),
+            encode_parameters(&three_list),
             "[{\"N\": \"42\"},{\"BOOL\": true},{\"BOOL\": false}]"
         );
     }
@@ -595,7 +662,7 @@ mod tests {
     fn test_get_payload() {
         let partiql_statement = "SELECT * FROM collinearity WHERE sequence_length=?";
         let parameters = vec![AttributeValue::Number(100.to_string())];
-        let payload = DynamoDbController::get_payload(partiql_statement, parameters);
+        let payload = DynamoDbController::get_payload(partiql_statement, &parameters, None);
         assert_eq!(
             payload,
             "{\"Statement\": \"SELECT * FROM collinearity WHERE sequence_length=?\", \"Parameters\": [{\"N\": \"100\"}]}"

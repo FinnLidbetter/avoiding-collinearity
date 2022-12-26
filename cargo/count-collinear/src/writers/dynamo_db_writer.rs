@@ -98,7 +98,7 @@ impl CollinearWriter for DynamoDbWriter {
         }
         self.last_write_time = Some(Instant::now());
         self.dynamo_db_controller
-            .execute_statement(partiql_statement.as_str(), parameters)
+            .execute_statement(partiql_statement.as_str(), parameters, None)
             .map_err(|err| CollinearWriterError {
                 msg: format!("DynamoDB write failed: {}", err),
             })?;
