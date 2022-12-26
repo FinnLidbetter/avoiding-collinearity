@@ -416,6 +416,7 @@ impl DynamoDbController {
     }
 }
 
+#[derive(Debug, PartialEq)]
 pub struct DynamoDbExecuteStatementResponse {
     items: Vec<BTreeMap<String, AttributeValue>>,
     next_token: Option<String>,
@@ -440,7 +441,7 @@ impl DynamoDbExecuteStatementResponse {
                 .strip_suffix('}')
                 .unwrap_or(stripped_item_str);
             let named_attr_value_strs = split_top_level_comma_separated(stripped_item_str);
-            let name_matcher = Regex::new(r#""(.*)":"#).unwrap();
+            let name_matcher = Regex::new(r#""(.*)"\s*:"#).unwrap();
             let mut item: BTreeMap<String, AttributeValue> = BTreeMap::new();
             for named_attr_value in named_attr_value_strs {
                 let name = &name_matcher
@@ -470,15 +471,19 @@ impl FromStr for DynamoDbExecuteStatementResponse {
         let stripped = trimmed.strip_prefix('{').unwrap_or(trimmed);
         let stripped = stripped.strip_suffix('}').unwrap_or(stripped);
         let top_level_strs = split_top_level_comma_separated(stripped);
+        for some_str in top_level_strs.iter() {
+            println!("{}", some_str);
+        }
         let mut items_str = "[]";
         let mut next_token_str: Option<&str> = None;
         let items_name_regex = Regex::new(r#"^"Items"\s*:"#).unwrap();
         let next_token_name_regex = Regex::new(r#"^"NextToken"\s*:"#).unwrap();
         for value in top_level_strs {
-            if let Some(items_match) = items_name_regex.find(value) {
-                items_str = (&value[items_match.end() + 1..]).trim();
-            } else if let Some(token_match) = next_token_name_regex.find(value) {
-                next_token_str = Some(&value[token_match.end() + 1..]);
+            let trimmed_value = value.trim();
+            if let Some(items_match) = items_name_regex.find(trimmed_value) {
+                items_str = (&trimmed_value[items_match.end() + 1..]).trim();
+            } else if let Some(token_match) = next_token_name_regex.find(trimmed_value) {
+                next_token_str = Some(&trimmed_value[token_match.end() + 1..]);
             }
         }
         let items = DynamoDbExecuteStatementResponse::parse_items_from_string(items_str)?;
@@ -863,5 +868,84 @@ mod tests {
             AttributeValue::from_str(map_item.encode().as_str()).unwrap(),
             map_item
         );
+    }
+
+    #[test]
+    fn test_decode_execute_statement_items() {
+        let response = r#"{
+            "ConsumedCapacity": {
+                "CapacityUnits": 1,
+                "GlobalSecondaryIndexes": {
+                    "string" : {
+                        "CapacityUnits": 1,
+                        "ReadCapacityUnits": 1,
+                        "WriteCapacityUnits": 1
+                    }
+                },
+                "LocalSecondaryIndexes": {
+                    "string" : {
+                        "CapacityUnits": 1,
+                        "ReadCapacityUnits": 1,
+                        "WriteCapacityUnits": 1
+                    }
+                },
+                "ReadCapacityUnits": 1,
+                "Table": {
+                    "CapacityUnits": 1,
+                    "ReadCapacityUnits": 1,
+                    "WriteCapacityUnits": 1
+                },
+                "TableName": "string",
+                "WriteCapacityUnits": 1
+            },
+            "Items": [
+                {
+                    "string_1" : {
+                        "BOOL": true
+                    },
+                    "string_2": {
+                        "S": "some_string"
+                    }
+                },
+                {
+                    "another_key": {
+                        "L": [
+                            {"N": "0"}, {"S": "string"}
+                        ]
+                    }
+                }
+            ],
+            "LastEvaluatedKey": {
+                "string" : {
+                    "N": "1"
+                },
+                "other_string": {
+                    "S": "something"
+                }
+            },
+            "NextToken": "some_token"
+        }"#;
+        let decoded_response = DynamoDbExecuteStatementResponse::from_str(response).unwrap();
+        let expected_items = vec![
+            BTreeMap::from([
+                ("string_1".to_string(), AttributeValue::Boolean(true)),
+                (
+                    "string_2".to_string(),
+                    AttributeValue::String("some_string".to_string()),
+                ),
+            ]),
+            BTreeMap::from([(
+                "another_key".to_string(),
+                AttributeValue::List(vec![
+                    AttributeValue::Number("0".to_string()),
+                    AttributeValue::String("string".to_string()),
+                ]),
+            )]),
+        ];
+        let expected = DynamoDbExecuteStatementResponse {
+            items: expected_items,
+            next_token: Some(String::from("some_token")),
+        };
+        assert_eq!(decoded_response, expected)
     }
 }
