@@ -179,12 +179,12 @@ mod tests {
 
     #[test]
     fn test_collinear_args_from_str() {
-        let good_string_1 = "{\"sequence_length\": 1000, \"start_index\": 50, \"end_index\": 60}";
-        let good_string_2 = "{\"sequence_length\": 1000, \"end_index\": 60, \"start_index\": 50}";
-        let good_string_3 = "{\"start_index\": 50, \"sequence_length\": 1000, \"end_index\": 60}";
-        let good_string_4 = "{\"start_index\": 50, \"end_index\": 60, \"sequence_length\": 1000}";
-        let good_string_5 = "{\"end_index\": 60, \"start_index\": 50, \"sequence_length\": 1000}";
-        let good_string_6 = "{\"end_index\": 60, \"sequence_length\": 1000, \"start_index\": 50}";
+        let good_string_1 = r#"{"sequence_length": 1000, "start_index": 50, "end_index": 60}"#;
+        let good_string_2 = r#"{"sequence_length": 1000, "end_index": 60, "start_index": 50}"#;
+        let good_string_3 = r#"{"start_index": 50, "sequence_length": 1000, "end_index": 60}"#;
+        let good_string_4 = r#"{"start_index": 50, "end_index": 60, "sequence_length": 1000}"#;
+        let good_string_5 = r#"{"end_index": 60, "start_index": 50, "sequence_length": 1000}"#;
+        let good_string_6 = r#"{"end_index": 60, "sequence_length": 1000, "start_index": 50}"#;
         let expected_args = CountCollinearArgs {
             sequence_length: 1000,
             start_index: 50,
@@ -215,12 +215,12 @@ mod tests {
             Ok(expected_args.clone())
         );
         let extra_whitespace =
-            "{\"sequence_length\": 1000,\n \"start_index\":   50,             \"end_index\": 60}";
+            r#"{"sequence_length": 1000,\n "start_index":   50,             "end_index": 60}"#;
         assert_eq!(
             CountCollinearArgs::from_str(extra_whitespace),
             Ok(expected_args.clone())
         );
-        let missing_seqeunce_length = "{\"end_index\": 60, \"start_index\": 50}";
+        let missing_seqeunce_length = r#"{"end_index": 60, "start_index": 50}"#;
         assert_eq!(
             CountCollinearArgs::from_str(missing_seqeunce_length),
             Err(ParseCountCollinearArgsErr {
@@ -231,7 +231,7 @@ mod tests {
             })
         );
         // The sequence length value is missing.
-        let malformed_string = "{\"sequence_length\": , \"start_index\": 100, \"end_index\": 124}";
+        let malformed_string = r#"{"sequence_length": , "start_index": 100, "end_index": 124}"#;
         assert_eq!(
             CountCollinearArgs::from_str(malformed_string),
             Err(ParseCountCollinearArgsErr {

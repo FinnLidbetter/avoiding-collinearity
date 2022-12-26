@@ -511,10 +511,10 @@ mod tests {
     #[test]
     fn test_encode_number() {
         let item_1 = AttributeValue::Number("1".to_string());
-        assert_eq!(item_1.encode(), "{\"N\": \"1\"}");
+        assert_eq!(item_1.encode(), r#"{"N": "1"}"#);
 
         let item_2 = AttributeValue::Number("0".to_string());
-        assert_eq!(item_2.encode(), "{\"N\": \"0\"}");
+        assert_eq!(item_2.encode(), r#"{"N": "0"}"#);
 
         let numbers = ["1", "0", "-2", "-3.1234", "2139.412"];
         for number in numbers.iter() {
@@ -527,10 +527,10 @@ mod tests {
     #[test]
     fn test_encode_bool() {
         let true_item = AttributeValue::Boolean(true);
-        assert_eq!(true_item.encode(), "{\"BOOL\": true}");
+        assert_eq!(true_item.encode(), r#"{"BOOL": true}"#);
 
         let false_item = AttributeValue::Boolean(false);
-        assert_eq!(false_item.encode(), "{\"BOOL\": false}");
+        assert_eq!(false_item.encode(), r#"{"BOOL": false}"#);
     }
 
     #[test]
@@ -541,30 +541,30 @@ mod tests {
             .collect();
 
         let item = AttributeValue::NumberSet(values);
-        let expected = "{\"NS\": [\"0\", \"-1\", \"1\", \"1.0\", \"-9.432\"]}";
+        let expected = r#"{"NS": ["0", "-1", "1", "1.0", "-9.432"]}"#;
         assert_eq!(item.encode(), expected);
 
         let empty_number_set = AttributeValue::NumberSet(vec![]);
-        let expected = "{\"NS\": []}";
+        let expected = r#"{"NS": []}"#;
         assert_eq!(empty_number_set.encode(), expected);
     }
 
     #[test]
     fn test_encode_null() {
         let true_null = AttributeValue::Null(true);
-        assert_eq!(true_null.encode(), "{\"NULL\": true}");
+        assert_eq!(true_null.encode(), r#"{"NULL": true}"#);
 
         let false_null = AttributeValue::Null(false);
-        assert_eq!(false_null.encode(), "{\"NULL\": false}");
+        assert_eq!(false_null.encode(), r#"{"NULL": false}"#);
     }
 
     #[test]
     fn test_encode_string() {
         let item_1 = AttributeValue::String("Something".to_string());
-        assert_eq!(item_1.encode(), "{\"S\": \"Something\"}");
+        assert_eq!(item_1.encode(), r#"{"S": "Something"}"#);
 
         let item_2 = AttributeValue::String("a 😁".to_string());
-        assert_eq!(item_2.encode(), "{\"S\": \"a 😁\"}");
+        assert_eq!(item_2.encode(), r#"{"S": "a 😁"}"#);
     }
 
     #[test]
@@ -574,11 +574,11 @@ mod tests {
             .map(|value| value.to_string())
             .collect();
         let string_set_item = AttributeValue::StringSet(strings);
-        let expected = "{\"SS\": [\"\", \"abc\", \"Cat\"]}";
+        let expected = r#"{"SS": ["", "abc", "Cat"]}"#;
         assert_eq!(string_set_item.encode(), expected);
 
         let empty_string_set = AttributeValue::StringSet(vec![]);
-        let expected = "{\"SS\": []}";
+        let expected = r#"{"SS": []}"#;
         assert_eq!(empty_string_set.encode(), expected);
     }
 
@@ -588,7 +588,7 @@ mod tests {
         let data_b64 = base64::encode(&data);
         assert_eq!(data_b64, "AAED/w==");
         let item = AttributeValue::Binary(data);
-        let expected = "{\"B\": \"AAED/w==\"}";
+        let expected = r#"{"B": "AAED/w=="}"#;
         assert_eq!(item.encode(), expected);
     }
 
@@ -604,11 +604,11 @@ mod tests {
         assert_eq!(data_1_b64, "Bw==");
         assert_eq!(data_2_b64, "gG8=");
         let item = AttributeValue::BinarySet(vec![data_0, data_1, data_2]);
-        let expected = "{\"BS\": [\"FSp7\", \"Bw==\", \"gG8=\"]}";
+        let expected = r#"{"BS": ["FSp7", "Bw==", "gG8="]}"#;
         assert_eq!(item.encode(), expected);
 
         let empty_binary_set = AttributeValue::BinarySet(vec![]);
-        let expected = "{\"BS\": []}";
+        let expected = r#"{"BS": []}"#;
         assert_eq!(empty_binary_set.encode(), expected);
     }
 
@@ -617,10 +617,10 @@ mod tests {
         let number_item = AttributeValue::Number("0".to_string());
         let true_item = AttributeValue::Boolean(true);
         let nested_empty_list = AttributeValue::List(vec![]);
-        assert_eq!(nested_empty_list.encode(), "{\"L\": []}");
+        assert_eq!(nested_empty_list.encode(), r#"{"L": []}"#);
 
         let list_item = AttributeValue::List(vec![number_item, true_item, nested_empty_list]);
-        let expected = "{\"L\": [{\"N\": \"0\"}, {\"BOOL\": true}, {\"L\": []}]}";
+        let expected = r#"{"L": [{"N": "0"}, {"BOOL": true}, {"L": []}]}"#;
         assert_eq!(list_item.encode(), expected);
     }
 
@@ -633,7 +633,7 @@ mod tests {
         items_map.insert("number Thing".to_string(), number_item);
         items_map.insert("boolean thing".to_string(), false_item);
         items_map.insert("some_sort_of_list".to_string(), list_item);
-        let expected = "{\"M\": {\"boolean thing\": {\"BOOL\": false}, \"number Thing\": {\"N\": \"-1\"}, \"some_sort_of_list\": {\"L\": [{\"N\": \"-1\"}, {\"BOOL\": false}]}}}";
+        let expected = r#"{"M": {"boolean thing": {"BOOL": false}, "number Thing": {"N": "-1"}, "some_sort_of_list": {"L": [{"N": "-1"}, {"BOOL": false}]}}}"#;
         let map_item = AttributeValue::Map(items_map);
         assert_eq!(map_item.encode(), expected);
     }
@@ -643,14 +643,14 @@ mod tests {
         let empty_list: Vec<AttributeValue> = Vec::new();
         assert_eq!(encode_parameters(&empty_list), "[]");
         let unit_list = vec![AttributeValue::Number("-1".to_string())];
-        assert_eq!(encode_parameters(&unit_list), "[{\"N\": \"-1\"}]");
+        assert_eq!(encode_parameters(&unit_list), r#"[{"N": "-1"}]"#);
         let two_list = vec![
             AttributeValue::Number("-1".to_string()),
             AttributeValue::String("something".to_string()),
         ];
         assert_eq!(
             encode_parameters(&two_list),
-            "[{\"N\": \"-1\"},{\"S\": \"something\"}]"
+            r#"[{"N": "-1"},{"S": "something"}]"#
         );
         let three_list = vec![
             AttributeValue::Number("42".to_string()),
@@ -659,7 +659,7 @@ mod tests {
         ];
         assert_eq!(
             encode_parameters(&three_list),
-            "[{\"N\": \"42\"},{\"BOOL\": true},{\"BOOL\": false}]"
+            r#"[{"N": "42"},{"BOOL": true},{"BOOL": false}]"#
         );
     }
 
@@ -670,7 +670,7 @@ mod tests {
         let payload = DynamoDbController::get_payload(partiql_statement, &parameters, None);
         assert_eq!(
             payload,
-            "{\"Statement\": \"SELECT * FROM collinearity WHERE sequence_length=?\", \"Parameters\": [{\"N\": \"100\"}]}"
+            r#"{"Statement": "SELECT * FROM collinearity WHERE sequence_length=?", "Parameters": [{"N": "100"}]}"#
         );
     }
 
@@ -682,12 +682,12 @@ mod tests {
         let item = AttributeValue::Binary(data);
         let decoded = AttributeValue::from_str(item.encode().as_str()).unwrap();
         assert_eq!(decoded, item);
-        let expected = "{\"B\": \"AAED/w==\"}";
+        let expected = r#"{"B": "AAED/w=="}"#;
         assert_eq!(item.encode(), expected);
         assert_eq!(AttributeValue::from_str(expected).unwrap(), item);
-        let extra_spaces = "{ \"B\":   \"AAED/w==\"    }";
+        let extra_spaces = r#"{ "B":   "AAED/w=="    }"#;
         assert_eq!(AttributeValue::from_str(extra_spaces).unwrap(), item);
-        let no_braces = "\"B\": \"AAED/w==\"";
+        let no_braces = r#""B": "AAED/w==""#;
         assert_eq!(AttributeValue::from_str(no_braces).unwrap(), item);
     }
 
@@ -697,7 +697,7 @@ mod tests {
         let data_1: Vec<u8> = vec![7];
         let data_2: Vec<u8> = vec![128, 111];
         let item = AttributeValue::BinarySet(vec![data_0, data_1, data_2]);
-        let expected = "{\"BS\": [\"FSp7\", \"Bw==\", \"gG8=\"]}";
+        let expected = r#"{"BS": ["FSp7", "Bw==", "gG8="]}"#;
         assert_eq!(item.encode(), expected);
         assert_eq!(
             AttributeValue::from_str(item.encode().as_str()).unwrap(),
@@ -705,7 +705,7 @@ mod tests {
         );
 
         let empty_binary_set = AttributeValue::BinarySet(vec![]);
-        let expected = "{\"BS\": []}";
+        let expected = r#"{"BS": []}"#;
         assert_eq!(empty_binary_set.encode(), expected);
         assert_eq!(
             AttributeValue::from_str(empty_binary_set.encode().as_str()).unwrap(),
@@ -739,12 +739,12 @@ mod tests {
             .collect();
 
         let item = AttributeValue::NumberSet(values);
-        let expected = "{\"NS\": [\"0\", \"-1\", \"1\", \"1.0\", \"-9.432\"]}";
+        let expected = r#"{"NS": ["0", "-1", "1", "1.0", "-9.432"]}"#;
         assert_eq!(item.encode(), expected);
         assert_eq!(AttributeValue::from_str(expected).unwrap(), item);
 
         let empty_number_set = AttributeValue::NumberSet(vec![]);
-        let expected = "{\"NS\": []}";
+        let expected = r#"{"NS": []}"#;
         assert_eq!(empty_number_set.encode(), expected);
         assert_eq!(
             AttributeValue::from_str(expected).unwrap(),
@@ -756,12 +756,12 @@ mod tests {
     fn test_decode_null() {
         let true_null = AttributeValue::Null(true);
         assert_eq!(
-            AttributeValue::from_str("{\"NULL\": true}").unwrap(),
+            AttributeValue::from_str(r#"{"NULL": true}"#).unwrap(),
             true_null
         );
         let false_null = AttributeValue::Null(false);
         assert_eq!(
-            AttributeValue::from_str("{\"NULL\": false}").unwrap(),
+            AttributeValue::from_str(r#"{"NULL": false}"#).unwrap(),
             false_null
         );
     }
@@ -770,7 +770,7 @@ mod tests {
     fn test_decode_string() {
         let item_1 = AttributeValue::String("Something".to_string());
         assert_eq!(
-            AttributeValue::from_str("{\"S\": \"Something\"}").unwrap(),
+            AttributeValue::from_str(r#"{"S": "Something"}"#).unwrap(),
             item_1
         );
         assert_eq!(
@@ -780,7 +780,7 @@ mod tests {
 
         let item_2 = AttributeValue::String("a 😁".to_string());
         assert_eq!(
-            AttributeValue::from_str("{\"S\": \"a 😁\"}").unwrap(),
+            AttributeValue::from_str(r#"{"S": "a 😁"}"#).unwrap(),
             item_2
         );
         assert_eq!(
@@ -797,7 +797,7 @@ mod tests {
             .collect();
         let string_set_item = AttributeValue::StringSet(strings);
         assert_eq!(
-            AttributeValue::from_str("{\"SS\": [\"\", \"abc\", \"Cat\"]}").unwrap(),
+            AttributeValue::from_str(r#"{"SS": ["", "abc", "Cat"]}"#).unwrap(),
             string_set_item
         );
         assert_eq!(
@@ -807,7 +807,7 @@ mod tests {
 
         let empty_string_set = AttributeValue::StringSet(vec![]);
         assert_eq!(
-            AttributeValue::from_str("{\"SS\": []}").unwrap(),
+            AttributeValue::from_str(r#"{"SS": []}"#).unwrap(),
             empty_string_set
         );
         assert_eq!(
@@ -820,13 +820,13 @@ mod tests {
     fn test_decode_bool() {
         let true_item = AttributeValue::Boolean(true);
         assert_eq!(
-            AttributeValue::from_str("{\"BOOL\": true}").unwrap(),
+            AttributeValue::from_str(r#"{"BOOL": true}"#).unwrap(),
             true_item
         );
 
         let false_item = AttributeValue::Boolean(false);
         assert_eq!(
-            AttributeValue::from_str("{\"BOOL\": false}").unwrap(),
+            AttributeValue::from_str(r#"{"BOOL": false}"#).unwrap(),
             false_item
         );
     }
