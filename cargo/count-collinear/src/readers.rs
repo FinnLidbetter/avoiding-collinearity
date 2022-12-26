@@ -91,7 +91,7 @@ impl fmt::Display for CountCollinearArgs {
 impl CountCollinearArgs {
     pub fn as_json(&self) -> String {
         format!(
-            "{{\"seqeuence_length\": {}, \"start_index\": {}, \"end_index\": {}}}",
+            "{{\"sequence_length\": {}, \"start_index\": {}, \"end_index\": {}}}",
             self.sequence_length, self.start_index, self.end_index,
         )
     }
