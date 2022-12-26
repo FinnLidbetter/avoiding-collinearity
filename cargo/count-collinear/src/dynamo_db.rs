@@ -380,16 +380,25 @@ impl DynamoDbController {
 
         let mut request = self.client.post(endpoint);
         let header_map: HeaderMap = (&headers).try_into().map_err(|err| DynamoDbError {
-            msg: format!("Failed to convert headers into a HeaderMap due to {}", err),
+            msg: format!(
+                "Failed to convert headers into a HeaderMap due to '{}'",
+                err
+            ),
         })?;
         request = request.headers(header_map);
         request = request.query(&query_params);
         request = request.body(payload);
+        // println!("Making query with {}", partiql_statement);
         let result = request.send().map_err(|err| DynamoDbError {
-            msg: format!("Request to {} failed due to {}", endpoint, err),
+            msg: format!("Request to {} failed due to '{}'", endpoint, err),
         })?;
+        // println!("Finished query.");
+        // println!("Text response: {}", result.text().unwrap());
+        // println!("Response ^");
+        // Err(DynamoDbError{msg: "Error".to_string()})
+
         result.error_for_status_ref().map_err(|err| DynamoDbError {
-            msg: format!("Request to {} failed due to {}", endpoint, err),
+            msg: format!("Request to {} failed due to '{}'", endpoint, err),
         })?;
         let mut response = DynamoDbExecuteStatementResponse::from_str(
             result

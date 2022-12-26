@@ -136,6 +136,18 @@ fn split_jobs(
             sequence_length as usize + 1,
         );
     }
+    if !jobs.is_empty() && jobs.last().unwrap().end_index != curr_end {
+        if curr_end > sequence_length as usize {
+            curr_end = sequence_length as usize;
+        }
+        if curr_start < curr_end {
+            jobs.push(CountCollinearArgs {
+                sequence_length,
+                start_index: curr_start,
+                end_index: curr_end,
+            })
+        }
+    }
     jobs
 }
 
@@ -174,7 +186,7 @@ fn main() {
     let mut jobs: Vec<CountCollinearArgs> = Vec::new();
     if parsed_args.query_db {
         let partiql_statement = format!(
-            "SELECT sequence_length, start_index, end_index FROM {} WHERE sequence_length=? ORDER BY start_index;",
+            "SELECT sequence_length, start_index, end_index FROM {} WHERE sequence_length=?;",
             TABLE_NAME
         );
         let parameters = vec![AttributeValue::Number(
