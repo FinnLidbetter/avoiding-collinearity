@@ -16,20 +16,24 @@ use count_collinear::writers::dynamo_db_writer::TABLE_NAME;
 const JOBS_MAX: u32 = 10000;
 const HELP: &str = "\
 Usage:
-enqueue_jobs sequence-length job-size [--dry-run] [--query-db]
-     sequence-length (int): The length of the sequence for which to queue jobs.
-            job-size (int): The maximum number of indices to include in each job.
- --dry-run (optional bool): If set then only print the actions that would be
-                            taken. If this is used in conjunction with --query-db,
-                            then a real database query will occur, but jobs will
-                            not be enqueued.
---query-db (optional bool): If set then query the database to determine which jobs
-                            are already complete and do not need to be enqueued.
+enqueue_jobs sequence-length job-size [--start-index N] [--end-index M] [--dry-run] [--query-db]
+       sequence-length (int): The length of the sequence for which to queue jobs.
+              job-size (int): The maximum number of indices to include in each job.
+--start-index (optional int): The start index for the jobs. Defaults to 0.
+    --end-index (option int): The end index for the jobs. Defaults to the sequence-length.
+   --dry-run (optional bool): If set then only print the actions that would be
+                              taken. If this is used in conjunction with --query-db,
+                              then a real database query will occur, but jobs will
+                              not be enqueued.
+  --query-db (optional bool): If set then query the database to determine which jobs
+                              are already complete and do not need to be enqueued.
 ";
 
 struct EnqueueJobsArgs {
     sequence_length: u32,
     job_size_max: u32,
+    start_index: usize,
+    end_index: usize,
     dry_run: bool,
     query_db: bool,
 }
@@ -39,30 +43,50 @@ fn parse_args(args: Vec<String>) -> EnqueueJobsArgs {
     let mut query_db = false;
     let mut sequence_length: Option<u32> = None;
     let mut job_size_max: Option<u32> = None;
+    let mut start_index: Option<usize> = None;
+    let mut end_index: Option<usize> = None;
     let mut first_arg = true;
+    let mut expect_start_index = false;
+    let mut expect_end_index = false;
     for arg in args {
         if first_arg {
             first_arg = false;
             continue;
         }
-        if arg == "--dry-run" {
-            dry_run = true;
-        } else if arg == "--query-db" {
-            query_db = true;
-        } else {
-            let value = arg.parse::<u32>().expect(HELP);
-            if sequence_length.is_none() {
-                sequence_length = Some(value);
-            } else if job_size_max.is_none() {
-                job_size_max = Some(value);
-            } else {
-                panic!("{}", HELP);
+        match arg.as_str() {
+            "--dry-run" => dry_run = true,
+            "--query-db" => query_db = true,
+            "--start-index" => expect_start_index = true,
+            "--end-index" => expect_end_index = true,
+            _ => {
+                if expect_start_index {
+                    let value = arg.parse::<usize>().expect(HELP);
+                    start_index = Some(value);
+                    expect_start_index = false;
+                    continue;
+                }
+                if expect_end_index {
+                    let value = arg.parse::<usize>().expect(HELP);
+                    end_index = Some(value);
+                    expect_end_index = false;
+                    continue;
+                }
+                let value = arg.parse::<u32>().expect(HELP);
+                if sequence_length.is_none() {
+                    sequence_length = Some(value);
+                } else if job_size_max.is_none() {
+                    job_size_max = Some(value);
+                } else {
+                    panic!("{}", HELP);
+                }
             }
         }
     }
     EnqueueJobsArgs {
         sequence_length: sequence_length.expect(HELP),
         job_size_max: job_size_max.expect(HELP),
+        start_index: start_index.unwrap_or(0),
+        end_index: end_index.unwrap_or_else(|| sequence_length.unwrap().try_into().unwrap()),
         dry_run,
         query_db,
     }
@@ -118,35 +142,22 @@ fn split_jobs(
     sequence_length: u32,
     job_size_max: u32,
 ) -> Vec<CountCollinearArgs> {
+    let start_index = max(0, start_index);
+    let end_index = min(end_index, sequence_length as usize);
     let mut jobs: Vec<CountCollinearArgs> = Vec::new();
     let mut curr_start = start_index;
-    let mut curr_end = min(
-        curr_start + job_size_max as usize,
-        sequence_length as usize + 1,
-    );
-    while curr_end <= end_index {
+    let mut curr_end = curr_start + job_size_max as usize;
+    while curr_start < end_index {
+        if curr_end > end_index {
+            curr_end = end_index;
+        }
         jobs.push(CountCollinearArgs {
             sequence_length,
             start_index: curr_start,
             end_index: curr_end,
         });
         curr_start = curr_end;
-        curr_end = min(
-            curr_start + job_size_max as usize,
-            sequence_length as usize + 1,
-        );
-    }
-    if !jobs.is_empty() && jobs.last().unwrap().end_index != curr_end {
-        if curr_end > sequence_length as usize {
-            curr_end = sequence_length as usize;
-        }
-        if curr_start < curr_end {
-            jobs.push(CountCollinearArgs {
-                sequence_length,
-                start_index: curr_start,
-                end_index: curr_end,
-            })
-        }
+        curr_end = curr_start + job_size_max as usize;
     }
     jobs
 }
@@ -223,7 +234,7 @@ fn main() {
             }
             merged_intervals.push(curr);
         }
-        let mut prev_end = 0;
+        let mut prev_end = parsed_args.start_index;
         for interval in merged_intervals {
             if prev_end < interval.0 {
                 jobs.extend(split_jobs(
@@ -235,18 +246,18 @@ fn main() {
             }
             prev_end = interval.1;
         }
-        if prev_end < sequence_length as usize {
+        if prev_end < parsed_args.end_index {
             jobs.extend(split_jobs(
                 prev_end,
-                sequence_length as usize,
+                parsed_args.end_index,
                 sequence_length,
                 job_size_max,
             ))
         }
     } else {
         jobs.extend(split_jobs(
-            0,
-            sequence_length as usize,
+            parsed_args.start_index,
+            parsed_args.end_index,
             sequence_length,
             job_size_max,
         ));
@@ -265,5 +276,109 @@ fn main() {
                 );
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_merge_intervals() {
+        // Test overlap at one endpoint.
+        assert_eq!(merge_intervals((5, 10), (10, 14)), Some((5, 14)));
+        // Test other order overlap at one endpoint.
+        assert_eq!(merge_intervals((10, 14), (5, 10)), Some((5, 14)));
+        // Test non-overlap.
+        assert_eq!(merge_intervals((5, 10), (11, 14)), None);
+        // Test containment.
+        assert_eq!(merge_intervals((4, 6), (4, 8)), Some((4, 8)));
+        assert_eq!(merge_intervals((4, 6), (4, 6)), Some((4, 6)));
+        assert_eq!(merge_intervals((4, 6), (2, 6)), Some((2, 6)));
+        assert_eq!(merge_intervals((4, 6), (1, 20)), Some((1, 20)));
+        // Test other order containment.
+        assert_eq!(merge_intervals((4, 8), (4, 6)), Some((4, 8)));
+        assert_eq!(merge_intervals((2, 6), (4, 6)), Some((2, 6)));
+        assert_eq!(merge_intervals((1, 20), (4, 6)), Some((1, 20)));
+    }
+
+    #[test]
+    fn test_split_jobs_multiple_exact() {
+        let jobs = split_jobs(0, 100, 100, 20);
+        let expected_jobs = vec![
+            CountCollinearArgs {
+                sequence_length: 100,
+                start_index: 0,
+                end_index: 20,
+            },
+            CountCollinearArgs {
+                sequence_length: 100,
+                start_index: 20,
+                end_index: 40,
+            },
+            CountCollinearArgs {
+                sequence_length: 100,
+                start_index: 40,
+                end_index: 60,
+            },
+            CountCollinearArgs {
+                sequence_length: 100,
+                start_index: 60,
+                end_index: 80,
+            },
+            CountCollinearArgs {
+                sequence_length: 100,
+                start_index: 80,
+                end_index: 100,
+            },
+        ];
+        assert_eq!(jobs, expected_jobs)
+    }
+
+    #[test]
+    fn test_split_jobs_one_job_smaller_than_max() {
+        let jobs = split_jobs(10, 70, 1000, 100);
+        let expected_jobs = vec![CountCollinearArgs {
+            sequence_length: 1000,
+            start_index: 10,
+            end_index: 70,
+        }];
+        assert_eq!(jobs, expected_jobs);
+    }
+
+    #[test]
+    fn test_split_jobs_one_job_exact() {
+        let jobs = split_jobs(10, 70, 1000, 60);
+        let expected_jobs = vec![CountCollinearArgs {
+            sequence_length: 1000,
+            start_index: 10,
+            end_index: 70,
+        }];
+        assert_eq!(jobs, expected_jobs);
+    }
+
+    #[test]
+    fn test_split_jobs_one_max_one_partial() {
+        let jobs = split_jobs(10, 70, 1000, 59);
+        let expected_jobs = vec![
+            CountCollinearArgs {
+                sequence_length: 1000,
+                start_index: 10,
+                end_index: 69,
+            },
+            CountCollinearArgs {
+                sequence_length: 1000,
+                start_index: 69,
+                end_index: 70,
+            },
+        ];
+        assert_eq!(jobs, expected_jobs);
+    }
+
+    #[test]
+    fn test_split_jobs_trivial() {
+        let jobs = split_jobs(10, 10, 1000, 100);
+        let expected_jobs = vec![];
+        assert_eq!(jobs, expected_jobs);
     }
 }

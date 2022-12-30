@@ -102,16 +102,30 @@ impl Config {
     pub fn new(config_ini: Ini) -> Config {
         let from_email = config_ini.get("email", "from_email");
         let to_email = config_ini.get("email", "to_email");
-        let smtp_url = config_ini.get("email", "smtp_url");
-        let smtp_username = config_ini.get("email", "smtp_username");
-        let smtp_password = config_ini.get("email", "smtp_password");
+        let smtp_url = env::var("SMTP_URL")
+            .ok()
+            .or_else(|| config_ini.get("email", "smtp_url"));
+        let smtp_username = env::var("SMTP_USERNAME")
+            .ok()
+            .or_else(|| config_ini.get("email", "smtp_username"));
+        let smtp_password = env::var("SMTP_PASSWORD")
+            .ok()
+            .or_else(|| config_ini.get("email", "smtp_password"));
         let email_settings =
             EmailSettings::new(from_email, to_email, smtp_url, smtp_username, smtp_password);
 
-        let aws_access_key = config_ini.get("aws_auth", "access_key");
-        let aws_secret_key = config_ini.get("aws_auth", "secret_key");
-        let aws_account_number = config_ini.get("aws_auth", "account_number");
-        let aws_region = config_ini.get("aws_auth", "region");
+        let aws_access_key = env::var("AWS_ACCESS_KEY")
+            .ok()
+            .or_else(|| config_ini.get("aws_auth", "access_key"));
+        let aws_secret_key = env::var("AWS_SECRET_KEY")
+            .ok()
+            .or_else(|| config_ini.get("aws_auth", "secret_key"));
+        let aws_account_number = env::var("AWS_ACCOUNT_NUMBER")
+            .ok()
+            .or_else(|| config_ini.get("aws_auth", "account_number"));
+        let aws_region = env::var("AWS_REGION")
+            .ok()
+            .or_else(|| config_ini.get("aws_auth", "region"));
         let aws_auth_settings = AWSAuthSettings::new(
             aws_access_key,
             aws_secret_key,
