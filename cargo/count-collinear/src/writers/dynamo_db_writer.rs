@@ -48,7 +48,7 @@ impl CollinearWriter for DynamoDbWriter {
         count_collinear_result: CountCollinearResult,
     ) -> Result<(), CollinearWriterError> {
         let partiql_statement = format!(
-            "INSERT INTO {} VALUE {{'count_collinear_args': ?, 'seqeunce_length': ?, 'start_index': ?, 'end_index': ?, 'count_max': ?, 'build_duration_seconds': ?, 'count_duration_seconds': ?}}",
+            "INSERT INTO {} VALUE {{'count_collinear_args': ?, 'sequence_length': ?, 'start_index': ?, 'end_index': ?, 'count_max': ?, 'build_duration_seconds': ?, 'count_duration_seconds': ?}}",
             TABLE_NAME
         );
         let sequence_length = count_collinear_result.sequence_length;

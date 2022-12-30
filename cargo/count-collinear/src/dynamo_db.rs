@@ -325,6 +325,9 @@ impl DynamoDbController {
             Some(next_token) => format!(", \"NextToken\": {}", next_token),
             None => String::from(""),
         };
+        if parameters.is_empty() {
+            return format!("{{\"Statement\": \"{}\"{}}}", partiql_statement, next_token_str);
+        }
         let payload = format!(
             "{{\"Statement\": \"{}\", \"Parameters\": {}{}}}",
             partiql_statement, encoded_parameters, next_token_str,
@@ -450,7 +453,7 @@ impl DynamoDbExecuteStatementResponse {
                 .strip_suffix('}')
                 .unwrap_or(stripped_item_str);
             let named_attr_value_strs = split_top_level_comma_separated(stripped_item_str);
-            let name_matcher = Regex::new(r#""(.*)"\s*:"#).unwrap();
+            let name_matcher = Regex::new(r#""([^"]*)"\s*:"#).unwrap();
             let mut item: BTreeMap<String, AttributeValue> = BTreeMap::new();
             for named_attr_value in named_attr_value_strs {
                 let name = &name_matcher
@@ -480,9 +483,6 @@ impl FromStr for DynamoDbExecuteStatementResponse {
         let stripped = trimmed.strip_prefix('{').unwrap_or(trimmed);
         let stripped = stripped.strip_suffix('}').unwrap_or(stripped);
         let top_level_strs = split_top_level_comma_separated(stripped);
-        for some_str in top_level_strs.iter() {
-            println!("{}", some_str);
-        }
         let mut items_str = "[]";
         let mut next_token_str: Option<&str> = None;
         let items_name_regex = Regex::new(r#"^"Items"\s*:"#).unwrap();
@@ -956,5 +956,26 @@ mod tests {
             next_token: Some(String::from("some_token")),
         };
         assert_eq!(decoded_response, expected)
+    }
+
+    #[test]
+    fn test_decode_enqueue_jobs_query_response() {
+        let response = r#""Items":[{"start_index":{"N":"10"},"end_index":{"N":"20"},"sequence_length":{"N":"50"}},{"start_index":{"N":"30"},"end_index":{"N":"40"},"sequence_length":{"N":"50"}}]"#;
+        let decoded_response = DynamoDbExecuteStatementResponse::from_str(response).unwrap();
+        let item_1 = BTreeMap::from([
+            (String::from("start_index"), AttributeValue::Number(String::from("10"))),
+            (String::from("end_index"), AttributeValue::Number(String::from("20"))),
+            (String::from("sequence_length"), AttributeValue::Number(String::from("50"))),
+        ]);
+        let item_2 = BTreeMap::from([
+            (String::from("start_index"), AttributeValue::Number(String::from("30"))),
+            (String::from("end_index"), AttributeValue::Number(String::from("40"))),
+            (String::from("sequence_length"), AttributeValue::Number(String::from("50"))),
+        ]);
+        let expected = DynamoDbExecuteStatementResponse {
+            items: vec![item_1, item_2],
+            next_token: None,
+        };
+        assert_eq!(decoded_response, expected);
     }
 }

@@ -229,13 +229,13 @@ mod tests {
             CountCollinearArgs::from_str(extra_whitespace),
             Ok(expected_args.clone())
         );
-        let missing_seqeunce_length = r#"{"end_index": 60, "start_index": 50}"#;
+        let missing_sequence_length = r#"{"end_index": 60, "start_index": 50}"#;
         assert_eq!(
-            CountCollinearArgs::from_str(missing_seqeunce_length),
+            CountCollinearArgs::from_str(missing_sequence_length),
             Err(ParseCountCollinearArgsErr {
                 msg: format!(
                     "{} not found in {} when trying to parse CountCollinearArgs.",
-                    "sequence_length", missing_seqeunce_length
+                    "sequence_length", missing_sequence_length
                 )
             })
         );
