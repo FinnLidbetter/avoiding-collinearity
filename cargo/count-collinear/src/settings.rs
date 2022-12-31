@@ -100,30 +100,34 @@ pub struct Config {
 
 impl Config {
     pub fn new(config_ini: Ini) -> Config {
-        let from_email = config_ini.get("email", "from_email");
-        let to_email = config_ini.get("email", "to_email");
-        let smtp_url = env::var("SMTP_URL")
+        let from_email = env::var("CC_FROM_EMAIL")
+            .ok()
+            .or_else(|| config_ini.get("email", "from_email"));
+        let to_email = env::var("CC_TO_EMAIL")
+            .ok()
+            .or_else(|| config_ini.get("email", "to_email"));
+        let smtp_url = env::var("CC_SMTP_URL")
             .ok()
             .or_else(|| config_ini.get("email", "smtp_url"));
-        let smtp_username = env::var("SMTP_USERNAME")
+        let smtp_username = env::var("CC_SMTP_USERNAME")
             .ok()
             .or_else(|| config_ini.get("email", "smtp_username"));
-        let smtp_password = env::var("SMTP_PASSWORD")
+        let smtp_password = env::var("CC_SMTP_PASSWORD")
             .ok()
             .or_else(|| config_ini.get("email", "smtp_password"));
         let email_settings =
             EmailSettings::new(from_email, to_email, smtp_url, smtp_username, smtp_password);
 
-        let aws_access_key = env::var("AWS_ACCESS_KEY")
+        let aws_access_key = env::var("CC_AWS_ACCESS_KEY")
             .ok()
             .or_else(|| config_ini.get("aws_auth", "access_key"));
-        let aws_secret_key = env::var("AWS_SECRET_KEY")
+        let aws_secret_key = env::var("CC_AWS_SECRET_KEY")
             .ok()
             .or_else(|| config_ini.get("aws_auth", "secret_key"));
-        let aws_account_number = env::var("AWS_ACCOUNT_NUMBER")
+        let aws_account_number = env::var("CC_AWS_ACCOUNT_NUMBER")
             .ok()
             .or_else(|| config_ini.get("aws_auth", "account_number"));
-        let aws_region = env::var("AWS_REGION")
+        let aws_region = env::var("CC_AWS_REGION")
             .ok()
             .or_else(|| config_ini.get("aws_auth", "region"));
         let aws_auth_settings = AWSAuthSettings::new(
@@ -132,9 +136,12 @@ impl Config {
             aws_account_number,
             aws_region,
         );
-        let log_level = config_ini.get("main", "log_level").unwrap();
-        let input_source = config_ini.get("main", "source").unwrap();
-        let output_destination = config_ini.get("main", "destination").unwrap();
+        let log_level = env::var("CC_LOG_LEVEL")
+            .unwrap_or_else(|_| config_ini.get("main", "log_level").unwrap());
+        let input_source = env::var("CC_INPUT_SOURCE")
+            .unwrap_or_else(|_| config_ini.get("main", "source").unwrap());
+        let output_destination = env::var("CC_OUTPUT_DESTINATION")
+            .unwrap_or_else(|_| config_ini.get("main", "destination").unwrap());
         let input_source = match input_source.to_lowercase().as_str() {
             "args" => Source::Args,
             "sqs" => Source::Sqs,

@@ -326,7 +326,10 @@ impl DynamoDbController {
             None => String::from(""),
         };
         if parameters.is_empty() {
-            return format!("{{\"Statement\": \"{}\"{}}}", partiql_statement, next_token_str);
+            return format!(
+                "{{\"Statement\": \"{}\"{}}}",
+                partiql_statement, next_token_str
+            );
         }
         let payload = format!(
             "{{\"Statement\": \"{}\", \"Parameters\": {}{}}}",
@@ -963,14 +966,32 @@ mod tests {
         let response = r#""Items":[{"start_index":{"N":"10"},"end_index":{"N":"20"},"sequence_length":{"N":"50"}},{"start_index":{"N":"30"},"end_index":{"N":"40"},"sequence_length":{"N":"50"}}]"#;
         let decoded_response = DynamoDbExecuteStatementResponse::from_str(response).unwrap();
         let item_1 = BTreeMap::from([
-            (String::from("start_index"), AttributeValue::Number(String::from("10"))),
-            (String::from("end_index"), AttributeValue::Number(String::from("20"))),
-            (String::from("sequence_length"), AttributeValue::Number(String::from("50"))),
+            (
+                String::from("start_index"),
+                AttributeValue::Number(String::from("10")),
+            ),
+            (
+                String::from("end_index"),
+                AttributeValue::Number(String::from("20")),
+            ),
+            (
+                String::from("sequence_length"),
+                AttributeValue::Number(String::from("50")),
+            ),
         ]);
         let item_2 = BTreeMap::from([
-            (String::from("start_index"), AttributeValue::Number(String::from("30"))),
-            (String::from("end_index"), AttributeValue::Number(String::from("40"))),
-            (String::from("sequence_length"), AttributeValue::Number(String::from("50"))),
+            (
+                String::from("start_index"),
+                AttributeValue::Number(String::from("30")),
+            ),
+            (
+                String::from("end_index"),
+                AttributeValue::Number(String::from("40")),
+            ),
+            (
+                String::from("sequence_length"),
+                AttributeValue::Number(String::from("50")),
+            ),
         ]);
         let expected = DynamoDbExecuteStatementResponse {
             items: vec![item_1, item_2],
