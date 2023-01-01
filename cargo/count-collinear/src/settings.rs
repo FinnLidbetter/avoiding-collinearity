@@ -11,7 +11,7 @@ pub fn read_config() -> Config {
     if let Err(failure_reason) = config_ini.load(config_path.clone()) {
         // If loading the config failed, then setup the logger and log
         // the failure reason.
-        env::set_var("RUST_LOG", "count-collinear=info");
+        env::set_var("RUST_LOG", "count_collinear=info");
         env_logger::init();
         log::info!("Loading config from {:?}", &config_path);
         log::error!("Failed to load config: {}", failure_reason);
