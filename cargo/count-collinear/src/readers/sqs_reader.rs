@@ -170,6 +170,7 @@ impl CollinearReader for SqsReader {
                         }
                     })?;
                 self.processed_message_receipt_handle = Some(message.receipt_handle);
+                self.consecutive_no_jobs_polls = 0;
                 Ok(Some(count_collinear_args))
             }
             None => {
