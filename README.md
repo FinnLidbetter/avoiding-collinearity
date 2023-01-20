@@ -42,4 +42,9 @@ More usage information for each the com.commands can be found by using the `--he
 
 ## Rust project
 
-In the `cargo/count-collinear` subdirectory, the Rust program has been run for the first 211,800 points considering all points up to index 10 million. This computation has found that there is no set of 7 collinear points in the first 10 million points of the Gerver-Ramsey construction where at least one point is in the first 211,800 points. This computation has taken approximately 3 weeks so far. The computation has been paused and this note is to serve as a reminder for where it should be continued from.
+The cargo/count-collinear subdirectory contains a Rust program for counting the largest number of collinear points in the first N points 
+of a particular sequence of points. The collinearity_data.csv file contains the result of checking for the largest number of collinear
+points in the first 10 million terms of the sequence. This used approximately 2.7 years of CPU time spread between AWS Fargate spot instances,
+my personal laptop, and a PC belonging to my brother, Robin Lidbetter.
+
+The computation showed that there are no 7 collinear points in the first 10 million terms of the sequence.
