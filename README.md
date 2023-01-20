@@ -52,7 +52,10 @@ The computation showed that there are no 7 collinear points in the first 10 mill
 The computation can be reproduced by running
 
 ```cargo run --release```
+
 and entering 
-```10000000```
+
+```10000000```.
+
 Other configurations are available for running this in parallel by splitting it up into many jobs, enqueuing an encoding of those jobs in 
 AWS SQS and reading and processing those jobs, optionally writing the results to AWS DynamoDb. 
