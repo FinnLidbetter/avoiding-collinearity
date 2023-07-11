@@ -6,6 +6,17 @@ import com.numbers.WholeAndRt3;
 import com.numbers.DoubleRep;
 import com.numbers.Fraction;
 
+/**
+ * Assert that the ratio for the largest distance squared between two trapezoids
+ * separated by a gap of indices in the range [gapMin,gapMax] divided by that index
+ * gap is below a specified value.
+ *
+ * O((gapMax - gapMin) * gapMax)
+ * Note that there is a large constant factor involved since the second gapMax term
+ * in the expression corresponds to the index of the last new subword of length gapMax
+ * in the sequence.
+ */
+
 public class AssertBoundedMaxDistance {
 
     public static void main(String[] args) {

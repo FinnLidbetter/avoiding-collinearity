@@ -19,4 +19,9 @@ public class Interval {
     public String toString() {
         return String.format("[%d,%d]", lo, hi);
     }
+
+    public boolean equals(Object obj) {
+        Interval i2 = (Interval) obj;
+        return lo == i2.lo && hi == i2.hi;
+    }
 }

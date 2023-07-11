@@ -237,7 +237,7 @@ public class TrapezoidSequence<T extends AbstractNumber<T>> {
      * where no two trapezoids are more than maxIndexDiff indices apart.
      *
      * This algorithm uses a radial line sweep approach.
-     * Where n=maxIndex-minIndex this algorithm is O(n^2 log^2 n).
+     * Where n=maxIndex-minIndex and maxIndexDiff<n, this algorithm is O(n^2 log n).
      *
      * @param minIndex: the smallest index to consider.
      * @param maxIndex: the largest index to consider.
@@ -246,7 +246,7 @@ public class TrapezoidSequence<T extends AbstractNumber<T>> {
      * @return The maximum number of trapezoids intersected by an infinite line
      *      subject to the bounds on the indices.
      */
-    public int radialSweepCountCollinear(int minIndex, int maxIndex, int maxIndexDiff) {
+    public TrapezoidIntersectionPair<T> radialSweepCountCollinear(int minIndex, int maxIndex, int maxIndexDiff) {
         ArrayList<Trapezoid<T>> trapezoidRange = new ArrayList<>(maxIndex - minIndex + 1);
         if (maxIndex + 1 > trapezoidTypeSequence.size()) {
             symbolSequence.extendSequenceToLength(2 * maxIndex);
@@ -259,7 +259,7 @@ public class TrapezoidSequence<T extends AbstractNumber<T>> {
             prevPoint = nextTrapezoid.vertices.get(3);
         }
         // Iterate over all pivot vertices in trapezoids between minIndex and maxIndex.
-        int maxCollinear = 0;
+        TrapezoidIntersectionPair<T> bestTrapezoidIntersectionPair = null;
         for (int pivotTrapezoidIndex=minIndex; pivotTrapezoidIndex<=maxIndex; pivotTrapezoidIndex++) {
             if (pivotTrapezoidIndex % 200 == 0) {
                 System.out.printf("Progress: considering vertices in trapezoid %d as pivots\n", pivotTrapezoidIndex);
@@ -270,6 +270,7 @@ public class TrapezoidSequence<T extends AbstractNumber<T>> {
                     firstVertex = false;
                     continue;
                 }
+                int pivotCurrentCollinear = 0;
                 // Initialize a segment tree.
                 // Each index of the segment tree corresponds to an interval of size maxIndexDiff. Incrementing
                 // the count at an index corresponds to increasing the number of active trapezoids in a particular
@@ -290,7 +291,7 @@ public class TrapezoidSequence<T extends AbstractNumber<T>> {
                         // Every line through the pivot intersects this trapezoid, so
                         // there are no enter and exit vertices.
                         activeTrapezoidsRoot.update(currTrapezoidIndex, currTrapezoidIndex + maxIndexDiff, 1);
-                        maxCollinear = Math.max(maxCollinear, activeTrapezoidsRoot.max(0, maxIndex + maxIndexDiff));
+                        pivotCurrentCollinear = Math.max(pivotCurrentCollinear, activeTrapezoidsRoot.max(0, maxIndex + maxIndexDiff));
                         continue;
                     }
                     // Initialize a sortable list of the trapezoid vertices.
@@ -307,7 +308,7 @@ public class TrapezoidSequence<T extends AbstractNumber<T>> {
                         trapPoints.sort(negativePointComparator);
                         // The sweep line starts intersecting the trapezoid, so increment the initial counter.
                         activeTrapezoidsRoot.update(currTrapezoidIndex, currTrapezoidIndex + maxIndexDiff, 1);
-                        maxCollinear = Math.max(maxCollinear, activeTrapezoidsRoot.max(0, maxIndex + maxIndexDiff));
+                        pivotCurrentCollinear = Math.max(pivotCurrentCollinear, activeTrapezoidsRoot.max(0, maxIndex + maxIndexDiff));
                     }
                     Point<T> startPoint = trapPoints.get(0);
                     Point<T> endPoint = trapPoints.get(trapPoints.size() - 1);
@@ -316,23 +317,47 @@ public class TrapezoidSequence<T extends AbstractNumber<T>> {
                 }
                 // Sort all enter and exit vertices relative to the pivot.
                 eventPoints.sort(eventPointComparator);
+                TrapezoidIntersectionPair<T> pivotBestIntersectionPair = new TrapezoidIntersectionPair<>(
+                        pivotCurrentCollinear,
+                        pivotTrapezoidIndex,
+                        eventPoints.get(0).trapezoidIndex,
+                        pivotVertex,
+                        eventPoints.get(0).point
+                );
                 // Iterate over enter and exit vertices and insert trapezoid index into the Segment tree
                 for (EventPoint<T> eventPoint: eventPoints) {
                     if (eventPoint.isStart) {
                         // Insert the corresponding trapezoid into the Segment tree.
                         activeTrapezoidsRoot.update(eventPoint.trapezoidIndex, eventPoint.trapezoidIndex + maxIndexDiff, 1);
-                        maxCollinear = Math.max(maxCollinear, activeTrapezoidsRoot.max(0, maxIndex + maxIndexDiff));
-                        // Check the count of inserted vertices `maxIndexDiff` either side of the inserted index.
+                        pivotCurrentCollinear = Math.max(pivotCurrentCollinear, activeTrapezoidsRoot.max(0, maxIndex + maxIndexDiff));
+                        if (pivotCurrentCollinear > pivotBestIntersectionPair.numTrapezoidsIntersected) {
+                            pivotBestIntersectionPair = new TrapezoidIntersectionPair<>(
+                                    pivotCurrentCollinear,
+                                    pivotTrapezoidIndex,
+                                    eventPoint.trapezoidIndex,
+                                    pivotVertex,
+                                    eventPoint.point
+                            );
+                        }
                     } else {
                         // Remove the corresponding trapezoid from the Segment tree.
                         activeTrapezoidsRoot.update(eventPoint.trapezoidIndex, eventPoint.trapezoidIndex + maxIndexDiff, -1);
                     }
                 }
+                if (bestTrapezoidIntersectionPair == null || pivotBestIntersectionPair.numTrapezoidsIntersected > bestTrapezoidIntersectionPair.numTrapezoidsIntersected) {
+                    bestTrapezoidIntersectionPair = pivotBestIntersectionPair;
+                }
             }
         }
-        return maxCollinear;
+        return bestTrapezoidIntersectionPair;
     }
 
+    /**
+     * Get the smallest value for the square of a distance between trapezoids separated by
+     * `gap` or `gap`+1 indices where the smaller index is in the interval [minIndex, maxIndex].
+     *
+     * O(maxIndex - minIndex)
+     */
     private T loDistanceSq(int minIndex, int maxIndex, int gap) {
         T minMinDistanceSq = null;
         for (int index=minIndex; index<=maxIndex; index++) {
@@ -347,6 +372,13 @@ public class TrapezoidSequence<T extends AbstractNumber<T>> {
         }
         return minMinDistanceSq;
     }
+
+    /**
+     * Get the largest value for the square of a distance between trapezoids separated by
+     * `gap` or `gap`+1 indices, where the smaller index is in the interval [minIndex, maxIndex].
+     *
+     * O(maxIndex - minIndex)
+     */
     private T hiDistanceSq(int minIndex, int maxIndex, int gap) {
         T maxMaxDistanceSq = null;
         for (int index=minIndex; index<=maxIndex; index++) {
@@ -421,6 +453,9 @@ public class TrapezoidSequence<T extends AbstractNumber<T>> {
         return maxHiDistanceSqIndexRatio;
     }
 
+    /**
+     * O((gapMax-gapMin) * (endIndex - startIndex))
+     */
     private DistanceSqIndexRatio maxLoDistanceSqIndexRatio(int gapMin, int gapMax, int startIndex, int endIndex) {
         if (trapezoids.size() <= endIndex + gapMax + 1) {
             symbolSequence.extendSequenceToLength(endIndex + gapMax + 2);
@@ -466,6 +501,8 @@ public class TrapezoidSequence<T extends AbstractNumber<T>> {
 
     /**
      * Assert that max distance divided by the index gap for all trapezoid pairs is below a given upper bound.
+     *
+     * O((gapMax-gapMin) * (endIndex - startIndex))
      *
      * @param gapMin: the minimum number of indices separating a pair of trapezoids.
      * @param gapMax: the maximum number of indices separating a pair of trapezoids.

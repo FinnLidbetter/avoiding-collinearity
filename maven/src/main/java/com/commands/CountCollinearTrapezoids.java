@@ -2,6 +2,7 @@ package com.commands;
 
 import com.Interval;
 import com.Point;
+import com.TrapezoidIntersectionPair;
 import com.TrapezoidSequence;
 import com.numbers.WholeAndRt3;
 import com.numbers.WholeNumber;
@@ -27,36 +28,50 @@ public class CountCollinearTrapezoids {
                 TrapezoidSequence<WholeAndRt3> trapSeq = new TrapezoidSequence<>(2, zeroPoint);
                 Interval[] searchIntervals = trapSeq.getCollinearSearchIntervals(maxIndexGap);
                 System.out.printf("Intervals to search: %s.\n", Arrays.toString(searchIntervals));
-                int maxCollinearCount = 0;
+                TrapezoidIntersectionPair<WholeAndRt3> bestIntersectionPair = null;
                 for (Interval searchInterval: searchIntervals) {
-                    int intervalMaxCollinearCount = trapSeq.radialSweepCountCollinear(
+                    TrapezoidIntersectionPair<WholeAndRt3> intervalBestIntersectionPair = trapSeq.radialSweepCountCollinear(
                             searchInterval.getLo(), searchInterval.getHi(), maxIndexGap
                     );
-                    if (intervalMaxCollinearCount > maxCollinearCount) {
-                        maxCollinearCount = intervalMaxCollinearCount;
+                    if (bestIntersectionPair == null || intervalBestIntersectionPair.numTrapezoidsIntersected > bestIntersectionPair.numTrapezoidsIntersected) {
+                        bestIntersectionPair = intervalBestIntersectionPair;
                     }
                 }
                 System.out.printf(
                         "The largest number of trapezoids separated by at most %d indices that\n" +
-                        "are intersected by a single straight line is %d.\n", maxIndexGap, maxCollinearCount
+                        "are intersected by a single straight line is %d.\n" +
+                        "The intersection is through trapezoids %d and %d (0-based indexing) at points\n" +
+                        "%s and %s.\n",
+                        maxIndexGap, bestIntersectionPair.numTrapezoidsIntersected,
+                        bestIntersectionPair.trapezoidIndex1,
+                        bestIntersectionPair.trapezoidIndex2,
+                        bestIntersectionPair.p1,
+                        bestIntersectionPair.p2
                 );
             } else if (numberSystem.equals("wholeNumber")) {
                 Point<WholeNumber> zeroPoint = new Point<>(WholeNumber.ZERO, WholeNumber.ZERO);
                 TrapezoidSequence<WholeNumber> trapSeq = new TrapezoidSequence<>(2, zeroPoint);
                 Interval[] searchIntervals = trapSeq.getCollinearSearchIntervals(maxIndexGap);
                 System.out.printf("Intervals to search: %s.\n", Arrays.toString(searchIntervals));
-                int maxCollinearCount = 0;
+                TrapezoidIntersectionPair<WholeNumber> bestIntersectionPair = null;
                 for (Interval searchInterval: searchIntervals) {
-                    int intervalMaxCollinearCount = trapSeq.radialSweepCountCollinear(
+                    TrapezoidIntersectionPair<WholeNumber> intervalBestIntersectionPair = trapSeq.radialSweepCountCollinear(
                             searchInterval.getLo(), searchInterval.getHi(), maxIndexGap
                     );
-                    if (intervalMaxCollinearCount > maxCollinearCount) {
-                        maxCollinearCount = intervalMaxCollinearCount;
+                    if (bestIntersectionPair == null || intervalBestIntersectionPair.numTrapezoidsIntersected > bestIntersectionPair.numTrapezoidsIntersected) {
+                        bestIntersectionPair = intervalBestIntersectionPair;
                     }
                 }
                 System.out.printf(
                         "The largest number of trapezoids separated by at most %d indices that\n" +
-                        "are intersected by a single straight line is %d.\n", maxIndexGap, maxCollinearCount
+                                "are intersected by a single straight line is %d.\n" +
+                                "The intersection is through trapezoids %d and %d (0-based indexing) at points\n" +
+                                "%s and %s.\n",
+                        maxIndexGap, bestIntersectionPair.numTrapezoidsIntersected,
+                        bestIntersectionPair.trapezoidIndex1,
+                        bestIntersectionPair.trapezoidIndex2,
+                        bestIntersectionPair.p1,
+                        bestIntersectionPair.p2
                 );
             } else {
                 printHelp();

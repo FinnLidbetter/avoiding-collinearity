@@ -25,12 +25,14 @@ public class TrapezoidSequenceTests {
         Assertions.assertEquals(5, trapSeq49.countCollinear(0, 6, 6));
 
         Assertions.assertEquals(6, trapSeq49.countCollinear(0, 48, 6));
+        Assertions.assertEquals(6, trapSeq49.radialSweepCountCollinear(0, 48, 6).numTrapezoidsIntersected);
         Assertions.assertEquals(10, trapSeq49.countCollinear(0, 48, 13));
+        Assertions.assertEquals(10, trapSeq49.radialSweepCountCollinear(0, 48, 13).numTrapezoidsIntersected);
     }
-/*
+
+    /*
     @Test
     public void testFastCollinearity() {
-        //com.TrapezoidSequence<com.numbers.Fraction<com.numbers.WholeAndRt3>> trapSeq343 = new com.TrapezoidSequence<>(343, zeroPt);
         TrapezoidSequence<WholeNumber> trapSeq343 = new TrapezoidSequence<>(343, new Point<WholeNumber>(new WholeNumber(0), new WholeNumber(0)));
         for (int minIndex=0; minIndex<100; minIndex++) {
             for (int maxIndex=minIndex+1; maxIndex<200; maxIndex++) {
@@ -38,20 +40,33 @@ public class TrapezoidSequenceTests {
                     System.out.printf("Testing (%d, %d, %d)\n", minIndex, maxIndex, maxIndexDiff);
                     Assertions.assertEquals(
                             trapSeq343.countCollinear(minIndex, maxIndex, maxIndexDiff),
-                            trapSeq343.radialSweepCountCollinear(minIndex, maxIndex, maxIndexDiff)
+                            trapSeq343.radialSweepCountCollinear(minIndex, maxIndex, maxIndexDiff).numTrapezoidsIntersected
                     );
                 }
             }
         }
     }
+    */
 
     @Test
     public void testIntervals() {
         TrapezoidSequence<Fraction<WholeAndRt3>> trapSeq = new TrapezoidSequence<>(2, zeroPt);
         Interval[] collinearSearchIntervals = trapSeq.getCollinearSearchIntervals(2401);
-        System.out.println(Arrays.toString(collinearSearchIntervals));
+        // Expected values computed by an earlier implementation.
+        Interval[] expectedIntervals = new Interval[]{
+                new Interval(0, 14061),
+                new Interval(16809, 30868),
+                new Interval(67229, 76831),
+                new Interval(76833, 83689),
+                new Interval(184879, 194480),
+                new Interval(194482, 201339),
+                new Interval(504212, 518270),
+                new Interval(1327757, 1341814)
+        };
+        Assertions.assertArrayEquals(expectedIntervals, collinearSearchIntervals);
     }
 
+    /*
     @Test
     public void testLoDistanceSquared() {
         Point<DoubleRep> pt = new Point<>(new DoubleRep(0), new DoubleRep(0));
@@ -71,7 +86,9 @@ public class TrapezoidSequenceTests {
         }
         System.out.println(maxVal);
     }
+    */
 
+    /*
     @Test
     public void testHiDistanceSquared() {
         Point<DoubleRep> pt = new Point<>(new DoubleRep(0), new DoubleRep(0));
@@ -91,14 +108,16 @@ public class TrapezoidSequenceTests {
         }
         System.out.println(maxVal);
     }
+     */
 
     @Test
     public void testRadialSweep() {
         TrapezoidSequence<Fraction<WholeAndRt3>> trapSeq = new TrapezoidSequence<>(6002, zeroPt);
-        int result = trapSeq.radialSweepCountCollinear(0, 6000, 2401);
-        System.out.println(result);
+        int result = trapSeq.radialSweepCountCollinear(0, 345, 343).numTrapezoidsIntersected;
+        Assertions.assertEquals(62, result);
     }
 
+    /*
     @Test
     public void testAllIntervalsCollinearity() {
         TrapezoidSequence<Fraction<WholeAndRt3>> trapSeq = new TrapezoidSequence<>(2, zeroPt);
@@ -108,7 +127,7 @@ public class TrapezoidSequenceTests {
         long startTime = System.currentTimeMillis();
         for (Interval interval: collinearSearchIntervals) {
             System.out.printf("Starting interval %s\n", interval);
-            int maxCollinear =  trapSeq.radialSweepCountCollinear(interval.getLo(), interval.getHi(), 2401);
+            int maxCollinear =  trapSeq.radialSweepCountCollinear(interval.getLo(), interval.getHi(), 2401).numTrapezoidsIntersected;
             if (maxCollinear > overallMaxCollinear) {
                 overallMaxCollinear = maxCollinear;
             }
@@ -118,6 +137,5 @@ public class TrapezoidSequenceTests {
         }
         System.out.printf("Final max collinear is %d\n", overallMaxCollinear);
     }
-
- */
+     */
 }
