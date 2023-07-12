@@ -21,6 +21,8 @@ enqueue_jobs sequence-length job-size [--start-index N] [--end-index M] [--dry-r
               job-size (int): The maximum number of indices to include in each job.
 --start-index (optional int): The start index for the jobs. Defaults to 0.
     --end-index (option int): The end index for the jobs. Defaults to the sequence-length.
+  --window-size (option int): The size of the window to use for checking collinearity
+                              in each job. Defaults to the sequence-length.
    --dry-run (optional bool): If set then only print the actions that would be
                               taken. If this is used in conjunction with --query-db,
                               then a real database query will occur, but jobs will
@@ -34,6 +36,7 @@ struct EnqueueJobsArgs {
     job_size_max: u32,
     start_index: usize,
     end_index: usize,
+    window_size: usize,
     dry_run: bool,
     query_db: bool,
 }
@@ -45,9 +48,11 @@ fn parse_args(args: Vec<String>) -> EnqueueJobsArgs {
     let mut job_size_max: Option<u32> = None;
     let mut start_index: Option<usize> = None;
     let mut end_index: Option<usize> = None;
+    let mut window_size: Option<usize> = None;
     let mut first_arg = true;
     let mut expect_start_index = false;
     let mut expect_end_index = false;
+    let mut expect_window_size = false;
     for arg in args {
         if first_arg {
             first_arg = false;
@@ -58,6 +63,7 @@ fn parse_args(args: Vec<String>) -> EnqueueJobsArgs {
             "--query-db" => query_db = true,
             "--start-index" => expect_start_index = true,
             "--end-index" => expect_end_index = true,
+            "--window-size" => expect_window_size = true,
             _ => {
                 if expect_start_index {
                     let value = arg.parse::<usize>().expect(HELP);
@@ -69,6 +75,12 @@ fn parse_args(args: Vec<String>) -> EnqueueJobsArgs {
                     let value = arg.parse::<usize>().expect(HELP);
                     end_index = Some(value);
                     expect_end_index = false;
+                    continue;
+                }
+                if expect_window_size {
+                    let value = arg.parse::<usize>().expect(HELP);
+                    window_size = Some(value);
+                    expect_window_size = false;
                     continue;
                 }
                 let value = arg.parse::<u32>().expect(HELP);
@@ -87,6 +99,7 @@ fn parse_args(args: Vec<String>) -> EnqueueJobsArgs {
         job_size_max: job_size_max.expect(HELP),
         start_index: start_index.unwrap_or(0),
         end_index: end_index.unwrap_or_else(|| sequence_length.unwrap().try_into().unwrap()),
+        window_size: window_size.unwrap_or_else(|| sequence_length.unwrap().try_into().unwrap()),
         dry_run,
         query_db,
     }
@@ -139,6 +152,7 @@ fn merge_intervals(
 fn split_jobs(
     start_index: usize,
     end_index: usize,
+    window_size: usize,
     sequence_length: u32,
     job_size_max: u32,
 ) -> Vec<CountCollinearArgs> {
@@ -155,6 +169,7 @@ fn split_jobs(
             sequence_length,
             start_index: curr_start,
             end_index: curr_end,
+            window_size,
         });
         curr_start = curr_end;
         curr_end = curr_start + job_size_max as usize;
@@ -187,6 +202,7 @@ fn main() {
     let parsed_args = parse_args(args);
     let sequence_length = parsed_args.sequence_length;
     let job_size_max = parsed_args.job_size_max;
+    let window_size = parsed_args.window_size;
     if parsed_args.sequence_length / parsed_args.job_size_max > JOBS_MAX {
         panic!(
             "Too many jobs! Choose a larger job size. \
@@ -197,12 +213,13 @@ fn main() {
     let mut jobs: Vec<CountCollinearArgs> = Vec::new();
     if parsed_args.query_db {
         let partiql_statement = format!(
-            "SELECT sequence_length, start_index, end_index FROM {} WHERE sequence_length=?;",
+            "SELECT sequence_length, start_index, end_index, window_size FROM {} WHERE sequence_length=? AND window_size=?;",
             TABLE_NAME
         );
-        let parameters = vec![AttributeValue::Number(
-            parsed_args.sequence_length.to_string(),
-        )];
+        let parameters = vec![
+            AttributeValue::Number(parsed_args.sequence_length.to_string()),
+            AttributeValue::Number(parsed_args.window_size.to_string()),
+        ];
         let result =
             dynamo_db_controller.execute_statement(partiql_statement.as_str(), parameters, None);
         if let Err(err) = result {
@@ -240,6 +257,7 @@ fn main() {
                 jobs.extend(split_jobs(
                     prev_end,
                     interval.0,
+                    window_size,
                     sequence_length,
                     job_size_max,
                 ));
@@ -250,6 +268,7 @@ fn main() {
             jobs.extend(split_jobs(
                 prev_end,
                 parsed_args.end_index,
+                window_size,
                 sequence_length,
                 job_size_max,
             ))
@@ -258,6 +277,7 @@ fn main() {
         jobs.extend(split_jobs(
             parsed_args.start_index,
             parsed_args.end_index,
+            window_size,
             sequence_length,
             job_size_max,
         ));
@@ -304,32 +324,37 @@ mod tests {
 
     #[test]
     fn test_split_jobs_multiple_exact() {
-        let jobs = split_jobs(0, 100, 100, 20);
+        let jobs = split_jobs(0, 100, 100, 100, 20);
         let expected_jobs = vec![
             CountCollinearArgs {
                 sequence_length: 100,
                 start_index: 0,
                 end_index: 20,
+                window_size: 100,
             },
             CountCollinearArgs {
                 sequence_length: 100,
                 start_index: 20,
                 end_index: 40,
+                window_size: 100,
             },
             CountCollinearArgs {
                 sequence_length: 100,
                 start_index: 40,
                 end_index: 60,
+                window_size: 100,
             },
             CountCollinearArgs {
                 sequence_length: 100,
                 start_index: 60,
                 end_index: 80,
+                window_size: 100,
             },
             CountCollinearArgs {
                 sequence_length: 100,
                 start_index: 80,
                 end_index: 100,
+                window_size: 100,
             },
         ];
         assert_eq!(jobs, expected_jobs)
@@ -337,39 +362,43 @@ mod tests {
 
     #[test]
     fn test_split_jobs_one_job_smaller_than_max() {
-        let jobs = split_jobs(10, 70, 1000, 100);
+        let jobs = split_jobs(10, 70, 1000, 1000, 100);
         let expected_jobs = vec![CountCollinearArgs {
             sequence_length: 1000,
             start_index: 10,
             end_index: 70,
+            window_size: 1000,
         }];
         assert_eq!(jobs, expected_jobs);
     }
 
     #[test]
     fn test_split_jobs_one_job_exact() {
-        let jobs = split_jobs(10, 70, 1000, 60);
+        let jobs = split_jobs(10, 70, 1000, 1000, 60);
         let expected_jobs = vec![CountCollinearArgs {
             sequence_length: 1000,
             start_index: 10,
             end_index: 70,
+            window_size: 1000,
         }];
         assert_eq!(jobs, expected_jobs);
     }
 
     #[test]
     fn test_split_jobs_one_max_one_partial() {
-        let jobs = split_jobs(10, 70, 1000, 59);
+        let jobs = split_jobs(10, 70, 1000, 1000, 59);
         let expected_jobs = vec![
             CountCollinearArgs {
                 sequence_length: 1000,
                 start_index: 10,
                 end_index: 69,
+                window_size: 1000,
             },
             CountCollinearArgs {
                 sequence_length: 1000,
                 start_index: 69,
                 end_index: 70,
+                window_size: 1000,
             },
         ];
         assert_eq!(jobs, expected_jobs);
@@ -377,7 +406,7 @@ mod tests {
 
     #[test]
     fn test_split_jobs_trivial() {
-        let jobs = split_jobs(10, 10, 1000, 100);
+        let jobs = split_jobs(10, 10, 1000, 1000, 100);
         let expected_jobs = vec![];
         assert_eq!(jobs, expected_jobs);
     }

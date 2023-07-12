@@ -48,15 +48,17 @@ impl CollinearWriter for DynamoDbWriter {
         count_collinear_result: CountCollinearResult,
     ) -> Result<(), CollinearWriterError> {
         let partiql_statement = format!(
-            "INSERT INTO {} VALUE {{'count_collinear_args': ?, 'sequence_length': ?, 'start_index': ?, 'end_index': ?, 'count_max': ?, 'build_duration_seconds': ?, 'count_duration_seconds': ?}}",
+            "INSERT INTO {} VALUE {{'count_collinear_args': ?, 'sequence_length': ?, 'window_size': ?, 'start_index': ?, 'end_index': ?, 'count_max': ?, 'build_duration_seconds': ?, 'count_duration_seconds': ?}}",
             TABLE_NAME
         );
         let sequence_length = count_collinear_result.sequence_length;
+        let window_size = count_collinear_result.window_size;
         let start_index = count_collinear_result.start_index;
         let end_index = count_collinear_result.end_index;
         let count_collinear_args_key = format!(
-            "{}{delimiter}{}{delimiter}{}",
+            "{}{delimiter}{}{delimiter}{}{delimiter}{}",
             sequence_length,
+            window_size,
             start_index,
             end_index,
             delimiter = DELIMITER
@@ -64,6 +66,7 @@ impl CollinearWriter for DynamoDbWriter {
         let parameters = vec![
             AttributeValue::String(count_collinear_args_key.clone()),
             AttributeValue::Number(count_collinear_result.sequence_length.to_string()),
+            AttributeValue::Number(count_collinear_result.window_size.to_string()),
             AttributeValue::Number(count_collinear_result.start_index.to_string()),
             AttributeValue::Number(count_collinear_result.end_index.to_string()),
             AttributeValue::Number(count_collinear_result.count_max.to_string()),

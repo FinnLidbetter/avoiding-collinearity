@@ -64,10 +64,27 @@ pub fn parse_args_from_strings(
     if end_index > sequence_length.try_into().unwrap() {
         end_index = sequence_length.try_into().unwrap();
     }
+    let mut window_size: usize = match values.get(3) {
+        Some(element) => element
+            .to_string()
+            .trim()
+            .parse()
+            .map_err(|err: ParseIntError| CollinearReaderError {
+                msg: format!(
+                    "The fourth argument should be a positive integer for the window size. {}",
+                    err
+                ),
+            })?,
+        None => sequence_length.try_into().unwrap(),
+    };
+    if window_size > sequence_length.try_into().unwrap() {
+        window_size = sequence_length.try_into().unwrap();
+    }
     Ok(Some(CountCollinearArgs {
         sequence_length,
         start_index,
         end_index,
+        window_size,
     }))
 }
 
@@ -76,6 +93,7 @@ pub struct CountCollinearArgs {
     pub sequence_length: u32,
     pub start_index: usize,
     pub end_index: usize,
+    pub window_size: usize,
 }
 
 impl fmt::Display for CountCollinearArgs {
@@ -91,8 +109,8 @@ impl fmt::Display for CountCollinearArgs {
 impl CountCollinearArgs {
     pub fn as_json(&self) -> String {
         format!(
-            "{{\"sequence_length\": {}, \"start_index\": {}, \"end_index\": {}}}",
-            self.sequence_length, self.start_index, self.end_index,
+            "{{\"sequence_length\": {}, \"start_index\": {}, \"end_index\": {}, \"window_size\": {}}}",
+            self.sequence_length, self.start_index, self.end_index, self.window_size,
         )
     }
 }
@@ -159,10 +177,13 @@ impl FromStr for CountCollinearArgs {
         let sequence_length = parse_digits_after_pattern::<u32>(trimmed, "sequence_length")?;
         let start_index = parse_digits_after_pattern::<usize>(trimmed, "start_index")?;
         let end_index = parse_digits_after_pattern::<usize>(trimmed, "end_index")?;
+        let window_size = parse_digits_after_pattern::<usize>(trimmed, "window_size")
+            .unwrap_or_else(|_| sequence_length.try_into().unwrap());
         Ok(CountCollinearArgs {
             sequence_length,
             start_index,
             end_index,
+            window_size,
         })
     }
 }
@@ -194,10 +215,13 @@ mod tests {
         let good_string_4 = r#"{"start_index": 50, "end_index": 60, "sequence_length": 1000}"#;
         let good_string_5 = r#"{"end_index": 60, "start_index": 50, "sequence_length": 1000}"#;
         let good_string_6 = r#"{"end_index": 60, "sequence_length": 1000, "start_index": 50}"#;
+        let good_string_7 =
+            r#"{"sequence_length:" 1000, "start_index": 50, "end_index": 60, "window_size": 1000}"#;
         let expected_args = CountCollinearArgs {
             sequence_length: 1000,
             start_index: 50,
             end_index: 60,
+            window_size: 1000,
         };
         assert_eq!(
             CountCollinearArgs::from_str(good_string_1),
@@ -221,6 +245,10 @@ mod tests {
         );
         assert_eq!(
             CountCollinearArgs::from_str(good_string_6),
+            Ok(expected_args.clone())
+        );
+        assert_eq!(
+            CountCollinearArgs::from_str(good_string_7),
             Ok(expected_args.clone())
         );
         let extra_whitespace =
@@ -255,10 +283,11 @@ mod tests {
             sequence_length: 123,
             start_index: 0,
             end_index: 56,
+            window_size: 42,
         };
         assert_eq!(
             value.as_json(),
-            r#"{"sequence_length": 123, "start_index": 0, "end_index": 56}"#
+            r#"{"sequence_length": 123, "start_index": 0, "end_index": 56, "window_size": 42}"#
         );
     }
 }

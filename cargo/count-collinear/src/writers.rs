@@ -19,6 +19,7 @@ impl fmt::Display for CollinearWriterError {
 
 pub struct CountCollinearResult {
     pub sequence_length: u32,
+    pub window_size: usize,
     pub start_index: usize,
     pub end_index: usize,
     pub count_max: i32,
@@ -41,11 +42,12 @@ impl CountCollinearResult {
     pub fn verbose_string(&self) -> String {
         format!(
             "Considering all lines with at least one point with an index in [{}, {}], \
-        the largest number of collinear points in the first {} indices of \
-        the sequence is {}. This took {} seconds to build the sequence and {} seconds \
-        to count the collinearity.",
+        the largest number of collinear points separated by at most {} indices in the \
+        first {} indices of the sequence is {}. This took {} seconds to build \
+        the sequence and {} seconds to count the collinearity.",
             self.start_index,
             self.end_index,
+            self.window_size,
             self.sequence_length,
             self.count_max,
             self.build_duration_seconds(),
@@ -58,9 +60,10 @@ impl fmt::Display for CountCollinearResult {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "Sequence length: {}, start index: {}, end index: {}, max collinear count: {}, \
-            sequence build seconds: {}, collinear count seconds: {}",
+            "Sequence length: {}, window size: {}, start index: {}, end index: {}, \
+            max collinear count: {}, sequence build seconds: {}, collinear count seconds: {}",
             self.sequence_length,
+            self.window_size,
             self.start_index,
             self.end_index,
             self.count_max,

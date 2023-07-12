@@ -1,4 +1,5 @@
 use log::debug;
+use std::cmp::min;
 use std::collections::HashMap;
 
 #[derive(Debug, PartialEq, Eq, Hash)]
@@ -233,6 +234,7 @@ pub fn count_collinear_points(
     point_sequence: &[Point3D],
     start_index: usize,
     end_index: usize,
+    window_size: usize,
 ) -> i32 {
     let mut count_max = 0;
     for i in start_index..end_index {
@@ -241,7 +243,8 @@ pub fn count_collinear_points(
             i, count_max
         );
         let mut line_counts = HashMap::new();
-        for j in i + 1..point_sequence.len() {
+        let window_end = min(point_sequence.len(), i + window_size);
+        for j in i + 1..window_end {
             let line = Line3D::new_normalised(&point_sequence[i], &point_sequence[j]);
             let count = line_counts.entry(line).or_insert(1);
             *count += 1;
@@ -605,7 +608,7 @@ mod tests {
     #[test]
     fn test_count_collinear() {
         let point_sequence = build_point_sequence(7);
-        assert_eq!(count_collinear_points(&point_sequence, 0, 1), 2);
+        assert_eq!(count_collinear_points(&point_sequence, 0, 1, 100), 2);
         let cases = [
             (7, 0, 1, 2),
             (185, 0, 185, 6),
@@ -619,7 +622,7 @@ mod tests {
         for (sequence_length, start_index, end_index, expected_collinear) in cases {
             let point_sequence = build_point_sequence(sequence_length);
             assert_eq!(
-                count_collinear_points(&point_sequence, start_index, end_index),
+                count_collinear_points(&point_sequence, start_index, end_index, 10000),
                 expected_collinear
             );
         }

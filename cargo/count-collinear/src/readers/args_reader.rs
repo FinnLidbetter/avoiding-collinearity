@@ -25,7 +25,7 @@ impl Display for ArgsReader {
 impl CollinearReader for ArgsReader {
     /// Parse the arguments.
     ///
-    /// Get the sequence length, start index, end index.
+    /// Get the sequence length, start index, end index, and window size.
     fn read_count_collinear_args(
         &mut self,
     ) -> Result<Option<CountCollinearArgs>, CollinearReaderError> {
