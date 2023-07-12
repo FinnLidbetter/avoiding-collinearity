@@ -2,6 +2,7 @@ package com;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.HashMap;
 
@@ -260,5 +261,115 @@ public class SymbolSequence {
             }
         }
         return lastNewIndex;
+    }
+
+    public Interval[] getCollienarSearchIntervals(int wordLength) {
+        int upperBoundIndex = indexOfLastNewSubword(wordLength);
+        if (upperBoundIndex + wordLength > sequence.size()) {
+            extendSequenceToLength(upperBoundIndex + wordLength);
+        }
+        WordHashContext hashContext = new WordHashContext(wordLength);
+        WordHash currHash = new WordHash(hashContext);
+        for (int i=0; i<wordLength; i++) {
+            currHash.append(sequence.get(i));
+        }
+        ArrayList<Interval> intervals = new ArrayList<>();
+        HashSet<WordHash> hashes = new HashSet<>();
+        hashes.add(currHash.copy());
+        Interval activeInterval = new Interval(0, wordLength);
+        for (int i=1; i<=upperBoundIndex; i++) {
+            int currLo = i;
+            int currHi = i + wordLength;
+            currHash.shift(sequence.get(i - 1), sequence.get(i + wordLength - 1));
+            if (!hashes.contains(currHash)) {
+                if (activeInterval.hi >= currLo) {
+                    activeInterval = new Interval(activeInterval.lo, currHi);
+                } else {
+                    intervals.add(activeInterval);
+                    activeInterval = new Interval(currLo, currHi);
+                }
+                hashes.add(currHash.copy());
+            }
+        }
+        intervals.add(activeInterval);
+        Interval[] intervalsArr = new Interval[intervals.size()];
+        for (int i=0; i < intervals.size(); i++) {
+            intervalsArr[i] = intervals.get(i);
+        }
+        return intervalsArr;
+    }
+
+    class WordHash {
+        WordHashContext hashContext;
+        long[] vals;
+
+        public WordHash(WordHashContext hashContext) {
+            this.hashContext = hashContext;
+            this.vals = new long[hashContext.MODS.length];
+        }
+        public void append(int value) {
+            for (int modIndex=0; modIndex<hashContext.MODS.length; modIndex++) {
+                vals[modIndex] *= NUM_SYMBOLS + 1;
+                vals[modIndex] += value + 1;
+                if (vals[modIndex] >= hashContext.MODS[modIndex]) {
+                    vals[modIndex] %= hashContext.MODS[modIndex];
+                }
+            }
+        }
+        public void shift(int leftValue, int rightValue) {
+            for (int modIndex=0; modIndex<hashContext.MODS.length; modIndex++) {
+                vals[modIndex] -= hashContext.pows[modIndex][hashContext.wordLength - 1] * (leftValue + 1);
+                while (vals[modIndex] < 0) {
+                    vals[modIndex] += hashContext.MODS[modIndex];
+                }
+                vals[modIndex] *= NUM_SYMBOLS + 1;
+                vals[modIndex] += rightValue + 1;
+                if (vals[modIndex] >= hashContext.MODS[modIndex]) {
+                    vals[modIndex] %= hashContext.MODS[modIndex];
+                }
+            }
+        }
+
+        public boolean equals(Object obj) {
+            WordHash w2 = (WordHash) obj;
+            if (vals.length != w2.vals.length) {
+                return false;
+            }
+            for (int i=0; i<vals.length; i++) {
+                if (vals[i] != w2.vals[i]) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        public int hashCode() {
+            return Arrays.hashCode(vals);
+        }
+        public WordHash copy() {
+            WordHash copy = new WordHash(hashContext);
+            copy.vals = Arrays.copyOf(vals, vals.length);
+            return copy;
+        }
+        public String toString() {
+            return Arrays.toString(vals);
+        }
+    }
+    class WordHashContext {
+        long[] MODS = new long[]{1_000_000_007, 1_000_000_009};
+        int wordLength;
+        long[][] pows;
+        public WordHashContext(int wordLength) {
+            this.wordLength = wordLength;
+            pows = new long[MODS.length][wordLength + 1];
+            for (int modIndex=0; modIndex < MODS.length; modIndex++) {
+                pows[modIndex][0] = 1;
+                for (int i = 1; i <= wordLength; i++) {
+                    pows[modIndex][i] = pows[modIndex][i - 1] * (NUM_SYMBOLS + 1);
+                    if (pows[modIndex][i] >= MODS[modIndex]) {
+                        pows[modIndex][i] %= MODS[modIndex];
+                    }
+                }
+            }
+        }
     }
 }

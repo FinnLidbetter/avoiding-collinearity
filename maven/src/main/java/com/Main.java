@@ -44,6 +44,9 @@ public class Main {
                 case "AssertBoundedMinDistance":
                     com.commands.AssertBoundedMinDistance.main(commandArgs);
                     break;
+                case "DistinctSubwordIntervals":
+                    com.commands.DistinctSubwordIntervals.main(commandArgs);
+                    break;
                 case "help":
                     printHelp();
                     break;
@@ -65,9 +68,12 @@ public class Main {
     public static void printHelp() {
         System.out.println("Available commands:");
         System.out.println(
-                "\tAssertBoundedDistanceRatio, AssertBoundedMaxDistance, \n" +
-                "\tAssertBoundedMinDistance, CountCollinearTrapezoids, DrawTrapezoids, \n" +
-                "\tEarliestSubwordMatch, IndexOfLastNewSubword, PrintSymbolSequence"
+                """
+                        \tAssertBoundedDistanceRatio, AssertBoundedMaxDistance,\s
+                        \tAssertBoundedMinDistance, CountCollinearTrapezoids, DrawTrapezoids,\s
+                        \tEarliestSubwordMatch, IndexOfLastNewSubword, PrintSymbolSequence,\s
+                        \tDistinctSubwordIntervals
+                        """
         );
     }
 
