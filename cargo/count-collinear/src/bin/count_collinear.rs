@@ -1,20 +1,19 @@
 extern crate count_collinear;
 
 use count_collinear::compute::Point3D;
-use count_collinear::compute::{build_point_sequence, count_collinear_points};
 use count_collinear::readers::args_reader::ArgsReader;
 use count_collinear::readers::sqs_reader::SqsReader;
 use count_collinear::readers::stdin_reader::StdInReader;
-use count_collinear::readers::{CollinearReader, CountCollinearArgs};
+use count_collinear::readers::CollinearReader;
+use count_collinear::runner::process_count_collinear_args;
 use count_collinear::settings;
 use count_collinear::settings::{Config, Destination, Source};
 use count_collinear::writers::dynamo_db_writer::DynamoDbWriter;
 use count_collinear::writers::email_writer::EmailWriter;
 use count_collinear::writers::stdout_writer::StdOutWriter;
-use count_collinear::writers::{CollinearWriter, CountCollinearResult};
+use count_collinear::writers::CollinearWriter;
 use log::{debug, error, info};
 use std::env;
-use std::time::Instant;
 
 fn get_reader(config: &Config) -> Box<dyn CollinearReader> {
     match config.input_source {
@@ -32,35 +31,6 @@ fn get_writer(config: &Config) -> Box<dyn CollinearWriter> {
     }
 }
 
-fn process_count_collinear_args(
-    point_sequence: &mut Vec<Point3D>,
-    count_collinear_args: CountCollinearArgs,
-) -> CountCollinearResult {
-    let sequence_length = count_collinear_args.sequence_length;
-    let start_index = count_collinear_args.start_index;
-    let end_index = count_collinear_args.end_index;
-    let window_size = count_collinear_args.window_size;
-    let build_sequence_start_time = Instant::now();
-    let mut build_sequence_end_time = build_sequence_start_time;
-    if sequence_length > point_sequence.len().try_into().unwrap() {
-        *point_sequence = build_point_sequence(sequence_length);
-        build_sequence_end_time = Instant::now();
-    }
-    let build_duration = build_sequence_end_time - build_sequence_start_time;
-    let count_start_time = Instant::now();
-    let count_max = count_collinear_points(point_sequence, start_index, end_index, window_size);
-    let count_end_time = Instant::now();
-    let count_duration = count_end_time - count_start_time;
-    CountCollinearResult {
-        sequence_length,
-        window_size,
-        start_index,
-        end_index,
-        count_max,
-        build_duration,
-        count_duration,
-    }
-}
 
 fn main() {
     let config = settings::read_config();
