@@ -139,6 +139,8 @@ impl SqsReader {
 }
 
 impl CollinearReader for SqsReader {
+    fn initialize_reading(&self) {}
+
     fn read_count_collinear_args(
         &mut self,
     ) -> std::result::Result<Option<CountCollinearArgs>, CollinearReaderError> {

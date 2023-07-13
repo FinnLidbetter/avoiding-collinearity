@@ -192,6 +192,8 @@ pub trait CollinearReader
 where
     Self: Display,
 {
+    fn initialize_reading(&self);
+
     fn read_count_collinear_args(
         &mut self,
     ) -> Result<Option<CountCollinearArgs>, CollinearReaderError>;

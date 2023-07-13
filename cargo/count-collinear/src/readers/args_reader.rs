@@ -23,6 +23,8 @@ impl Display for ArgsReader {
 }
 
 impl CollinearReader for ArgsReader {
+    fn initialize_reading(&self) {}
+
     /// Parse the arguments.
     ///
     /// Get the sequence length, start index, end index, and window size.

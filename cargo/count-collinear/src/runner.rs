@@ -1,7 +1,7 @@
-use std::time::Instant;
 use crate::compute::{build_point_sequence, count_collinear_points, Point3D};
 use crate::readers::CountCollinearArgs;
 use crate::writers::CountCollinearResult;
+use std::time::Instant;
 
 pub fn process_count_collinear_args(
     point_sequence: &mut Vec<Point3D>,

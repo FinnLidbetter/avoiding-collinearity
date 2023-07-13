@@ -24,6 +24,10 @@ impl Display for StdInReader {
 }
 
 impl CollinearReader for StdInReader {
+    fn initialize_reading(&self) {
+        println! {"Enter input in format:\n\tsequence_length start_index end_index window_size"};
+    }
+
     fn read_count_collinear_args(
         &mut self,
     ) -> Result<Option<CountCollinearArgs>, CollinearReaderError> {

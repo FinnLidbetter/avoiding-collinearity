@@ -1,12 +1,12 @@
 extern crate count_collinear;
 
 use count_collinear::compute::Point3D;
+use count_collinear::readers::CountCollinearArgs;
 use count_collinear::runner::process_count_collinear_args;
 use count_collinear::settings;
 use log::info;
 use std::env;
 use std::time::Instant;
-use count_collinear::readers::CountCollinearArgs;
 
 fn main() {
     let config = settings::read_config();
@@ -20,13 +20,13 @@ fn main() {
     let window_size = 16807;
     let intervals = [
         (0, 98440),
-        (117650,216089),
+        (117650, 216089),
         (470597, 537823),
         (537825, 585843),
         (1294140, 1361366),
         (1361368, 1409386),
         (3529471, 3627910),
-        (9294272, 9392711)
+        (9294272, 9392711),
     ];
     let start_time = Instant::now();
     for interval in intervals {
@@ -44,5 +44,8 @@ fn main() {
     }
     let end_time = Instant::now();
     let duration = end_time - start_time;
-    info!("collinearity16807 completed in {} seconds.", duration.as_secs_f32());
+    info!(
+        "collinearity16807 completed in {} seconds.",
+        duration.as_secs_f32()
+    );
 }

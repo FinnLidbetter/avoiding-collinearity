@@ -31,7 +31,6 @@ fn get_writer(config: &Config) -> Box<dyn CollinearWriter> {
     }
 }
 
-
 fn main() {
     let config = settings::read_config();
 
@@ -45,6 +44,7 @@ fn main() {
     debug!("Using reader: {}", reader);
     let mut writer = get_writer(&config);
     debug!("Using writer: {}", writer);
+    reader.initialize_reading();
     while !reader.is_finished_reading() {
         let count_collinear_args = reader.read_count_collinear_args();
         match count_collinear_args {
