@@ -227,15 +227,17 @@ pub fn build_point_sequence(sequence_length: u32) -> Vec<Point3D> {
 ///
 /// Only lines going through points with indices in [`start_index`, `end_index`) are
 /// considered and only points after `start_index` are considered.
-/// Note that that all points after `start_index` in `point_sequence` are considered
-/// for counting points on lines having some point at an index in
-/// [`start_index`, `end_index`).
+/// Only lines whose point indices are separated by at most `window_size` are
+/// considered.
 pub fn count_collinear_points(
     point_sequence: &[Point3D],
     start_index: usize,
     end_index: usize,
     window_size: usize,
 ) -> i32 {
+    if window_size == 0 {
+        return 1;
+    }
     let mut count_max = 0;
     for i in start_index..end_index {
         debug!(
@@ -243,7 +245,7 @@ pub fn count_collinear_points(
             i, count_max
         );
         let mut line_counts = HashMap::new();
-        let window_end = min(point_sequence.len(), i + window_size);
+        let window_end = min(point_sequence.len(), i + window_size + 1);
         for j in i + 1..window_end {
             let line = Line3D::new_normalised(&point_sequence[i], &point_sequence[j]);
             let count = line_counts.entry(line).or_insert(1);
@@ -623,6 +625,28 @@ mod tests {
             let point_sequence = build_point_sequence(sequence_length);
             assert_eq!(
                 count_collinear_points(&point_sequence, start_index, end_index, 10000),
+                expected_collinear
+            );
+        }
+    }
+
+    #[test]
+    fn test_count_collinear_window_size() {
+        let point_sequence = build_point_sequence(7);
+        let cases = [
+            (1000, 0, 1000, 71, 4),
+            (1000, 0, 1000, 72, 5),
+            (1000, 0, 1000, 75, 5),
+            (1000, 0, 1000, 76, 6),
+            (1000, 109, 185, 76, 6),
+            (1000, 0, 1000, 2, 3),
+            (1000, 0, 1000, 1, 2),
+            (1000, 0, 1000, 0, 1),
+        ];
+        for (sequence_length, start_index, end_index, window_size, expected_collinear) in cases {
+            let point_sequence = build_point_sequence(sequence_length);
+            assert_eq!(
+                count_collinear_points(&point_sequence, start_index, end_index, window_size),
                 expected_collinear
             );
         }
