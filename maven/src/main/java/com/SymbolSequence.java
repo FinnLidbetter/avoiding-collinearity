@@ -263,7 +263,7 @@ public class SymbolSequence {
         return lastNewIndex;
     }
 
-    public Interval[] getCollienarSearchIntervals(int wordLength) {
+    public Interval[] getCollinearSearchIntervals(int wordLength) {
         int upperBoundIndex = indexOfLastNewSubword(wordLength);
         if (upperBoundIndex + wordLength > sequence.size()) {
             extendSequenceToLength(upperBoundIndex + wordLength);
@@ -355,6 +355,7 @@ public class SymbolSequence {
         }
     }
     class WordHashContext {
+        // Use large prime numbers as moduli.
         long[] MODS = new long[]{1_000_000_007, 1_000_000_009};
         int wordLength;
         long[][] pows;

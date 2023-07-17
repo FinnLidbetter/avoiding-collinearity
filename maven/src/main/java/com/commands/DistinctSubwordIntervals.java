@@ -14,7 +14,7 @@ public class DistinctSubwordIntervals {
         try {
             int wordLength = Integer.parseInt(args[0]);
             SymbolSequence sequence = new SymbolSequence(2);
-            Interval[] intervals = sequence.getCollienarSearchIntervals(wordLength);
+            Interval[] intervals = sequence.getCollinearSearchIntervals(wordLength);
             System.out.println(Arrays.toString(intervals));
         } catch (NumberFormatException e) {
             printHelp();
