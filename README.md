@@ -35,6 +35,10 @@ Find the largest count of trapezoids separated by at most a given number of indi
 
   ```CountCollinearTrapezoids 7 wholeAndRt3```
 
+Get a disjoint set of intervals that contain all subwords of a given length for the symbol sequence:
+
+  ```DistinctSubwordIntervals 343```
+
 More usage information for each the com.commands can be found by using the `--help` option, for example: 
 
 ```PrintSymbolSequence --help```
@@ -57,5 +61,13 @@ and entering
 
 ```10000000```.
 
+
 Other configurations are available for running this in parallel by splitting it up into many jobs, enqueuing an encoding of those jobs in 
 AWS SQS and reading and processing those jobs, optionally writing the results to AWS DynamoDb. 
+
+To prove the weaker claim that there are no 7 collinear points in any 7^5=16807 consecutive terms of the sequence, the command 
+
+```cargo run --release --bin collinearity16807```
+
+can be used. This command takes approximately 95 minutes to run to completion on a 2020 M1 Macbook Air.
+
